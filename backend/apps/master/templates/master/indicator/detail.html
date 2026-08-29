@@ -1,0 +1,77 @@
+{% extends "base/crud_page.html" %}
+
+{% block title %}
+Indicator Detail
+{% endblock %}
+
+{% block page_title %}
+Indicator Detail
+{% endblock %}
+
+{% block crud_content %}
+
+<table class="table table-bordered">
+
+    <tr>
+        <th width="220">Variable</th>
+        <td>{{ indicator.variable.name }}</td>
+    </tr>
+
+    <tr>
+        <th>Code</th>
+        <td>{{ indicator.code }}</td>
+    </tr>
+
+    <tr>
+        <th>Name</th>
+        <td>{{ indicator.name }}</td>
+    </tr>
+
+    <tr>
+        <th>Description</th>
+        <td>{{ indicator.description|default:"-" }}</td>
+    </tr>
+
+    <tr>
+        <th>Weight</th>
+        <td>{{ indicator.weight }}</td>
+    </tr>
+
+    <tr>
+        <th>Status</th>
+
+        <td>
+
+            {% if indicator.is_active %}
+
+                <span class="badge bg-success">
+
+                    Active
+
+                </span>
+
+            {% else %}
+
+                <span class="badge bg-danger">
+
+                    Inactive
+
+                </span>
+
+            {% endif %}
+
+        </td>
+
+    </tr>
+
+</table>
+
+<a
+    href="{% url 'master:indicator-list' %}"
+    class="btn btn-secondary">
+
+    Back
+
+</a>
+
+{% endblock %}

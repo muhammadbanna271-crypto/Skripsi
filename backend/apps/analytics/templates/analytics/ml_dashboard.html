@@ -1,0 +1,609 @@
+{% extends "base/layout.html" %}
+
+{% block title %}
+ML Analytics Dashboard
+{% endblock %}
+
+{% block content %}
+
+<h2 class="mb-1">ML Analytics Dashboard</h2>
+<p class="text-secondary">Clustering, Feature Importance &amp; Rekomendasi Desa</p>
+
+{% if messages %}
+{% for message in messages %}
+<div class="alert alert-{{ message.tags }}">
+    {{ message }}
+</div>
+{% endfor %}
+{% endif %}
+
+<hr>
+
+<!-- ================= Ringkasan + Aksi ================= -->
+
+<div class="row g-3 mb-3">
+
+    <div class="col-6 col-md-3">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
+                <div class="text-secondary small">Jumlah Desa</div>
+                <div class="fs-3 fw-bold">{{ summary.total_village }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 col-md-3">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
+                <div class="text-secondary small">Jumlah Responden</div>
+                <div class="fs-3 fw-bold">{{ summary.total_respondent }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 col-md-3">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
+                <div class="text-secondary small">Jumlah Cluster</div>
+                <div class="fs-3 fw-bold">{{ summary.n_clusters|default:"-" }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 col-md-3">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
+                <div class="text-secondary small">Silhouette Score</div>
+                <div class="fs-3 fw-bold">
+                    {% if summary.silhouette_score %}
+                    {{ summary.silhouette_score|floatformat:3 }}
+                    {% else %}
+                    -
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% if analysis_stale %}
+<div class="alert alert-warning rounded-3 d-flex align-items-center mb-4">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    Konfigurasi variable berubah sejak terakhir dihitung. Silakan klik <strong>&quot;Retrain Model&quot;</strong> untuk memperbarui hasil.
+</div>
+{% endif %}
+
+<div class="d-flex flex-wrap gap-2 mb-4">
+
+    <form method="post" action="{% url 'analytics:ml-retrain' %}" id="retrain-form">
+        {% csrf_token %}
+        <button type="submit" id="retrain-btn" class="btn btn-primary">
+            <i class="bi bi-arrow-repeat me-1"></i>
+            Retrain Model
+        </button>
+    </form>
+
+    <form method="post" id="predict-form" action="">
+        {% csrf_token %}
+        <div class="input-group">
+            <select name="village_id" id="predict-village" class="form-select">
+                {% for village in villages %}
+                <option value="{{ village.id }}">{{ village.name }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" id="predict-btn" class="btn btn-outline-primary">
+                Prediksi Cluster
+            </button>
+        </div>
+    </form>
+
+    <a href="{% url 'analytics:ml-simulate' %}" class="btn btn-outline-dark">
+        <i class="bi bi-sliders me-1"></i> Simulasi Manual
+    </a>
+
+    <a href="{% url 'analytics:ml-export-excel' %}" class="btn btn-outline-success">
+        <i class="bi bi-file-earmark-excel me-1"></i> Export Excel
+    </a>
+
+    <a href="{% url 'analytics:ml-export-pdf' %}" class="btn btn-outline-danger">
+        <i class="bi bi-file-earmark-pdf me-1"></i> Export PDF
+    </a>
+
+</div>
+
+<!-- ================= Charts ================= -->
+
+<div class="row g-3 mb-3">
+
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white"><strong>Distribusi Cluster</strong></div>
+            <div class="card-body">
+                <canvas id="pieChart" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white"><strong>Feature Importance (Variabel Paling Dominan)</strong></div>
+            <div class="card-body">
+                <canvas id="importanceChart" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="row g-3 mb-3">
+
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white"><strong>Scatter Plot Hasil Clustering (PCA)</strong></div>
+            <div class="card-body">
+                <canvas id="scatterChart" height="260"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <strong>Radar Chart Indikator Dominan</strong>
+                <select id="radar-village-select" class="form-select form-select-sm w-auto">
+                    {% for village in villages %}
+                    <option value="{{ village.id }}">{{ village.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="card-body">
+                <canvas id="radarChart" height="260"></canvas>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ================= Kesimpulan Otomatis ================= -->
+
+<div class="alert alert-info mb-4">
+    <strong>Kesimpulan Otomatis:</strong>
+    <p class="mb-0">{{ narrative }}</p>
+</div>
+
+<!-- ================= Relasi Predictor -> Response ================= -->
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white"><strong>Relasi Predictor &rarr; Response (Korelasi)</strong></div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Predictor</th>
+                    <th>Response</th>
+                    <th class="text-end">Korelasi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rel in relationship %}
+                <tr>
+                    <td>{{ rel.predictor }}</td>
+                    <td>{{ rel.response }}</td>
+                    <td class="text-end">
+                        {% if rel.correlation is not None %}
+                        <span class="badge {% if rel.correlation >= 0 %}bg-success{% else %}bg-danger{% endif %}">
+                            {{ rel.correlation }}
+                        </span>
+                        {% else %}
+                        <span class="text-secondary">&mdash;</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="text-center">Belum ada data relasi.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ================= Tabel Desa & Cluster ================= -->
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white"><strong>Hasil Clustering Desa</strong></div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Rank</th>
+                    <th>Desa</th>
+                    <th>Cluster</th>
+                    <th>Total Score</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in village_table %}
+                <tr>
+                    <td>{{ row.rank }}</td>
+                    <td>{{ row.village.name }}</td>
+                    <td>
+                        {% if row.cluster %}
+                        <span class="badge" style="background-color: {{ row.cluster.color }}">
+                            {{ row.cluster.name }}
+                        </span>
+                        {% else %}
+                        <span class="text-secondary">Belum Dikluster</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ row.total_score }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center">Belum ada data. Jalankan "Retrain Model" dulu.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ================= Ranking TOPSIS per Cluster ================= -->
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white"><strong>Ranking Prioritas (TOPSIS per Cluster)</strong></div>
+    <div class="card-body">
+
+        {% for group in cluster_ranking %}
+        <h6 class="mt-2">
+            {% if group.cluster %}
+            <span class="badge" style="background-color: {{ group.cluster.color }}">
+                {{ group.cluster.name }}
+            </span>
+            {% else %}
+            Belum Dikluster
+            {% endif %}
+        </h6>
+
+        <table class="table table-sm table-bordered mb-4">
+            <thead class="table-light">
+                <tr>
+                    <th width="60">Rank</th>
+                    <th>Desa</th>
+                    <th width="140">Skor Preferensi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in group.ranking %}
+                <tr>
+                    <td>{{ item.rank }}</td>
+                    <td>{{ item.village.name }}</td>
+                    <td>{{ item.score|floatformat:4|default:"-" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% empty %}
+        <p class="text-secondary">Belum ada hasil ranking. Jalankan "Retrain Model" dulu.</p>
+        {% endfor %}
+
+    </div>
+</div>
+
+{{ cluster_distribution|json_script:"cluster-distribution-data" }}
+{{ variable_importance|json_script:"variable-importance-data" }}
+{{ scatter_data|json_script:"scatter-data" }}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+const clusterDistribution = JSON.parse(
+    document.getElementById("cluster-distribution-data").textContent
+);
+
+const variableImportance = JSON.parse(
+    document.getElementById("variable-importance-data").textContent
+);
+
+const scatterData = JSON.parse(
+    document.getElementById("scatter-data").textContent
+);
+
+// ================= Pie Chart =================
+
+new Chart(document.getElementById("pieChart"), {
+    type: "pie",
+    data: {
+        labels: clusterDistribution.map(item => item.label),
+        datasets: [{
+            data: clusterDistribution.map(item => item.count),
+            backgroundColor: clusterDistribution.map(item => item.color),
+            borderColor: "#ffffff",
+            borderWidth: 2,
+        }],
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: "top",
+            },
+        },
+    },
+});
+
+
+// ================= Feature Importance Bar Chart =================
+
+new Chart(document.getElementById("importanceChart"), {
+    type: "bar",
+    data: {
+        labels: variableImportance.map(item => item.name),
+        datasets: [{
+            label: "Kontribusi (%)",
+            data: variableImportance.map(item => item.percentage),
+            backgroundColor: "#198754",
+            borderColor: "#146c43",
+            borderWidth: 1,
+        }],
+    },
+    options: {
+        indexAxis: "y",
+        responsive: true,
+        plugins: {
+            legend: {
+                display: false,
+            },
+        },
+        scales: {
+            x: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: "Kontribusi (%)",
+                },
+            },
+        },
+    },
+});
+
+// ================= Scatter Plot (PCA) =================
+
+const scatterByCluster = {};
+
+const clusterColors = {
+    "Berkembang": "#0d6efd",
+    "Sedang": "#fd7e14",
+    "Unggul": "#198754",
+
+    // fallback jika nama cluster masih default
+    "Cluster 0": "#0d6efd",
+    "Cluster 1": "#fd7e14",
+    "Cluster 2": "#198754",
+
+    "Belum Dikluster": "#6c757d",
+};
+
+scatterData.forEach((point) => {
+
+    if (!scatterByCluster[point.cluster]) {
+
+        const color =
+            point.color ||
+            clusterColors[point.cluster] ||
+            "#6c757d";
+
+        scatterByCluster[point.cluster] = {
+
+            label: point.cluster,
+
+            data: [],
+
+            backgroundColor: color,
+
+            borderColor: color,
+
+            pointRadius: 6,
+
+            pointHoverRadius: 8,
+
+        };
+    }
+
+    scatterByCluster[point.cluster].data.push({
+
+        x: point.x,
+
+        y: point.y,
+
+        village: point.village,
+
+    });
+
+});
+
+new Chart(
+    document.getElementById("scatterChart"),
+    {
+        type: "scatter",
+
+        data: {
+            datasets: Object.values(scatterByCluster),
+        },
+
+        options: {
+
+            responsive: true,
+
+            plugins: {
+
+                legend: {
+                    position: "top",
+                    display: true,
+                },
+
+                tooltip: {
+
+                    callbacks: {
+
+                        label: (ctx) => {
+
+                            return (
+                                ctx.dataset.label +
+                                " - " +
+                                ctx.raw.village
+                            );
+
+                        },
+
+                    },
+
+                },
+
+            },
+
+            scales: {
+
+                x: {
+
+                    title: {
+
+                        display: true,
+
+                        text: "Principal Component 1",
+
+                    },
+
+                },
+
+                y: {
+
+                    title: {
+
+                        display: true,
+
+                        text: "Principal Component 2",
+
+                    },
+
+                },
+
+            },
+
+        },
+
+    }
+);
+
+// ================= Radar Chart =================
+
+let radarChartInstance = null;
+
+function loadRadarChart(villageId) {
+
+    fetch(`/analytics/ml/radar/${villageId}/`)
+        .then(response => response.json())
+        .then(data => {
+
+            if (radarChartInstance) {
+                radarChartInstance.destroy();
+            }
+
+            radarChartInstance = new Chart(
+                document.getElementById("radarChart"),
+                {
+                    type: "radar",
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: data.village,
+                            data: data.values,
+                            backgroundColor: "rgba(25, 135, 84, 0.20)",
+                            borderColor: "#198754",
+                        }],
+                    },
+                    options: {
+                        scales: {
+                            r: {
+                                min: 0,
+                                max: 5,
+                            },
+                        },
+                    },
+                }
+            );
+
+        });
+
+}
+
+const radarSelect = document.getElementById("radar-village-select");
+
+if (radarSelect && radarSelect.value) {
+    loadRadarChart(radarSelect.value);
+}
+
+radarSelect.addEventListener("change", (event) => {
+    loadRadarChart(event.target.value);
+});
+
+// ================= Form Predict -> set action dinamis =================
+
+const predictForm = document.getElementById("predict-form");
+
+const predictVillageSelect = document.getElementById("predict-village");
+
+function setPredictFormAction() {
+    predictForm.action = `/analytics/ml/predict/${predictVillageSelect.value}/`;
+}
+
+predictVillageSelect.addEventListener("change", setPredictFormAction);
+
+setPredictFormAction();
+
+// ================= UX: konfirmasi & loading state =================
+
+const retrainForm = document.getElementById("retrain-form");
+
+const retrainBtn = document.getElementById("retrain-btn");
+
+retrainForm.addEventListener("submit", (event) => {
+
+    const confirmed = confirm(
+        "Retrain model akan menghitung ulang seluruh clustering " +
+        "dan feature importance berdasarkan data survey terbaru. " +
+        "Lanjutkan?"
+    );
+
+    if (!confirmed) {
+
+        event.preventDefault();
+
+        return;
+
+    }
+
+    retrainBtn.disabled = true;
+
+    retrainBtn.innerHTML = (
+        '<span class="spinner-border spinner-border-sm me-1"></span> Memproses...'
+    );
+
+});
+
+const predictBtn = document.getElementById("predict-btn");
+
+predictForm.addEventListener("submit", () => {
+
+    predictBtn.disabled = true;
+
+    predictBtn.innerText = "Memproses...";
+
+});
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends "base/crud_page.html" %}
+
+{% block title %}
+Survey Village Detail
+{% endblock %}
+
+{% block page_title %}
+Survey Village Detail
+{% endblock %}
+
+{% block crud_content %}
+
+<table class="table table-bordered">
+
+    <tr>
+
+        <th width="220">
+
+            Survey
+
+        </th>
+
+        <td>
+
+            {{ survey_village.survey.name }}
+
+        </td>
+
+    </tr>
+
+    <tr>
+
+        <th>
+
+            Village
+
+        </th>
+
+        <td>
+
+            {{ survey_village.village.name }}
+
+        </td>
+
+    </tr>
+
+    <tr>
+
+        <th>
+
+            Status
+
+        </th>
+
+        <td>
+
+            {% if survey_village.is_active %}
+
+                <span class="badge bg-success">
+
+                    Active
+
+                </span>
+
+            {% else %}
+
+                <span class="badge bg-danger">
+
+                    Inactive
+
+                </span>
+
+            {% endif %}
+
+        </td>
+
+    </tr>
+
+</table>
+
+<a
+    href="{% url 'survey:survey-village-list' %}"
+    class="btn btn-secondary">
+
+    Back
+
+</a>
+
+{% endblock %}

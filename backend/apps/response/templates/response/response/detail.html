@@ -1,0 +1,114 @@
+{% extends "base/crud_page.html" %}
+
+{% block title %}
+Response Detail
+{% endblock %}
+
+{% block page_title %}
+Response Detail
+{% endblock %}
+
+{% block crud_content %}
+
+<div class="alert alert-info">
+
+    <h5>Respondent Information</h5>
+
+    <hr>
+
+    <p><strong>Name :</strong> {{ respondent.name }}</p>
+
+    <p><strong>Total Score :</strong> {{ total_score }}</p>
+
+</div>
+
+<table class="table table-bordered table-hover">
+
+    <thead class="table-light">
+
+        <tr>
+
+            <th width="60">No</th>
+            <th>Question</th>
+            <th>Answer</th>
+            <th width="100">Score</th>
+            <th width="140">Action</th>
+
+        </tr>
+
+    </thead>
+
+    <tbody>
+
+        {% for response in responses %}
+
+        <tr>
+
+            <td>{{ forloop.counter }}</td>
+
+            <td>{{ response.questionnaire.question }}</td>
+
+            <td>
+
+                {% if response.questionnaire.answer_type == "boolean" %}
+
+                {{ response.answer_boolean|yesno:"Yes,No" }}
+
+                {% elif response.questionnaire.answer_type == "likert" %}
+
+                {{ response.answer_integer }}
+
+                {% elif response.questionnaire.answer_type == "integer" %}
+
+                {{ response.answer_integer }}
+
+                {% elif response.questionnaire.answer_type == "decimal" %}
+
+                {{ response.answer_decimal }}
+
+                {% else %}
+
+                {{ response.answer_text }}
+
+                {% endif %}
+
+            </td>
+
+            <td>{{ response.score }}</td>
+
+            <td>
+
+                <a href="{% url 'response:response-update' response.pk %}" class="btn btn-warning btn-sm">Edit</a>
+                <a href="{% url 'response:response-delete' response.pk %}" class="btn btn-danger btn-sm">Delete</a>
+
+            </td>
+
+        </tr>
+
+        {% empty %}
+
+        <tr>
+
+            <td colspan="5" class="text-center">
+
+                No Response Available
+
+            </td>
+
+        </tr>
+
+        {% endfor %}
+
+    </tbody>
+
+</table>
+
+<a
+    href="{% url 'response:response-list' %}"
+    class="btn btn-secondary">
+
+    Back
+
+</a>
+
+{% endblock %}

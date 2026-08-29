@@ -1,0 +1,314 @@
+{% extends "base/crud_page.html" %}
+
+{% block title %}
+Respondent
+{% endblock %}
+
+{% block page_title %}
+Respondent Management
+{% endblock %}
+
+{% block page_action %}
+
+<button type="button" class="btn btn-outline-secondary" onclick="history.back()">
+    <i class="bi bi-arrow-left me-1"></i> Kembali
+</button>
+
+<a href="{% url 'respondent:respondent-create' %}"
+   class="btn btn-primary">
+
+    + Add Respondent
+
+</a>
+
+<button
+    type="button"
+    class="btn btn-danger"
+    data-bs-toggle="modal"
+    data-bs-target="#deleteAllModal">
+
+    <i class="bi bi-trash me-1"></i> Hapus Semua
+
+</button>
+
+{% endblock %}
+
+{% block crud_content %}
+
+<div class="card shadow-sm">
+
+<div class="card-body">
+
+<form method="get" class="row g-3 mb-4">
+
+<div class="col-md-10">
+
+<input
+type="text"
+name="q"
+class="form-control"
+placeholder="Search respondent..."
+value="{{ request.GET.q }}">
+
+</div>
+
+<div class="col-md-2 d-grid">
+
+<button class="btn btn-primary">
+
+Search
+
+</button>
+
+</div>
+
+</form>
+
+<div class="table-responsive">
+
+<table class="table table-hover align-middle">
+
+<thead class="table-light">
+
+<tr>
+
+<th>No</th>
+
+<th>Name</th>
+
+<th>Village</th>
+
+<th>Survey</th>
+
+<th>Gender</th>
+
+<th width="260">
+
+Action
+
+</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for respondent in respondents %}
+
+<tr>
+
+<td>
+
+{{ forloop.counter }}
+
+</td>
+
+<td>
+
+<strong>
+
+{{ respondent.name }}
+
+</strong>
+
+</td>
+
+<td>
+
+{{ respondent.survey_village.village.name }}
+
+</td>
+
+<td>
+
+{{ respondent.survey_village.survey.name }}
+
+</td>
+
+<td>
+
+{% if respondent.gender == "M" %}
+
+<span class="badge bg-primary">
+
+Male
+
+</span>
+
+{% else %}
+
+<span class="badge bg-danger">
+
+Female
+
+</span>
+
+{% endif %}
+
+</td>
+
+<td>
+
+<div class="btn-group">
+
+<a href="{% url 'respondent:respondent-detail' respondent.pk %}"
+class="btn btn-info btn-sm">
+
+Detail
+
+</a>
+
+<a href="{% url 'respondent:respondent-update' respondent.pk %}"
+class="btn btn-warning btn-sm">
+
+Edit
+
+</a>
+
+<a href="{% url 'respondent:respondent-delete' respondent.pk %}"
+class="btn btn-danger btn-sm">
+
+Delete
+
+</a>
+
+<a href="{% url 'response:take-survey' respondent.pk %}"
+class="btn btn-success btn-sm">
+
+Survey
+
+</a>
+
+</div>
+
+</td>
+
+</tr>
+
+{% empty %}
+
+<tr>
+
+<td colspan="6" class="text-center text-muted">
+
+No respondent found.
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- ================= Modal Hapus Semua ================= -->
+
+<div class="modal fade" id="deleteAllModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <form method="post" action="{% url 'respondent:respondent-delete-all' %}">
+
+                {% csrf_token %}
+
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger">
+                        <i class="bi bi-exclamation-triangle me-1"></i>
+                        Hapus SEMUA Data Respondent
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+
+                    <p>
+                        Tindakan ini akan menghapus <strong>seluruh</strong>
+                        data respondent secara permanen, <strong>termasuk
+                        semua jawaban response</strong> milik mereka, dan
+                        tidak bisa dibatalkan.
+                    </p>
+
+                    <label class="form-label">
+                        Ketik <strong>HAPUS</strong> untuk konfirmasi:
+                    </label>
+
+                    <input
+                        type="text"
+                        name="confirm_text"
+                        id="confirmTextRespondent"
+                        class="form-control"
+                        autocomplete="off"
+                        oninput="document.getElementById('deleteAllSubmitRespondent').disabled = (this.value.trim().toUpperCase() !== 'HAPUS')">
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" id="deleteAllSubmitRespondent" class="btn btn-danger" disabled>
+                        Hapus Semua
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+
+{% if is_paginated %}
+
+<nav>
+<ul class="pagination justify-content-center">
+
+{% if page_obj.has_previous %}
+<li class="page-item">
+    <a class="page-link"
+       href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+        Previous
+    </a>
+</li>
+{% endif %}
+
+{% for i in paginator.page_range %}
+    {% if i >= page_obj.number|add:"-2" and i <= page_obj.number|add:"2" %}
+
+        {% if page_obj.number == i %}
+        <li class="page-item active">
+            <span class="page-link">{{ i }}</span>
+        </li>
+        {% else %}
+        <li class="page-item">
+            <a class="page-link"
+               href="?page={{ i }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+                {{ i }}
+            </a>
+        </li>
+        {% endif %}
+
+    {% endif %}
+{% endfor %}
+
+{% if page_obj.has_next %}
+<li class="page-item">
+    <a class="page-link"
+       href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+        Next
+    </a>
+</li>
+{% endif %}
+
+</ul>
+</nav>
+
+{% endif %}
+{% endblock %}

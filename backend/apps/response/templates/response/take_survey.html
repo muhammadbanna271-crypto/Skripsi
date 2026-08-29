@@ -1,0 +1,244 @@
+{% extends "base/base.html" %}
+
+{% block title %}
+Take Survey
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="card shadow">
+
+        <div class="card-header">
+
+            <h3>
+
+                Survey Form
+
+            </h3>
+
+        </div>
+
+        <div class="card-body">
+
+            <div class="alert alert-info">
+
+                <h5>
+
+                    Respondent Information
+
+                </h5>
+
+                <hr>
+
+                <p>
+
+                    <strong>Name :</strong>
+
+                    {{ respondent.name }}
+
+                </p>
+
+                <p>
+
+                    <strong>NIK :</strong>
+
+                    {{ respondent.nik }}
+
+                </p>
+
+                <p>
+
+                    <strong>Village :</strong>
+
+                    {{ respondent.survey_village.village.name }}
+
+                </p>
+
+                <p>
+
+                    <strong>Survey :</strong>
+
+                    {{ respondent.survey_village.survey.name }}
+
+                </p>
+
+            </div>
+
+            <form method="post">
+
+                {% csrf_token %}
+
+                {% for question in questionnaires %}
+
+                <div class="card mb-3">
+
+                    <div class="card-header bg-light">
+
+                        <strong>
+
+                            {{ question.indicator.variable.name }}
+
+                        </strong>
+
+                        <br>
+
+                        <small>
+
+                            {{ question.indicator.name }}
+
+                        </small>
+
+                    </div>
+
+                    <div class="card-body">
+
+                        <p>
+
+                            <strong>
+
+                                {{ question.question_order }}.
+
+                            </strong>
+
+                            {{ question.question }}
+
+                        </p>
+
+                        {% if question.answer_type == "boolean" %}
+
+                        <div class="form-check">
+
+                            <input
+                                class="form-check-input"
+                                type="radio"
+                                name="question_{{ question.id }}"
+                                value="1"
+                                required>
+
+                            <label class="form-check-label">
+
+                                Yes
+
+                            </label>
+
+                        </div>
+
+                        <div class="form-check">
+
+                            <input
+                                class="form-check-input"
+                                type="radio"
+                                name="question_{{ question.id }}"
+                                value="0">
+
+                            <label class="form-check-label">
+
+                                No
+
+                            </label>
+
+                        </div>
+
+                        {% elif question.answer_type == "likert" %}
+
+                        <div class="d-flex flex-wrap gap-3">
+
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="question_{{ question.id }}" value="1" required>
+                                <label class="form-check-label">1 - Sangat Tidak Setuju</label>
+                            </div>
+
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="question_{{ question.id }}" value="2">
+                                <label class="form-check-label">2 - Tidak Setuju</label>
+                            </div>
+
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="question_{{ question.id }}" value="3">
+                                <label class="form-check-label">3 - Netral</label>
+                            </div>
+
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="question_{{ question.id }}" value="4">
+                                <label class="form-check-label">4 - Setuju</label>
+                            </div>
+
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="question_{{ question.id }}" value="5">
+                                <label class="form-check-label">5 - Sangat Setuju</label>
+                            </div>
+
+                        </div>
+
+                        {% elif question.answer_type == "integer" %}
+
+                        <input
+                            type="number"
+                            class="form-control"
+                            name="question_{{ question.id }}"
+                            required>
+
+                        {% elif question.answer_type == "decimal" %}
+
+                        <input
+                            type="number"
+                            step="0.01"
+                            class="form-control"
+                            name="question_{{ question.id }}"
+                            required>
+
+                        {% elif question.answer_type == "text" %}
+
+                        <textarea
+                            rows="3"
+                            class="form-control"
+                            name="question_{{ question.id }}"
+                            required></textarea>
+
+                        {% elif question.answer_type == "choice" %}
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            name="question_{{ question.id }}"
+                            required>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+                {% endfor %}
+
+                <div class="mt-4">
+
+                    <button
+                        type="submit"
+                        class="btn btn-success">
+
+                        Submit Survey
+
+                    </button>
+
+                    <a
+                        href="{% url 'respondent:respondent-list' %}"
+                        class="btn btn-secondary">
+
+                        Cancel
+
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

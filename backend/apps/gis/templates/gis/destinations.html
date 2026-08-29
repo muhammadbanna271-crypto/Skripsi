@@ -1,0 +1,124 @@
+{% extends "base/layout.html" %}
+{% load gis_extras %}
+
+{% block title %}
+Destinasi Wisata
+{% endblock %}
+
+{% block content %}
+
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-4">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="page-title mb-1">Destinasi Wisata</h3>
+                <div class="page-subtitle">
+                    Daftar destinasi wisata Kota Batu beserta harga tiket
+                    weekday &amp; weekend.
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                {% if request.user.is_staff or request.user.is_superuser %}
+                <a href="{% url 'gis:manage-destination-create' %}" class="btn btn-success">
+                    <i class="bi bi-plus-circle me-1"></i> Tambah Destinasi
+                </a>
+                {% endif %}
+                <a href="{% url 'gis:map' %}" class="btn btn-outline-primary">
+                    <i class="bi bi-map"></i> Buka Peta
+                </a>
+            </div>
+        </div>
+
+        {% if destinations %}
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Nama</th>
+                        <th>Desa/Kelurahan</th>
+                        <th>Kecamatan</th>
+                        <th>Tipe</th>
+                        <th>Kategori</th>
+                        <th>Tipe Harga</th>
+                        <th class="text-end">Harga Weekday</th>
+                        <th class="text-end">Harga Weekend</th>
+                        <th>Jam Operasional</th>
+                        <th>Hari Tutup</th>
+                        <th>Google Maps</th>
+                        {% if request.user.is_staff or request.user.is_superuser %}
+                        <th>Aksi</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for dest in destinations %}
+                    <tr>
+                        <td class="fw-semibold">{{ dest.name }}</td>
+                        <td>{{ dest.village.name|default:"—" }}</td>
+                        <td>{{ dest.effective_district.name|default:"—" }}</td>
+                        <td>{{ dest.tourism_type|default:"—" }}</td>
+                        <td>
+                            {% for category in dest.categories.all %}
+                                <span class="badge bg-light text-dark border">
+                                    {{ category.name }}
+                                </span>
+                            {% empty %}
+                                —
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {% if dest.is_free %}Gratis{% else %}{{ dest.get_ticket_type_display }}{% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if dest.ticket_price_weekday %}
+                                {{ dest.ticket_price_weekday|idr }}
+                            {% else %}
+                                <span class="text-muted">belum tersedia</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if dest.ticket_price_weekend %}
+                                {{ dest.ticket_price_weekend|idr }}
+                            {% else %}
+                                <span class="text-muted">belum tersedia</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ dest.operating_hours_display }}</td>
+                        <td>{{ dest.closed_days_display }}</td>
+                        <td>
+                            <a href="{{ dest.google_maps_url }}" target="_blank" rel="noopener">
+                                Buka Google Maps
+                            </a>
+                        </td>
+                        {% if request.user.is_staff or request.user.is_superuser %}
+                        <td class="text-nowrap">
+                            <a href="{% url 'gis:manage-destination-update' dest.pk %}" class="btn btn-outline-warning btn-sm">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% else %}
+
+        <div class="text-center text-muted py-5">
+            <i class="bi bi-signpost-2-fill" style="font-size: 2rem;"></i>
+            <p class="mt-3 mb-1 fw-semibold">Belum ada destinasi wisata.</p>
+            <p class="small">
+                Tambahkan destinasi lewat Django admin (staff/superuser)
+                untuk mulai mengisi data pariwisata Kota Batu.
+            </p>
+        </div>
+
+        {% endif %}
+
+    </div>
+</div>
+
+{% endblock %}

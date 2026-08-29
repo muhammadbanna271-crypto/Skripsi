@@ -1,0 +1,92 @@
+{% extends "base/crud_page.html" %}
+
+{% block title %}
+Kategori Wisata
+{% endblock %}
+
+{% block page_title %}
+Kategori Wisata
+{% endblock %}
+
+{% block page_subtitle %}
+Kelola kategori/jenis wisata.
+{% endblock %}
+
+{% block page_action %}
+<a href="{% url 'gis:manage-category-create' %}" class="btn btn-success rounded-3 px-4">
+    <i class="bi bi-plus-circle me-2"></i>
+    Tambah Kategori
+</a>
+{% endblock %}
+
+{% block search %}
+<form method="get">
+    <div class="row g-3">
+        <div class="col-md-5">
+            <input type="search" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Cari kategori...">
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-success"><i class="bi bi-search me-2"></i>Cari</button>
+        </div>
+        {% if request.GET.q %}
+        <div class="col-auto">
+            <a href="{% url 'gis:manage-category-list' %}" class="btn btn-outline-secondary">Reset</a>
+        </div>
+        {% endif %}
+    </div>
+</form>
+{% endblock %}
+
+{% block crud_content %}
+<div class="table-responsive">
+    <table class="table align-middle">
+        <thead>
+            <tr>
+                <th>Nama Kategori</th>
+                <th>Deskripsi</th>
+                <th>Status</th>
+                <th class="text-center">Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in categories %}
+            <tr>
+                <td class="fw-semibold">{{ c.name }}</td>
+                <td>{{ c.description|default:"—" }}</td>
+                <td>
+                    {% if c.is_active %}
+                    <span class="badge bg-success">Aktif</span>
+                    {% else %}
+                    <span class="badge bg-danger">Nonaktif</span>
+                    {% endif %}
+                </td>
+                <td class="text-center text-nowrap">
+                    <a href="{% url 'gis:manage-category-update' c.pk %}" class="btn btn-outline-warning btn-sm"><i class="bi bi-pencil"></i></a>
+                    <a href="{% url 'gis:manage-category-delete' c.pk %}" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i></a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" class="text-center py-5 text-muted">Belum ada kategori wisata.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if is_paginated %}
+<nav class="mt-4">
+    <ul class="pagination justify-content-end">
+        {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+        {% endif %}
+        {% for i in paginator.page_range %}
+        <li class="page-item {% if page_obj.number == i %}active{% endif %}"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

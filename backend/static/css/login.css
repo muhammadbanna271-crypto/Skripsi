@@ -1,0 +1,221 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:"Segoe UI",sans-serif;
+}
+
+body{
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    overflow:hidden;
+    background:#edf5ef;
+    position:relative;
+}
+
+/* Background */
+.background{
+    position:fixed;
+    inset:0;
+    background:
+        linear-gradient(rgba(255,255,255,.35),rgba(255,255,255,.35)),
+        url("../images/login-bg.png");
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+    z-index:-2;
+}
+
+/* Glow */
+body::before{
+    content:"";
+    position:absolute;
+    width:550px;
+    height:550px;
+    background:#7fd18d55;
+    border-radius:50%;
+    filter:blur(150px);
+    z-index:-1;
+}
+
+/* Card */
+.login-card{
+    width:440px;
+    padding:45px;
+    border-radius:28px;
+
+    background:rgba(255,255,255,.85);
+    backdrop-filter:blur(18px);
+
+    border:1px solid rgba(255,255,255,.6);
+
+    box-shadow:
+        0 20px 60px rgba(0,0,0,.12),
+        0 10px 30px rgba(0,0,0,.05);
+
+    animation:fade .7s ease;
+}
+
+/* Logo */
+.logo{
+    text-align:center;
+    margin-bottom:35px;
+}
+
+.logo img{
+    width:95px;
+    margin-bottom:15px;
+}
+
+.logo h1{
+    font-size:34px;
+    color:#18492c;
+    margin-bottom:10px;
+}
+
+.logo p{
+    color:#6d6d6d;
+    line-height:1.6;
+    font-size:15px;
+}
+
+/* Field */
+.field{
+    margin-bottom:22px;
+}
+
+.field label{
+    display:block;
+    margin-bottom:8px;
+    font-weight:600;
+    color:#333;
+}
+
+/* Input */
+.input-box{
+    display:flex;
+    align-items:center;
+    border-radius:14px;
+    border:2px solid #e8ece8;
+    background:white;
+    padding:0 16px;
+    transition:.25s;
+    box-shadow:0 3px 8px rgba(0,0,0,.03);
+}
+
+.input-box:focus-within{
+    border-color:#1f8f4e;
+    box-shadow:0 0 0 4px rgba(31,143,78,.15);
+}
+
+.input-box i{
+    color:#1f8f4e;
+    margin-right:12px;
+}
+
+.input-box input{
+    flex:1;
+    border:none;
+    outline:none;
+    padding:15px 0;
+    background:transparent;
+    font-size:15px;
+}
+
+/* Django form */
+.input-box input[type=text],
+.input-box input[type=password]{
+    width:100%;
+}
+
+/* Eye button */
+#showPassword{
+    border:none;
+    background:none;
+    cursor:pointer;
+    color:#777;
+    font-size:17px;
+    transition:.25s;
+}
+
+#showPassword:hover{
+    color:#1f8f4e;
+}
+
+/* Error */
+.error{
+    margin-bottom:18px;
+    padding:13px;
+    border-radius:10px;
+    background:#ffe9e9;
+    color:#cc2c2c;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:14px;
+}
+
+/* Button */
+.login-btn{
+    width:100%;
+    margin-top:12px;
+    padding:15px;
+    border:none;
+    border-radius:14px;
+    background:#1f8f4e;
+    color:white;
+    font-size:16px;
+    font-weight:600;
+    cursor:pointer;
+    transition:.25s;
+}
+
+.login-btn:hover{
+    background:#16673a;
+    transform:translateY(-2px);
+}
+
+/* Footer */
+footer{
+    margin-top:35px;
+    text-align:center;
+    color:#777;
+    font-size:13px;
+    line-height:1.8;
+}
+
+footer span{
+    display:block;
+    margin-top:10px;
+}
+
+/* Animation */
+@keyframes fade{
+    from{
+        opacity:0;
+        transform:translateY(25px);
+    }
+    to{
+        opacity:1;
+        transform:none;
+    }
+}
+
+/* Responsive */
+@media (max-width:600px){
+
+    .login-card{
+        width:92%;
+        padding:30px;
+    }
+
+    .logo img{
+        width:75px;
+    }
+
+    .logo h1{
+        font-size:28px;
+    }
+}

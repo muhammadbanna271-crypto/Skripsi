@@ -1,0 +1,43 @@
+{% extends "base/crud_page.html" %}
+
+{% block title %}
+Delete Indicator
+{% endblock %}
+
+{% block page_title %}
+Delete Indicator
+{% endblock %}
+
+{% block crud_content %}
+
+<form method="post">
+
+    {% csrf_token %}
+
+    <div class="alert alert-danger">
+
+        Are you sure you want to delete
+
+        <strong>{{ indicator.name }}</strong>?
+
+    </div>
+
+    <button
+        type="submit"
+        class="btn btn-danger">
+
+        Delete
+
+    </button>
+
+    <a
+        href="{% url 'master:indicator-list' %}"
+        class="btn btn-secondary">
+
+        Cancel
+
+    </a>
+
+</form>
+
+{% endblock %}

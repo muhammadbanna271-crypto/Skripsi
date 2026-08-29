@@ -1,0 +1,996 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peta Analisis Desa Wisata — TRIP</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+        rel="stylesheet">
+    <link
+        href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"
+        rel="stylesheet">
+
+    <style>
+        html, body { height: 100%; margin: 0; }
+        body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+
+        .map-topbar {
+            height: 56px;
+            background: #14532d;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 0 16px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+            position: relative;
+            z-index: 1100;
+        }
+        .map-topbar .brand { font-weight: 700; }
+        .map-topbar .title { font-size: 0.92rem; opacity: 0.85; }
+        .map-topbar .spacer { flex: 1; }
+        .map-topbar .tb-btn {
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.35);
+            border-radius: 8px;
+            padding: 5px 12px;
+            font-size: 0.8rem;
+            background: transparent;
+            text-decoration: none;
+            cursor: pointer;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .map-topbar .tb-btn:hover {
+            background: rgba(255,255,255,0.12);
+        }
+        .map-topbar .tb-back {
+            background: rgba(255,255,255,0.16);
+            border-color: rgba(255,255,255,0.5);
+            font-weight: 600;
+        }
+        .map-topbar .tb-back:hover {
+            background: rgba(255,255,255,0.24);
+        }
+
+        #map { height: calc(100vh - 56px); width: 100%; }
+
+        .legend-panel {
+            position: absolute;
+            right: 12px;
+            top: 68px;
+            z-index: 1000;
+            background: #fff;
+            border: 1px solid #e1e0d9;
+            border-radius: 10px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+            padding: 12px 14px;
+            width: 220px;
+            max-height: 80vh;
+            overflow-y: auto;
+            font-size: 0.78rem;
+        }
+        .legend-panel h6 {
+            font-size: 0.78rem;
+            font-weight: 700;
+            margin: 0 0 8px;
+            color: #22301f;
+        }
+        .legend-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 5px;
+        }
+        .legend-swatch {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+            flex-shrink: 0;
+            border: 1px solid rgba(0,0,0,0.12);
+        }
+        .legend-group { margin-bottom: 12px; }
+        .legend-divider { border-top: 1px solid #eef2ec; margin: 10px 0; }
+
+        .data-banner {
+            position: absolute;
+            left: 12px;
+            top: 68px;
+            z-index: 1000;
+            max-width: 360px;
+            background: #fff7e6;
+            border: 1px solid #f0d48a;
+            color: #6b4d00;
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 0.8rem;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+        }
+
+        /* ============== Drawer Kelola Data ============== */
+        .manage-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 40, 25, 0.4);
+            z-index: 1199;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+        .manage-backdrop.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .manage-drawer {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 380px;
+            max-width: 100vw;
+            height: 100%;
+            background: #fff;
+            z-index: 1200;
+            box-shadow: -8px 0 30px rgba(0,0,0,0.18);
+            transform: translateX(100%);
+            transition: transform 0.28s ease;
+            display: flex;
+            flex-direction: column;
+            border-top-left-radius: 16px;
+            border-bottom-left-radius: 16px;
+        }
+        .manage-drawer.open {
+            transform: translateX(0);
+        }
+        .manage-drawer-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            padding: 20px 20px 16px;
+            border-bottom: 1px solid #eef2ec;
+        }
+        .manage-drawer-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #22301f;
+        }
+        .manage-drawer-subtitle {
+            font-size: 0.8rem;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+        .manage-close {
+            border: none;
+            background: transparent;
+            font-size: 1.1rem;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 8px;
+        }
+        .manage-close:hover {
+            background: #f1f5f1;
+            color: #14532d;
+        }
+        .manage-drawer-body {
+            padding: 16px;
+            overflow-y: auto;
+            flex: 1;
+        }
+        .manage-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px;
+            border: 1px solid #e9efe6;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.15s ease;
+        }
+        .manage-card:hover {
+            border-color: #22c55e;
+            box-shadow: 0 4px 14px rgba(34,197,94,0.12);
+            transform: translateY(-1px);
+        }
+        .manage-card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: #eef7ec;
+            color: #166534;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+        .manage-card-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #22301f;
+        }
+        .manage-card-desc {
+            font-size: 0.76rem;
+            color: #6b7280;
+        }
+        .manage-card-arrow {
+            margin-left: auto;
+            color: #9fb3a2;
+        }
+        @media (max-width: 560px) {
+            .manage-drawer { width: 100%; }
+        }
+
+        .village-popup { line-height: 1.5; font-size: 0.85rem; }
+        .village-popup .name { font-weight: 700; font-size: 0.95rem; }
+        .village-popup .muted { color: #898781; }
+    </style>
+</head>
+<body>
+
+<div class="map-topbar">
+    <span class="brand"><i class="bi bi-tree"></i> TRIP</span>
+    <span class="title">Peta Analisis Desa Wisata — Kota Batu</span>
+    <span class="spacer"></span>
+    <a href="{% url 'dashboard:dashboard' %}" class="tb-btn tb-back">
+        <i class="bi bi-arrow-left"></i> Dashboard
+    </a>
+    <a href="{% url 'chatbot:chat-page' %}" target="_blank" class="tb-btn">
+        <i class="bi bi-chat-heart"></i> PRUDENCE
+    </a>
+    {% if request.user.is_staff or request.user.is_superuser %}
+    <a href="{% url 'gis:manage-destination-create' %}" class="tb-btn">
+        <i class="bi bi-plus-circle"></i> Tambah Destinasi
+    </a>
+    <button type="button" id="manage-btn" class="tb-btn">
+        <i class="bi bi-gear"></i> Kelola Data
+    </button>
+    {% endif %}
+    <button type="button" id="fullscreen-btn" class="tb-btn">
+        <i class="bi bi-arrows-fullscreen"></i> Fullscreen
+    </button>
+</div>
+
+<div id="map"></div>
+
+<div id="data-banner" class="data-banner" style="display:none;"></div>
+
+<div class="legend-panel" id="legend-panel">
+    <h6><i class="bi bi-palette"></i> Legenda</h6>
+    {% if request.user.is_staff or request.user.is_superuser %}
+    <div id="legend-clusters" class="legend-group"></div>
+    <div class="legend-divider"></div>
+    <div id="legend-elevation" class="legend-group"></div>
+    <div id="legend-climate" class="legend-group"></div>
+    <div class="legend-divider"></div>
+    <div id="legend-characteristic" class="legend-group"></div>
+    {% else %}
+    <div id="legend-climate" class="legend-group"></div>
+    {% endif %}
+    <div class="text-muted small mt-1">
+        Gunakan kontrol lapisan (ikon pojok kanan atas) untuk menyalakan /
+        mematikan layer.
+    </div>
+</div>
+
+{% if request.user.is_staff or request.user.is_superuser %}
+<div id="manage-backdrop" class="manage-backdrop"></div>
+
+<aside id="manage-drawer" class="manage-drawer" aria-hidden="true">
+    <div class="manage-drawer-header">
+        <div>
+            <div class="manage-drawer-title">Kelola Data</div>
+            <div class="manage-drawer-subtitle">
+                Kelola informasi wilayah dan data pariwisata.
+            </div>
+        </div>
+        <button type="button" id="manage-close" class="manage-close" aria-label="Tutup">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+    <div class="manage-drawer-body">
+        <a href="{% url 'gis:manage-characteristic-list' %}" class="manage-card">
+            <div class="manage-card-icon"><i class="bi bi-pin-map"></i></div>
+            <div>
+                <div class="manage-card-title">Karakteristik Wilayah</div>
+                <div class="manage-card-desc">Kelola keunikan dan karakteristik setiap wilayah.</div>
+            </div>
+            <i class="bi bi-chevron-right manage-card-arrow"></i>
+        </a>
+        <a href="{% url 'gis:manage-elevation-list' %}" class="manage-card">
+            <div class="manage-card-icon"><i class="bi bi-mountains"></i></div>
+            <div>
+                <div class="manage-card-title">Elevasi Wilayah</div>
+                <div class="manage-card-desc">Kelola data ketinggian dan statistik elevasi wilayah.</div>
+            </div>
+            <i class="bi bi-chevron-right manage-card-arrow"></i>
+        </a>
+        <a href="{% url 'gis:manage-category-list' %}" class="manage-card">
+            <div class="manage-card-icon"><i class="bi bi-tags"></i></div>
+            <div>
+                <div class="manage-card-title">Kategori Wisata</div>
+                <div class="manage-card-desc">Kelola kategori/jenis wisata.</div>
+            </div>
+            <i class="bi bi-chevron-right manage-card-arrow"></i>
+        </a>
+        <a href="{% url 'gis:manage-destination-list' %}" class="manage-card">
+            <div class="manage-card-icon"><i class="bi bi-signpost-2"></i></div>
+            <div>
+                <div class="manage-card-title">Destinasi Wisata</div>
+                <div class="manage-card-desc">Kelola data destinasi wisata Kota Batu.</div>
+            </div>
+            <i class="bi bi-chevron-right manage-card-arrow"></i>
+        </a>
+    </div>
+</aside>
+{% endif %}
+
+{{ data_status|json_script:"data-status" }}
+
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+const DATA_STATUS = JSON.parse(
+    document.getElementById("data-status").textContent
+);
+
+// URL detail desa: "master/village/0/" -> ganti "0" dengan id asli.
+const VILLAGE_DETAIL_URL = "{% url 'master:village-detail' 0 %}";
+
+// URL kelola destinasi (edit/delete) untuk staff.
+const DEST_EDIT_URL = "{% url 'gis:manage-destination-update' 0 %}";
+const DEST_DELETE_URL = "{% url 'gis:manage-destination-delete' 0 %}";
+const IS_STAFF = {% if request.user.is_staff or request.user.is_superuser %}true{% else %}false{% endif %};
+
+// ============================== INIT MAP ==============================
+
+// Batas tampilan: area Kota Batu (dengan sedikit padding). Format Leaflet
+// maxBounds = [[latSelatan, lonBarat], [latUtara, lonTimur]].
+const KOTA_BATU_BOUNDS = [
+    [-7.93, 112.48],  // barat daya
+    [-7.74, 112.61],  // timur laut
+];
+
+const map = L.map("map", {
+    center: [-7.8695, 112.5236],
+    zoom: 12,
+    minZoom: 11,
+    maxZoom: 18,
+    maxBounds: KOTA_BATU_BOUNDS,
+    maxBoundsViscosity: 1.0,
+    zoomControl: true,
+});
+
+const osm = L.tileLayer(
+    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    {
+        maxZoom: 19,
+        attribution: "&copy; OpenStreetMap contributors",
+    }
+).addTo(map);
+
+// ============================== STATE ==============================
+
+let clusterColorMap = {};
+let elevationClasses = [];
+let characteristicOptions = [];
+let categoricalPalette = [];
+let clusterLayerGroup = null;
+let elevationLayerGroup = null;
+let characteristicLayerGroup = null;
+
+// ============================== HELPERS ==============================
+
+function el(tag, attrs, children) {
+    const node = document.createElement(tag);
+    if (attrs) {
+        for (const [k, v] of Object.entries(attrs)) {
+            if (k === "className") node.className = v;
+            else if (k === "innerHTML") node.innerHTML = v;
+            else node.setAttribute(k, v);
+        }
+    }
+    if (children) children.forEach((c) => node.appendChild(c));
+    return node;
+}
+
+function fmtIDR(n) {
+    if (n === null || n === undefined) return null;
+    return "Rp" + Number(n).toLocaleString("id-ID");
+}
+
+function elevationClassOf(mean) {
+    if (mean === null || mean === undefined) return null;
+    for (const cls of elevationClasses) {
+        const minOk = mean >= (cls.min ?? -Infinity);
+        const maxOk = cls.max === null ? true : mean < cls.max;
+        if (minOk && maxOk) return cls;
+    }
+    return null;
+}
+
+// Color ramp untuk layer ketinggian & suhu (nilai -> warna interpolasi).
+const ELEV_STOPS = [[0, 46, 125, 50], [0.5, 240, 200, 60], [1, 101, 67, 33]];
+const TEMP_STOPS = [[0, 33, 150, 243], [0.5, 240, 200, 60], [1, 220, 50, 47]];
+
+function rampColor(value, min, max, stops) {
+    if (value === null || value === undefined || isNaN(value)) return "#d1d5db";
+    if (max === min) {
+        const s = stops[Math.floor(stops.length / 2)];
+        return `rgb(${s[1]},${s[2]},${s[3]})`;
+    }
+    let t = (value - min) / (max - min);
+    t = Math.max(0, Math.min(1, t));
+    for (let i = 0; i < stops.length - 1; i++) {
+        const a = stops[i];
+        const b = stops[i + 1];
+        if (t <= b[0]) {
+            const u = (t - a[0]) / (b[0] - a[0] || 1);
+            const r = Math.round(a[1] + (b[1] - a[1]) * u);
+            const g = Math.round(a[2] + (b[2] - a[2]) * u);
+            const bl = Math.round(a[3] + (b[3] - a[3]) * u);
+            return `rgb(${r},${g},${bl})`;
+        }
+    }
+    const last = stops[stops.length - 1];
+    return `rgb(${last[1]},${last[2]},${last[3]})`;
+}
+
+function villagePopupHTML(props) {
+    const cluster = props.cluster
+        ? props.cluster.name
+        : "Belum dianalisis";
+    const elev = props.elevation;
+    const elevText = elev && elev.mean !== null
+        ? `${elev.mean} m (${elev.min}–${elev.max} m)`
+        : "belum tersedia";
+
+    const chars = (props.characteristics || [])
+        .slice(0, 3)
+        .map((c) => `${c.name}: ${c.value}`)
+        .join("<br>") || "belum tersedia";
+
+    const score = props.score && props.score.total_score !== null
+        ? `${props.score.total_score} (peringkat #${props.score.rank ?? "-"})`
+        : "belum tersedia";
+
+    const detailUrl = props.village_id
+        ? VILLAGE_DETAIL_URL.replace("/0/", `/${props.village_id}/`)
+        : "#";
+
+    return `
+        <div class="village-popup">
+            <div class="name">${props.village_name || ""}</div>
+            <div class="muted">Kecamatan ${props.district_name || "-"}</div>
+            <br>
+            <b>Cluster:</b> ${cluster}<br>
+            <b>Skor:</b> ${score}<br>
+            <b>Elevasi:</b> ${elevText}<br>
+            <b>Karakteristik:</b><br>${chars}<br>
+            <b>Destinasi wisata:</b> ${props.destination_count ?? 0}<br>
+            <br>
+            <a href="${detailUrl}">Lihat Detail Desa</a>
+        </div>
+    `;
+}
+
+function bindPopupAndHover(layer, props) {
+    layer.bindPopup(villagePopupHTML(props));
+    const defaultStyle = layer.options;
+    layer.on("mouseover", function () {
+        layer.setStyle({ weight: 3, color: "#111827", fillOpacity: 0.85 });
+        layer.bringToFront();
+    });
+    layer.on("mouseout", function () {
+        layer.setStyle(defaultStyle);
+    });
+}
+
+function styleByCluster(feature) {
+    const code = feature.properties.cluster?.code;
+    const color = code && clusterColorMap[code]
+        ? clusterColorMap[code]
+        : "#9ca3af";
+    return { color: "#ffffff", weight: 1, fillColor: color, fillOpacity: 0.55 };
+}
+
+function styleByElevation(feature) {
+    const mean = feature.properties.elevation?.mean ?? null;
+    const cls = elevationClassOf(mean);
+    const color = cls ? cls.color : "#d1d5db";
+    return { color: "#ffffff", weight: 1, fillColor: color, fillOpacity: 0.55 };
+}
+
+// ============================== LOAD DATA ==============================
+
+async function loadJson(url) {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`Gagal memuat ${url} (${resp.status})`);
+    return resp.json();
+}
+
+async function init() {
+    // Destinasi (publik) selalu dimuat.
+    const destinations = await loadJson("{% url 'gis:api-destinations-geojson' %}");
+
+    let legend = { clusters: [], elevation_classes: [], characteristics: [], palette: [] };
+    let villages = { type: "FeatureCollection", features: [] };
+    let villagePoints = { type: "FeatureCollection", features: [] };
+
+    if (IS_STAFF) {
+        // Data riset (clustering/skor desa) hanya untuk staff.
+        [legend, villages, villagePoints] = await Promise.all([
+            loadJson("{% url 'gis:api-legend' %}"),
+            loadJson("{% url 'gis:api-villages-geojson' %}"),
+            loadJson("{% url 'gis:api-villages-points-geojson' %}"),
+        ]);
+    }
+
+    clusterColorMap = {};
+    for (const c of legend.clusters || []) {
+        clusterColorMap[c.code] = c.color;
+    }
+    elevationClasses = legend.elevation_classes || [];
+    characteristicOptions = legend.characteristics || [];
+    categoricalPalette = legend.palette || [];
+
+    if (IS_STAFF) {
+        renderLegend(legend);
+    }
+
+    // --- Boundary layer (netral) ---
+    const boundaryLayer = L.geoJSON(villages, {
+        style: {
+            color: "#6b7280",
+            weight: 1,
+            fillColor: "#e5e7eb",
+            fillOpacity: 0.15,
+        },
+        onEachFeature: function (feature, layer) {
+            bindPopupAndHover(layer, feature.properties);
+        },
+    });
+
+    // --- Cluster layer ---
+    const clusterLayer = L.geoJSON(villages, {
+        style: styleByCluster,
+        onEachFeature: function (feature, layer) {
+            bindPopupAndHover(layer, feature.properties);
+        },
+    });
+    clusterLayerGroup = clusterLayer;
+
+    // --- Elevation layer ---
+    const elevationLayer = L.geoJSON(villages, {
+        style: styleByElevation,
+        onEachFeature: function (feature, layer) {
+            bindPopupAndHover(layer, feature.properties);
+        },
+    });
+    elevationLayerGroup = elevationLayer;
+
+    // --- Characteristic layer (kosong dulu, diisi bila ada data) ---
+    const characteristicLayer = L.layerGroup();
+    characteristicLayerGroup = characteristicLayer;
+
+    // --- Village points (titik pusat desa, fallback bila tanpa polygon) ---
+    const villagePointsLayer = L.geoJSON(villagePoints, {
+        pointToLayer: function (feature, latlng) {
+            const code = feature.properties.cluster?.code;
+            const color = code && clusterColorMap[code]
+                ? clusterColorMap[code]
+                : "#6b7280";
+            return L.circleMarker(latlng, {
+                radius: 6,
+                color: "#ffffff",
+                weight: 1.5,
+                fillColor: color,
+                fillOpacity: 0.9,
+            });
+        },
+        onEachFeature: function (feature, layer) {
+            bindPopupAndHover(layer, feature.properties);
+        },
+    });
+
+    // --- Destination layer ---
+    const destinationLayer = L.geoJSON(destinations, {
+        pointToLayer: function (feature, latlng) {
+            return L.circleMarker(latlng, {
+                radius: 11,
+                color: "#ffffff",
+                weight: 2,
+                fillColor: "#e34948",
+                fillOpacity: 0.95,
+            });
+        },
+        onEachFeature: function (feature, layer) {
+            const p = feature.properties;
+            const editUrl = p.id ? DEST_EDIT_URL.replace("/0/", `/${p.id}/`) : "#";
+            const deleteUrl = p.id ? DEST_DELETE_URL.replace("/0/", `/${p.id}/`) : "#";
+            const adminLinks = IS_STAFF
+                ? `<br><a href="${editUrl}" class="text-decoration-none">Edit</a> ·
+                   <a href="${deleteUrl}" class="text-danger text-decoration-none">Hapus</a>`
+                : "";
+
+            const priceLine = p.is_free
+                ? "Gratis"
+                : (p.price_display || "belum tersedia");
+            const parkingLine = p.parking_display
+                ? ` · Parkir: ${p.parking_display}`
+                : "";
+            const rideLines = p.ride_prices_display
+                ? `<br><b>Wahana:</b><br>${p.ride_prices_display}`
+                : "";
+            const bundleLines = p.bundle_prices_display
+                ? `<br><b>Bundle:</b><br>${p.bundle_prices_display}`
+                : "";
+            const mapsLink = p.google_maps_url
+                ? `<br><a href="${p.google_maps_url}" target="_blank" rel="noopener">Buka Google Maps</a>`
+                : "";
+            const elevLine = p.elevation_meters != null
+                ? `<b>Ketinggian:</b> ±${Math.round(p.elevation_meters)} mdpl (${p.elevation_source || "DEM"})<br>`
+                : "";
+            const tempLine = p.temperature_c != null
+                ? `<b>Suhu:</b> ±${p.temperature_c} °C (${p.temperature_source || "—"})<br>`
+                : "";
+
+            layer.bindPopup(`
+                <div class="village-popup">
+                    <div class="name">${p.name}</div>
+                    <div class="muted">${p.village_name || ""} · ${p.tourism_type || "wisata"}</div>
+                    <br>
+                    <b>Status:</b> ${p.status_label || "—"}<br>
+                    <b>Harga:</b> ${priceLine}${parkingLine}<br>
+                    <b>Jam:</b> ${p.operating_hours_display || "belum tersedia"}<br>
+                    ${elevLine}
+                    ${tempLine}
+                    <b>Hari tutup:</b> ${p.closed_days_display || "belum tersedia"}
+                    ${rideLines}
+                    ${bundleLines}
+                    ${mapsLink}
+                    ${adminLinks}
+                </div>
+            `);
+        },
+    });
+
+    // --- Destination elevation & temperature (point coloring) ---
+    const destFeatures = destinations.features || [];
+    let elevMin = Infinity, elevMax = -Infinity;
+    let tempMin = Infinity, tempMax = -Infinity;
+    destFeatures.forEach(function (f) {
+        const ev = f.properties.elevation_meters;
+        if (ev != null && !isNaN(ev)) {
+            elevMin = Math.min(elevMin, ev);
+            elevMax = Math.max(elevMax, ev);
+        }
+        const tc = f.properties.temperature_c;
+        if (tc != null && !isNaN(tc)) {
+            tempMin = Math.min(tempMin, tc);
+            tempMax = Math.max(tempMax, tc);
+        }
+    });
+    const hasElevation = elevMin !== Infinity;
+    const hasTemperature = tempMin !== Infinity;
+
+    renderClimateLegend(elevMin, elevMax, tempMin, tempMax, hasElevation, hasTemperature);
+
+    const destinationElevationLayer = L.geoJSON(destinations, {
+        pointToLayer: function (feature, latlng) {
+            return L.circleMarker(latlng, {
+                radius: 10,
+                color: "#ffffff",
+                weight: 1.5,
+                fillColor: rampColor(
+                    feature.properties.elevation_meters,
+                    elevMin, elevMax, ELEV_STOPS
+                ),
+                fillOpacity: 0.85,
+            });
+        },
+        onEachFeature: function (feature, layer) {
+            const p = feature.properties;
+            layer.bindPopup(`<div class="village-popup">
+                <div class="name">${p.name}</div>
+                <div class="muted">Ketinggian ±${Math.round(p.elevation_meters)} mdpl (${p.elevation_source || "DEM"})</div>
+            </div>`);
+        },
+    });
+
+    const destinationTemperatureLayer = L.geoJSON(destinations, {
+        pointToLayer: function (feature, latlng) {
+            return L.circleMarker(latlng, {
+                radius: 10,
+                color: "#ffffff",
+                weight: 1.5,
+                fillColor: rampColor(
+                    feature.properties.temperature_c,
+                    tempMin, tempMax, TEMP_STOPS
+                ),
+                fillOpacity: 0.85,
+            });
+        },
+        onEachFeature: function (feature, layer) {
+            const p = feature.properties;
+            layer.bindPopup(`<div class="village-popup">
+                <div class="name">${p.name}</div>
+                <div class="muted">Suhu ±${p.temperature_c} °C (${p.temperature_source || "—"})</div>
+            </div>`);
+        },
+    });
+
+    // --- Layer control ---
+    const overlays = {
+        "Ketinggian Destinasi": destinationElevationLayer,
+        "Persebaran Suhu": destinationTemperatureLayer,
+        "Destinasi Wisata": destinationLayer,
+    };
+    if (IS_STAFF) {
+        overlays["Batas Desa/Kelurahan"] = boundaryLayer;
+        overlays["Hasil Clustering"] = clusterLayer;
+        overlays["Titik Desa"] = villagePointsLayer;
+        overlays["Elevasi Wilayah"] = elevationLayer;
+        overlays["Karakteristik Wilayah"] = characteristicLayer;
+    }
+
+    L.control.layers(
+        { "OpenStreetMap": osm },
+        overlays,
+        { collapsed: false }
+    ).addTo(map);
+
+    // Tampilkan layer default + destinasi.
+    if (IS_STAFF) {
+        villagePointsLayer.addTo(map);
+        clusterLayer.addTo(map);
+    }
+    destinationLayer.addTo(map);
+
+    if (IS_STAFF) {
+        renderDataBanner(villages, villagePoints, destinations);
+    }
+}
+
+function renderLegend(legend) {
+    const clusterBox = document.getElementById("legend-clusters");
+    clusterBox.innerHTML = "";
+    if (legend.clusters && legend.clusters.length) {
+        const title = el("div", { className: "text-muted small mb-1" },
+            [document.createTextNode("Hasil Clustering")]);
+        clusterBox.appendChild(title);
+        for (const c of legend.clusters) {
+            const row = el("div", { className: "legend-row" });
+            row.appendChild(el("span", {
+                className: "legend-swatch",
+                style: `background:${c.color}`,
+            }));
+            row.appendChild(el("span", {},
+                [document.createTextNode(`${c.name} (${c.count})`)]));
+            clusterBox.appendChild(row);
+        }
+    } else {
+        clusterBox.appendChild(el("div", { className: "text-muted" },
+            [document.createTextNode("Clustering belum dijalankan.")]));
+    }
+
+    const elevBox = document.getElementById("legend-elevation");
+    elevBox.innerHTML = "";
+    if (elevationClasses.length) {
+        const title = el("div", { className: "text-muted small mb-1" },
+            [document.createTextNode("Elevasi Wilayah")]);
+        elevBox.appendChild(title);
+        for (const cls of elevationClasses) {
+            const range = cls.max === null
+                ? `≥ ${cls.min} m`
+                : `${cls.min}–${cls.max} m`;
+            const row = el("div", { className: "legend-row" });
+            row.appendChild(el("span", {
+                className: "legend-swatch",
+                style: `background:${cls.color}`,
+            }));
+            row.appendChild(el("span", {},
+                [document.createTextNode(`${cls.label} (${range})`)]));
+            elevBox.appendChild(row);
+        }
+    } else {
+        elevBox.appendChild(el("div", { className: "text-muted" },
+            [document.createTextNode("Data elevasi belum tersedia.")]));
+    }
+
+    const charBox = document.getElementById("legend-characteristic");
+    charBox.innerHTML = "";
+    if (characteristicOptions.length) {
+        const title = el("div", { className: "text-muted small mb-1" },
+            [document.createTextNode("Karakteristik Wilayah")]);
+        charBox.appendChild(title);
+        const select = el("select", { className: "form-select form-select-sm" });
+        const opt = el("option", { value: "" },
+            [document.createTextNode("— pilih karakteristik —")]);
+        select.appendChild(opt);
+        for (const c of characteristicOptions) {
+            select.appendChild(el("option", { value: c.name },
+                [document.createTextNode(c.name)]));
+        }
+        select.addEventListener("change", () => onCharacteristicChange(select.value));
+        charBox.appendChild(select);
+    } else {
+        charBox.appendChild(el("div", { className: "text-muted" },
+            [document.createTextNode("Data karakteristik belum tersedia.")]));
+    }
+}
+
+function rampLegend(title, stops, min, max, unit) {
+    const grad = stops
+        .map((s) => `rgb(${s[1]},${s[2]},${s[3]}) ${Math.round(s[0] * 100)}%`)
+        .join(", ");
+    const group = el("div", { className: "legend-group" });
+    group.appendChild(el("div", { className: "text-muted small mb-1" },
+        [document.createTextNode(title)]));
+    group.appendChild(el("div", {
+        style: `height:10px;border-radius:5px;border:1px solid #e5e7eb;` +
+            `background:linear-gradient(to right, ${grad});`,
+    }));
+    const labels = el("div", { className: "d-flex justify-content-between text-muted small mt-1" });
+    labels.appendChild(el("span", {},
+        [document.createTextNode(`${Math.round(min)} ${unit}`)]));
+    labels.appendChild(el("span", {},
+        [document.createTextNode(`${Math.round(max)} ${unit}`)]));
+    group.appendChild(labels);
+    return group;
+}
+
+function renderClimateLegend(elevMin, elevMax, tempMin, tempMax, hasElevation, hasTemperature) {
+    const box = document.getElementById("legend-climate");
+    if (!box) return;
+    box.innerHTML = "";
+    if (hasElevation) {
+        box.appendChild(rampLegend("Ketinggian (mdpl)", ELEV_STOPS, elevMin, elevMax, "m"));
+    }
+    if (hasTemperature) {
+        box.appendChild(rampLegend("Suhu (°C)", TEMP_STOPS, tempMin, tempMax, "°C"));
+    }
+    if (!hasElevation && !hasTemperature) {
+        box.appendChild(el("div", { className: "text-muted" },
+            [document.createTextNode("Data ketinggian & suhu belum tersedia.")]));
+    }
+}
+
+function onCharacteristicChange(name) {
+    // Layer karakteristik diwarnai berdasarkan karakteristik terpilih.
+    if (!characteristicLayerGroup || !name) return;
+    characteristicLayerGroup.clearLayers();
+    // Re-fetch villages supaya punya properties lengkap (sudah di-cache
+    // di closure, tapi untuk kesederhanaan ambil dari clusterLayer).
+    if (!clusterLayerGroup) return;
+    clusterLayerGroup.eachLayer(function (layer) {
+        const props = layer.feature?.properties;
+        if (!props) return;
+        const chars = props.characteristics || [];
+        const hit = chars.find((c) => c.name === name);
+        const value = hit ? hit.value : null;
+        const isNum = hit && hit.value_type === "number";
+        const color = characteristicColor(value, isNum);
+        const geo = L.geoJSON(layer.feature, {
+            style: {
+                color: "#ffffff",
+                weight: 1,
+                fillColor: color,
+                fillOpacity: 0.6,
+            },
+        });
+        geo.eachLayer((l) => bindPopupAndHover(l, props));
+        characteristicLayerGroup.addLayer(geo);
+    });
+}
+
+function characteristicColor(value, isNum) {
+    // Warna sederhana: numerik -> ramp biru, teks -> palet kategori.
+    const ramp = ["#cde2fb", "#86b6ef", "#5598e7", "#1c5cab"];
+    const cat = categoricalPalette.length ? categoricalPalette : ["#2a78d6"];
+    if (value === null || value === undefined) return "#d1d5db";
+    if (isNum) {
+        // Equal-interval 4 kelas (disederhanakan) — gunakan nilai relatif.
+        const n = Number(value);
+        const step = Math.max(1, Math.abs(n) / 4);
+        const idx = Math.min(3, Math.floor(Math.abs(n) / step));
+        return ramp[idx];
+    }
+    let hash = 0;
+    const s = String(value);
+    for (let i = 0; i < s.length; i++) hash = (hash * 31 + s.charCodeAt(i)) >>> 0;
+    return cat[hash % cat.length];
+}
+
+function renderDataBanner(villages, villagePoints, destinations) {
+    const banner = document.getElementById("data-banner");
+
+    if (DATA_STATUS.has_geojson && villages.features.length) {
+        banner.style.display = "none";
+        return;
+    }
+
+    banner.style.display = "block";
+
+    if (villagePoints.features && villagePoints.features.length) {
+        banner.innerHTML = `
+            <i class="bi bi-info-circle"></i>
+            <b>Batas poligon desa belum tersedia.</b><br>
+            Yang ditampilkan saat ini adalah <b>titik pusat desa</b>
+            (koordinat dari OpenStreetMap), bukan batas wilayah. Untuk
+            batas poligon resmi, masukkan GeoJSON dari Bappelitbangda /
+            BIG ke <code>static/geo/</code>.
+        `;
+        return;
+    }
+
+    banner.innerHTML = `
+        <i class="bi bi-info-circle"></i>
+        <b>Data spasial desa belum tersedia.</b><br>
+        Tidak ada file GeoJSON batas desa maupun koordinat desa. Sistem
+        tidak membuat koordinat/polygon palsu. Masukkan file resmi ke
+        <code>static/geo/</code> atau isi latitude/longitude tiap desa.
+    `;
+}
+
+// ============================== FULLSCREEN ==============================
+
+document.getElementById("fullscreen-btn").addEventListener("click", function () {
+    const mapEl = document.getElementById("map");
+    if (document.fullscreenElement) {
+        document.exitFullscreen();
+    } else if (mapEl.requestFullscreen) {
+        mapEl.requestFullscreen();
+    }
+});
+
+// ============================== DRAWER KELOLA DATA ==============================
+
+(function () {
+    const manageBtn = document.getElementById("manage-btn");
+    const drawer = document.getElementById("manage-drawer");
+    const backdrop = document.getElementById("manage-backdrop");
+    const closeBtn = document.getElementById("manage-close");
+
+    if (!manageBtn || !drawer || !backdrop || !closeBtn) return;
+
+    function openDrawer() {
+        drawer.classList.add("open");
+        backdrop.classList.add("show");
+        drawer.setAttribute("aria-hidden", "false");
+    }
+
+    function closeDrawer() {
+        drawer.classList.remove("open");
+        backdrop.classList.remove("show");
+        drawer.setAttribute("aria-hidden", "true");
+    }
+
+    manageBtn.addEventListener("click", openDrawer);
+    closeBtn.addEventListener("click", closeDrawer);
+    backdrop.addEventListener("click", closeDrawer);
+
+    document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") closeDrawer();
+    });
+})();
+
+init().catch(function (err) {
+    console.error(err);
+    const banner = document.getElementById("data-banner");
+    banner.style.display = "block";
+    banner.innerHTML = "Gagal memuat data peta. Lihat console untuk detail.";
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,197 @@
+{% extends "base/layout.html" %}
+
+{% block title %}
+Dashboard
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <h2 class="mb-4">
+
+        Dashboard VillageInsight DSS
+
+    </h2>
+
+    <div class="row g-4">
+
+        <div class="col-md-3">
+
+            <div class="card shadow-sm border-0">
+
+                <div class="card-body">
+
+                    <h6 class="text-secondary">
+
+                        District
+
+                    </h6>
+
+                    <h2>
+
+                        {{ total_district }}
+
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <div class="card shadow-sm border-0">
+
+                <div class="card-body">
+
+                    <h6 class="text-secondary">
+
+                        Village
+
+                    </h6>
+
+                    <h2>
+
+                        {{ total_village }}
+
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <div class="card shadow-sm border-0">
+
+                <div class="card-body">
+
+                    <h6 class="text-secondary">
+
+                        Respondent
+
+                    </h6>
+
+                    <h2>
+
+                        {{ total_respondent }}
+
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <div class="card shadow-sm border-0">
+
+                <div class="card-body">
+
+                    <h6 class="text-secondary">
+
+                        Survey
+
+                    </h6>
+
+                    <h2>
+
+                        {{ total_survey }}
+
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="row mt-4">
+
+        <div class="col-md-6">
+
+            <div class="card shadow-sm">
+
+                <div class="card-header">
+
+                    Cluster Information
+
+                </div>
+
+                <div class="card-body">
+
+                    <h1>
+
+                        {{ total_cluster }}
+
+                    </h1>
+
+                    Total Clusters
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-6">
+
+            <div class="card shadow-sm">
+
+                <div class="card-header">
+
+                    Quick Access
+
+                </div>
+
+                <div class="card-body">
+
+                    <a href="{% url 'master:village-list' %}" class="btn btn-primary">
+
+                        Village
+
+                    </a>
+
+                    <a href="{% url 'respondent:respondent-list' %}" class="btn btn-success">
+
+                        Respondent
+
+                    </a>
+
+                    <a href="{% url 'survey:survey-list' %}" class="btn btn-warning">
+
+                        Survey
+
+                    </a>
+
+                    <a href="{% url 'analytics:dashboard' %}" class="btn btn-info">
+
+                        Analytics
+
+                    </a>
+
+                    <a href="{% url 'recommendation:dashboard' %}" class="btn btn-secondary">
+
+                        Recommendation
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

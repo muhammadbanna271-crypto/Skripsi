@@ -1,0 +1,205 @@
+{% extends "base/layout.html" %}
+{% load static %}
+{% block content %}
+
+<div class="mb-4">
+
+    <h2>
+
+        🌿 Welcome to TRIP
+
+    </h2>
+
+    <p class="text-muted mb-0">
+
+        Tourism Resource Integration Platform
+
+    </p>
+
+    <a href="{% url 'analytics:dashboard' %}"
+       class="btn btn-success mt-3">
+
+        <i class="bi bi-graph-up-arrow me-2"></i>
+
+        Explore Analytics
+
+    </a>
+
+</div>
+
+<div class="row g-4">
+
+<div class="row g-4 mt-1">
+
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="card kpi-card">
+            <div class="card-body">
+                <div class="kpi-icon">
+                    <i class="bi bi-geo-alt-fill"></i>
+                </div>
+                <div class="kpi-title">Village</div>
+                <div class="kpi-value">{{ total_village }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="card kpi-card">
+            <div class="card-body">
+                <div class="kpi-icon">
+                    <i class="bi bi-map-fill"></i>
+                </div>
+                <div class="kpi-title">District</div>
+                <div class="kpi-value">{{ total_district }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="card kpi-card">
+            <div class="card-body">
+                <div class="kpi-icon">
+                    <i class="bi bi-diagram-3-fill"></i>
+                </div>
+                <div class="kpi-title">Cluster</div>
+                <div class="kpi-value">{{ total_cluster }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="card kpi-card">
+            <div class="card-body">
+                <div class="kpi-icon">
+                    <i class="bi bi-bar-chart-fill"></i>
+                </div>
+                <div class="kpi-title">Indicator</div>
+                <div class="kpi-value">{{ total_indicator }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="card kpi-card">
+            <div class="card-body">
+                <div class="kpi-icon">
+                    <i class="bi bi-ui-checks-grid"></i>
+                </div>
+                <div class="kpi-title">Survey</div>
+                <div class="kpi-value">{{ total_survey }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="card kpi-card">
+            <div class="card-body">
+                <div class="kpi-icon">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+                <div class="kpi-title">Respondent</div>
+                <div class="kpi-value">{{ total_respondent }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="card kpi-card">
+            <div class="card-body">
+                <div class="kpi-icon">
+                    <i class="bi bi-pencil-square"></i>
+                </div>
+                <div class="kpi-title">Response</div>
+                <div class="kpi-value">{{ total_response }}</div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="card table-card mt-4">
+
+    <div class="card-header">
+
+        <i class="bi bi-lightning-charge-fill text-warning me-2"></i>
+
+        Quick Access
+
+    </div>
+
+    <div class="card-body">
+
+        <div class="row g-3">
+
+            <div class="col-md-4">
+
+                <a href="{% url 'respondent:respondent-list' %}"
+                   class="btn btn-light border w-100 py-3">
+
+                    <i class="bi bi-people-fill fs-4 text-success d-block mb-2"></i>
+
+                    Respondent
+
+                </a>
+
+            </div>
+
+            <div class="col-md-4">
+
+                <a href="{% url 'survey:survey-list' %}"
+                   class="btn btn-light border w-100 py-3">
+
+                    <i class="bi bi-ui-checks-grid fs-4 text-warning d-block mb-2"></i>
+
+                    Survey
+
+                </a>
+
+            </div>
+
+            <div class="col-md-4">
+
+                <a href="{% url 'response:response-list' %}"
+                   class="btn btn-light border w-100 py-3">
+
+                    <i class="bi bi-pencil-square fs-4 text-danger d-block mb-2"></i>
+
+                    Response
+
+                </a>
+
+            </div>
+
+            <div class="col-md-6">
+
+                <a href="{% url 'analytics:dashboard' %}"
+                   class="btn btn-light border w-100 py-3">
+
+                    <i class="bi bi-graph-up-arrow fs-4 text-primary d-block mb-2"></i>
+
+                    Analytics
+
+                </a>
+
+            </div>
+
+            <div class="col-md-6">
+
+                <a href="{% url 'recommendation:dashboard' %}"
+                   class="btn btn-light border w-100 py-3">
+
+                    <i class="bi bi-award-fill fs-4 text-success d-block mb-2"></i>
+
+                    Recommendation
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

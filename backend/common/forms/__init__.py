@@ -1,0 +1,1 @@
+from .base_form import BootstrapModelForm

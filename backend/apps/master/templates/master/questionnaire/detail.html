@@ -1,0 +1,97 @@
+{% extends "base/crud_page.html" %}
+
+{% block title %}
+Questionnaire Detail
+{% endblock %}
+
+{% block page_title %}
+Questionnaire Detail
+{% endblock %}
+
+{% block crud_content %}
+
+<table class="table table-bordered">
+
+    <tr>
+
+        <th width="220">Indicator</th>
+
+        <td>{{ questionnaire.indicator.name }}</td>
+
+    </tr>
+
+    <tr>
+
+        <th>Question</th>
+
+        <td>{{ questionnaire.question }}</td>
+
+    </tr>
+
+    <tr>
+
+        <th>Answer Type</th>
+
+        <td>{{ questionnaire.get_answer_type_display }}</td>
+
+    </tr>
+
+    <tr>
+
+        <th>Question Order</th>
+
+        <td>{{ questionnaire.question_order }}</td>
+
+    </tr>
+
+    <tr>
+
+        <th>Required</th>
+
+        <td>
+
+            {% if questionnaire.is_required %}
+
+                Yes
+
+            {% else %}
+
+                No
+
+            {% endif %}
+
+        </td>
+
+    </tr>
+
+    <tr>
+
+        <th>Status</th>
+
+        <td>
+
+            {% if questionnaire.is_active %}
+
+                Active
+
+            {% else %}
+
+                Inactive
+
+            {% endif %}
+
+        </td>
+
+    </tr>
+
+</table>
+
+<a
+    href="{% url 'master:questionnaire-list' %}"
+    class="btn btn-secondary">
+
+    Back
+
+</a>
+
+{% endblock %}

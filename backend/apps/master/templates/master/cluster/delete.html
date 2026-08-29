@@ -1,0 +1,43 @@
+{% extends "base/crud_page.html" %}
+
+{% block title %}
+Delete Cluster
+{% endblock %}
+
+{% block page_title %}
+Delete Cluster
+{% endblock %}
+
+{% block crud_content %}
+
+<form method="post">
+
+    {% csrf_token %}
+
+    <div class="alert alert-danger">
+
+        Are you sure you want to delete
+
+        <strong>{{ cluster.name }}</strong>?
+
+    </div>
+
+    <button
+        type="submit"
+        class="btn btn-danger">
+
+        Delete
+
+    </button>
+
+    <a
+        href="{% url 'master:cluster-list' %}"
+        class="btn btn-secondary">
+
+        Cancel
+
+    </a>
+
+</form>
+
+{% endblock %}

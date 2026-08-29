@@ -1,0 +1,79 @@
+{% extends "base/crud_page.html" %}
+
+{% block crud_content %}
+
+<form method="post">
+
+    {% csrf_token %}
+
+    <div class="row g-4">
+
+        {% for field in form %}
+
+            {% if field.name != "nik" and field.name != "latitude" and field.name != "longitude" %}
+
+                <div class="col-md-6">
+
+                    <label class="form-label fw-semibold mb-2">
+
+                        {{ field.label }}
+
+                    </label>
+
+                    {{ field }}
+
+                    {% if field.help_text %}
+
+                        <small class="text-muted d-block mt-2">
+
+                            {{ field.help_text }}
+
+                        </small>
+
+                    {% endif %}
+
+                    {% for error in field.errors %}
+
+                        <div class="text-danger small mt-2">
+
+                            {{ error }}
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            {% endif %}
+
+        {% endfor %}
+
+    </div>
+
+    <div class="border-top mt-5 pt-4 d-flex justify-content-end gap-2">
+
+        <a
+            href="javascript:history.back()"
+            class="btn btn-outline-secondary rounded-3 px-4">
+
+            <i class="bi bi-arrow-left me-2"></i>
+
+            Cancel
+
+        </a>
+
+        <button
+            type="submit"
+            class="btn btn-success rounded-3 px-4">
+
+            <i class="bi bi-check-circle me-2"></i>
+
+            Save
+
+        </button>
+
+    </div>
+
+</form>
+
+{% endblock %}

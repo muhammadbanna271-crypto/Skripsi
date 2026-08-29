@@ -1,0 +1,65 @@
+{% extends "base/crud_page.html" %}
+
+{% block title %}
+Delete District
+{% endblock %}
+
+{% block page_title %}
+Delete District
+{% endblock %}
+
+{% block crud_content %}
+
+<div class="alert alert-danger">
+
+    <h5>
+
+        Are you sure?
+
+    </h5>
+
+    <p>
+
+        You are about to delete
+
+        <strong>
+
+            {{ district.name }}
+
+        </strong>
+
+    </p>
+
+    <p>
+
+        This action cannot be undone.
+
+    </p>
+
+</div>
+
+<form method="post">
+
+    {% csrf_token %}
+
+    <button
+        type="submit"
+        class="btn btn-danger">
+
+        <i class="bi bi-trash"></i>
+
+        Delete
+
+    </button>
+
+    <a
+        href="{% url 'master:district-detail' district.pk %}"
+        class="btn btn-secondary">
+
+        Cancel
+
+    </a>
+
+</form>
+
+{% endblock %}

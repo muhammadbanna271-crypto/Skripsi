@@ -1,0 +1,96 @@
+{% extends "base/crud_page.html" %}
+
+{% block title %}
+Import Data Excel
+{% endblock %}
+
+{% block page_title %}
+Import Data Excel (Data Historis)
+{% endblock %}
+
+{% block crud_content %}
+
+{% if not has_access %}
+
+<div class="alert alert-danger">
+    Anda tidak memiliki akses untuk melakukan import data Excel.
+    Fitur ini hanya tersedia untuk staff atau superuser.
+</div>
+
+{% else %}
+
+<div class="alert alert-secondary">
+
+    <strong>Format file yang didukung:</strong>
+
+    <ul class="mb-0">
+        <li>Baris header berisi kolom <code>No</code>, <code>ID Resp</code>, <code>Desa</code>, <code>RT</code>, <code>Person</code>, lalu kolom indikator <code>X1.1</code> s/d <code>Y6.8</code> (boleh ada baris judul grup variabel di atasnya).</li>
+        <li>Kolom <code>Desa</code> diisi ID Desa (angka 1-24) sesuai Master Data.</li>
+        <li>Nilai tiap indikator berupa angka skala 1-5 (Likert).</li>
+        <li>Kolom <code>RT</code> &amp; <code>Person</code> opsional, hanya disimpan sebagai catatan alamat responden.</li>
+        <li>Karena file tidak memuat NIK/gender/tanggal lahir/alamat asli, data tersebut akan diisi otomatis dengan nilai default (bukan data pribadi sesungguhnya).</li>
+    </ul>
+
+</div>
+
+<form method="post" enctype="multipart/form-data">
+
+    {% csrf_token %}
+
+    <div class="mb-3">
+
+        <label class="form-label">Survey</label>
+
+        <select name="survey_id" class="form-select" required>
+            <option value="">-- Pilih Survey --</option>
+            {% for survey in surveys %}
+            <option value="{{ survey.id }}">{{ survey.name }}</option>
+            {% endfor %}
+        </select>
+
+    </div>
+
+    <div class="mb-3">
+
+        <label class="form-label">File Excel (.xlsx)</label>
+
+        <input
+            type="file"
+            name="excel_file"
+            class="form-control"
+            accept=".xlsx"
+            required>
+
+    </div>
+
+    <button type="submit" id="import-btn" class="btn btn-success">
+        <i class="bi bi-upload me-1"></i> Import
+    </button>
+
+    <a href="{% url 'response:response-list' %}" class="btn btn-secondary">
+        Batal
+    </a>
+
+</form>
+
+<script>
+
+const importForm = document.querySelector("form");
+
+const importBtn = document.getElementById("import-btn");
+
+importForm.addEventListener("submit", () => {
+
+    importBtn.disabled = true;
+
+    importBtn.innerHTML = (
+        '<span class="spinner-border spinner-border-sm me-1"></span> Memproses...'
+    );
+
+});
+
+</script>
+
+{% endif %}
+
+{% endblock %}

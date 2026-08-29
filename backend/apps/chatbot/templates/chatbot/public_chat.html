@@ -1,0 +1,1563 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>PRUDENCE — TRIP</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+
+        :root {
+            --forest-1: #14532d;
+            --forest-2: #166534;
+            --forest-3: #22c55e;
+            --cream: #f7faf5;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: "Inter", sans-serif;
+            background: var(--cream);
+            margin: 0;
+        }
+
+        .app-shell {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ================= SIDEBAR ================= */
+
+        .sidebar {
+            width: 260px;
+            flex-shrink: 0;
+            background: linear-gradient(180deg, var(--forest-1), var(--forest-2) 60%, #0f3d22);
+            color: white;
+            padding: 22px 16px;
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 4px 6px 22px;
+            font-weight: 700;
+            font-size: 1.02rem;
+        }
+
+        .sidebar-brand .icon-badge {
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
+            background: rgba(255,255,255,0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            color: rgba(255,255,255,0.82);
+            text-decoration: none;
+            font-size: 0.86rem;
+            font-weight: 500;
+            margin-bottom: 4px;
+            transition: all 0.15s ease;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.08);
+            color: white;
+        }
+
+        .nav-item.active {
+            background: white;
+            color: var(--forest-2);
+            font-weight: 600;
+        }
+
+        .nav-item.disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        .nav-item .soon-badge {
+            margin-left: auto;
+            font-size: 0.58rem;
+            background: rgba(255,255,255,0.15);
+            padding: 2px 6px;
+            border-radius: 999px;
+        }
+
+        .sidebar-divider {
+            height: 1px;
+            background: rgba(255,255,255,0.1);
+            margin: 12px 4px;
+        }
+
+        .sidebar-section-label {
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.45);
+            padding: 10px 8px 4px;
+        }
+
+        .fun-fact-card {
+            margin-top: auto;
+            background: rgba(255,255,255,0.08);
+            border-radius: 14px;
+            padding: 14px;
+            font-size: 0.76rem;
+            line-height: 1.5;
+            color: rgba(255,255,255,0.85);
+        }
+
+        .fun-fact-card .bi {
+            color: #fde68a;
+        }
+
+        /* ================= MAIN CONTENT ================= */
+
+        .main-content {
+            flex: 1;
+            padding: 26px 32px 20px;
+            display: flex;
+            flex-direction: column;
+            max-width: 1100px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .engine-chip-row {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .engine-chip {
+            border: 1px solid #d9e6da;
+            background: white;
+            border-radius: 999px;
+            padding: 6px 14px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #4b5f4d;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .engine-chip.active {
+            background: var(--forest-2);
+            border-color: var(--forest-2);
+            color: white;
+        }
+
+        /* ---- Hero ---- */
+
+        .hero-card {
+            background: linear-gradient(135deg, #f4f9ee, #ffffff);
+            border: 1px solid #e7f0e3;
+            border-radius: 22px;
+            padding: 32px;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            margin-bottom: 22px;
+        }
+
+        .hero-text {
+            flex: 1.1;
+        }
+
+        .hero-eyebrow {
+            color: var(--forest-3);
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+        }
+
+        .hero-title {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--forest-1);
+            line-height: 1.1;
+            margin-bottom: 12px;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: var(--forest-2);
+            color: white;
+            font-size: 0.76rem;
+            font-weight: 600;
+            padding: 6px 14px;
+            border-radius: 999px;
+            margin-bottom: 16px;
+        }
+
+        .hero-desc {
+            color: #445248;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            max-width: 480px;
+        }
+
+        .hero-illustration {
+            flex: 0.9;
+            display: flex;
+            justify-content: center;
+        }
+
+        .hero-illustration svg {
+            width: 100%;
+            max-width: 320px;
+            height: auto;
+        }
+
+        /* ---- Suggestions ---- */
+
+        .suggestions-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            color: #2c3a2d;
+            margin-bottom: 12px;
+            font-size: 0.95rem;
+        }
+
+        .suggestions-title .bi-stars {
+            color: #f5b301;
+        }
+
+        .suggestion-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 22px;
+        }
+
+        .suggestion-card {
+            background: white;
+            border: 1px solid #e9efe6;
+            border-radius: 16px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .suggestion-card:hover {
+            border-color: var(--forest-3);
+            box-shadow: 0 6px 16px rgba(34, 197, 94, 0.12);
+            transform: translateY(-2px);
+        }
+
+        .suggestion-card .icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
+            background: #eef7ec;
+            color: var(--forest-2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .suggestion-card .text {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #2c3a2d;
+            line-height: 1.35;
+        }
+
+        .suggestion-card .arrow {
+            margin-left: auto;
+            color: #9fb3a2;
+            font-size: 0.85rem;
+        }
+
+        /* ---- Chat view (muncul setelah mulai ngobrol) ---- */
+
+        #chat-view {
+            display: none;
+            flex-direction: column;
+            flex: 1;
+            background: white;
+            border: 1px solid #e9efe6;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .chat-view-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 18px;
+            border-bottom: 1px solid #eef2ec;
+        }
+
+        .chat-view-header .who {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            color: #2c3a2d;
+            font-size: 0.92rem;
+        }
+
+        .chat-view-header .who .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--forest-2), var(--forest-3));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .new-chat-btn {
+            border: 1px solid #e2e8e2;
+            background: white;
+            border-radius: 10px;
+            font-size: 0.76rem;
+            padding: 6px 12px;
+            color: #4b5f4d;
+        }
+
+        .chat-messages {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .bubble-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 14px;
+            align-items: flex-end;
+        }
+
+        .bubble-row.user {
+            flex-direction: row-reverse;
+        }
+
+        .avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+            color: white;
+        }
+
+        .avatar.bot {
+            background: linear-gradient(135deg, var(--forest-2), var(--forest-3));
+        }
+
+        .avatar.user {
+            background: #9ca3af;
+        }
+
+        .bubble {
+            max-width: 76%;
+            padding: 11px 15px;
+            border-radius: 16px;
+            line-height: 1.55;
+            font-size: 0.92rem;
+        }
+
+        .bubble.bot {
+            background: #f1f6f0;
+            color: #22301f;
+            border-bottom-left-radius: 4px;
+        }
+
+        .bubble.user {
+            background: linear-gradient(135deg, var(--forest-2), var(--forest-3));
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .engine-tag {
+            font-size: 0.64rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            color: #9ab19c;
+            margin-bottom: 3px;
+        }
+
+        /* ---- Input bar ---- */
+
+        .chat-input-bar {
+            background: white;
+            border: 1px solid #e9efe6;
+            border-radius: 999px;
+            padding: 8px 8px 8px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 16px rgba(20, 83, 45, 0.06);
+        }
+
+        .chat-input-bar .leaf-icon {
+            color: var(--forest-3);
+            font-size: 18px;
+        }
+
+        .chat-input-bar input {
+            border: none;
+            outline: none;
+            flex: 1;
+            font-size: 0.92rem;
+            background: transparent;
+        }
+
+        .chat-input-bar button {
+            border: none;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--forest-2), var(--forest-3));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .footnote {
+            text-align: center;
+            font-size: 0.74rem;
+            color: #94a89a;
+            margin-top: 12px;
+        }
+
+        .typing-dots {
+            display: inline-flex;
+            gap: 4px;
+            align-items: center;
+            padding: 4px 0;
+        }
+
+        .typing-dots span {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #9ab19c;
+            animation: typing-bounce 1.2s infinite ease-in-out;
+        }
+
+        .typing-dots span:nth-child(2) { animation-delay: 0.15s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.3s; }
+
+        @keyframes typing-bounce {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+            30% { transform: translateY(-4px); opacity: 1; }
+        }
+
+        @media (max-width: 900px) {
+
+            .sidebar { display: none; }
+
+            .suggestion-grid { grid-template-columns: repeat(2, 1fr); }
+
+            .hero-card { flex-direction: column; }
+
+        }
+
+        @media (max-width: 560px) {
+
+            .suggestion-grid { grid-template-columns: 1fr; }
+
+            .main-content { padding: 18px; }
+
+        }
+
+        /* ---- Voice ---- */
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        #voice-toggle.active {
+            background: var(--forest-2);
+            border-color: var(--forest-2);
+            color: white;
+        }
+
+        #voice-btn {
+            border: none;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: #eef7ec;
+            color: var(--forest-2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        #voice-btn:hover { background: #e0f0dc; }
+
+        #voice-btn.listening {
+            background: #e11d48;
+            color: white;
+        }
+
+        #voice-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .voice-status {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            justify-content: center;
+            font-size: 0.78rem;
+            color: #4b5f4d;
+            min-height: 22px;
+            margin-top: 8px;
+        }
+
+        .voice-status .dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #9fb3a2;
+            flex-shrink: 0;
+        }
+
+        .voice-status.listening .dot { background: #e11d48; animation: voice-pulse 1s infinite; }
+        .voice-status.speaking .dot { background: #22c55e; }
+        .voice-status.thinking .dot { background: #f5b301; animation: voice-pulse 1s infinite; }
+        .voice-status.error { color: #b91c1c; }
+        .voice-status.error .dot { background: #b91c1c; }
+
+        @keyframes voice-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .bubble-voice-controls {
+            display: flex;
+            gap: 4px;
+            margin-top: 6px;
+        }
+
+        .bubble-voice-btn {
+            border: 1px solid #d9e6da;
+            background: white;
+            border-radius: 8px;
+            font-size: 0.72rem;
+            padding: 2px 8px;
+            color: #4b5f4d;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .bubble-voice-btn:hover { background: #eef7ec; }
+
+        .bubble-voice-btn:focus-visible {
+            outline: 2px solid var(--forest-3);
+            outline-offset: 2px;
+        }
+
+        #voice-btn:focus-visible,
+        .engine-chip:focus-visible,
+        .new-chat-btn:focus-visible,
+        .suggestion-card:focus-visible {
+            outline: 2px solid var(--forest-3);
+            outline-offset: 2px;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="app-shell">
+
+    <!-- ================= SIDEBAR ================= -->
+
+    <aside class="sidebar">
+
+        <div class="sidebar-brand">
+            <div class="icon-badge"><i class="bi bi-tree"></i></div>
+            TRIP
+        </div>
+
+        <button type="button" class="nav-item active">
+            <i class="bi bi-chat-dots"></i> Chat dengan PRUDENCE
+        </button>
+
+        <a href="/" class="nav-item">
+            <i class="bi bi-compass"></i> Jelajahi
+        </a>
+
+        <div class="sidebar-section-label">
+            WISATA
+        </div>
+
+        <a href="{% url 'gis:map' %}" class="nav-item">
+            <i class="bi bi-map"></i> Peta Wisata
+        </a>
+
+        <a href="{% url 'gis:destinations' %}" class="nav-item">
+            <i class="bi bi-signpost-2"></i> Destinasi Wisata
+        </a>
+
+        <a href="{% url 'gis:itinerary' %}" class="nav-item">
+            <i class="bi bi-calendar-check"></i> Itinerary
+        </a>
+
+        {% if is_staff %}
+        <div class="sidebar-section-label">
+            INTERNAL (STAFF)
+        </div>
+
+        <a href="{% url 'dashboard:dashboard' %}" class="nav-item">
+            <i class="bi bi-house"></i> Dashboard
+        </a>
+
+        <a href="{% url 'recommendation:dashboard' %}" class="nav-item">
+            <i class="bi bi-award"></i> Rekomendasi Desa
+        </a>
+
+        <a href="{% url 'analytics:ml-dashboard' %}" class="nav-item">
+            <i class="bi bi-bar-chart"></i> Data &amp; Indikator
+        </a>
+        {% endif %}
+
+        <div class="sidebar-divider"></div>
+
+        <button type="button" class="nav-item" data-bs-toggle="modal" data-bs-target="#aboutModal">
+            <i class="bi bi-info-circle"></i> Tentang Sistem
+        </button>
+
+        <div class="fun-fact-card">
+            <i class="bi bi-lightbulb"></i> <strong>Tahukah kamu?</strong><br>
+            Kota Batu memiliki 24 desa/kelurahan dengan potensi wisata
+            yang beragam dan unik!
+        </div>
+
+    </aside>
+
+    <!-- ================= MAIN CONTENT ================= -->
+
+    <main class="main-content">
+
+        <div class="engine-chip-row">
+
+            <button type="button" class="engine-chip active" id="tab-deepseek">
+                Planning, Reasoning &amp; User Engagement
+            </button>
+
+            <button type="button" class="engine-chip" id="tab-claude">
+                <i class="bi bi-lock-fill"></i> Claude Engine
+            </button>
+
+        </div>
+
+        <!-- ============ LANDING VIEW ============ -->
+
+        <div id="landing-view">
+
+            <div class="hero-card">
+
+                <div class="hero-text">
+
+                    <div class="hero-eyebrow">🌿 Halo, saya</div>
+
+                    <div class="hero-title">PRUDENCE</div>
+
+                    <div class="hero-badge">Asisten Cerdas TRIP</div>
+
+                    <p class="hero-desc">
+                        Anggap aja saya teman ngobrol yang hafal luar-kepala
+                        soal desa-desa wisata di Kota Batu. Mau tanya desa
+                        mana yang lagi direkomendasikan, atau penasaran apa
+                        yang bikin satu desa wisata bisa unggul dari yang
+                        lain? Tinggal tanya aja, santai kok 😊
+                    </p>
+
+                </div>
+
+                <div class="hero-illustration">
+
+                    <svg viewBox="0 0 320 260" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="250" cy="55" r="28" fill="#fde68a"/>
+                        <ellipse cx="70" cy="60" rx="34" ry="14" fill="#e7f0e3"/>
+                        <ellipse cx="110" cy="45" rx="26" ry="11" fill="#e7f0e3"/>
+                        <polygon points="0,200 90,90 150,170 190,110 320,200" fill="#166534"/>
+                        <polygon points="60,200 140,130 190,170 230,140 320,200" fill="#22c55e" opacity="0.85"/>
+                        <rect x="120" y="185" width="26" height="20" rx="2" fill="#f7faf5"/>
+                        <polygon points="118,185 133,168 148,185" fill="#14532d"/>
+                        <rect x="160" y="192" width="22" height="13" rx="2" fill="#f7faf5"/>
+                        <polygon points="158,192 171,178 184,192" fill="#14532d"/>
+                        <rect x="195" y="188" width="24" height="17" rx="2" fill="#f7faf5"/>
+                        <polygon points="193,188 207,173 221,188" fill="#14532d"/>
+                        <rect x="0" y="205" width="320" height="55" fill="#f7faf5"/>
+                    </svg>
+
+                </div>
+
+            </div>
+
+            <div class="suggestions-title">
+                <i class="bi bi-stars"></i> Pertanyaan yang bisa kamu ajukan
+            </div>
+
+            <div class="suggestion-grid">
+
+                <div class="suggestion-card" data-text="Rekomendasikan wisata alam yang cocok untuk keluarga">
+                    <div class="icon"><i class="bi bi-tree"></i></div>
+                    <div class="text">Wisata alam untuk keluarga</div>
+                    <i class="bi bi-arrow-right arrow"></i>
+                </div>
+
+                <div class="suggestion-card" data-text="Rekomendasikan wisata murah di Kota Batu">
+                    <div class="icon"><i class="bi bi-wallet2"></i></div>
+                    <div class="text">Wisata dengan budget terbatas</div>
+                    <i class="bi bi-arrow-right arrow"></i>
+                </div>
+
+                <div class="suggestion-card" data-text="Saya punya waktu 1 hari, sebaiknya ke mana di Kota Batu?">
+                    <div class="icon"><i class="bi bi-clock"></i></div>
+                    <div class="text">1 hari ke mana saja?</div>
+                    <i class="bi bi-arrow-right arrow"></i>
+                </div>
+
+                <div class="suggestion-card" data-text="Buatkan itinerary wisata Kota Batu untuk saya">
+                    <div class="icon"><i class="bi bi-calendar-check"></i></div>
+                    <div class="text">Buat itinerary Kota Batu</div>
+                    <i class="bi bi-arrow-right arrow"></i>
+                </div>
+
+                <div class="suggestion-card" data-text="Wisata yang cocok untuk anak-anak apa saja?">
+                    <div class="icon"><i class="bi bi-people"></i></div>
+                    <div class="text">Wisata untuk anak-anak</div>
+                    <i class="bi bi-arrow-right arrow"></i>
+                </div>
+
+                <div class="suggestion-card" data-text="Wisata dengan spot foto menarik di Kota Batu">
+                    <div class="icon"><i class="bi bi-camera"></i></div>
+                    <div class="text">Wisata spot foto menarik</div>
+                    <i class="bi bi-arrow-right arrow"></i>
+                </div>
+
+            </div>
+
+            {% if is_staff %}
+            <div class="suggestions-title">
+                <i class="bi bi-stars"></i> Planning Wisata (untuk staff)
+            </div>
+
+            <div class="suggestion-grid">
+
+                <div class="suggestion-card" data-text="Bagaimana rekomendasi destinasi wisata Kota Batu untuk keluarga dengan budget Rp500.000?">
+                    <div class="icon"><i class="bi bi-geo-alt"></i></div>
+                    <div class="text">Planning wisata — rekomendasi destinasi keluarga dengan budget</div>
+                    <i class="bi bi-arrow-right arrow"></i>
+                </div>
+
+                <div class="suggestion-card" data-text="Buatkan itinerary wisata Kota Batu 2 hari dengan perjalanan yang efisien.">
+                    <div class="icon"><i class="bi bi-signpost-split"></i></div>
+                    <div class="text">Optimasi perjalanan — itinerary 2 hari efisien</div>
+                    <i class="bi bi-arrow-right arrow"></i>
+                </div>
+
+                <div class="suggestion-card" data-text="Rekomendasikan destinasi wisata berdasarkan budget, waktu perjalanan, jumlah orang, dan kendaraan yang tersedia.">
+                    <div class="icon"><i class="bi bi-sliders"></i></div>
+                    <div class="text">Rekomendasi berdasarkan budget, waktu, orang, kendaraan</div>
+                    <i class="bi bi-arrow-right arrow"></i>
+                </div>
+
+            </div>
+            {% endif %}
+
+        </div>
+
+        <!-- ============ CHAT VIEW ============ -->
+
+        <div id="chat-view">
+
+            <div class="chat-view-header">
+
+                <div class="who">
+                    <div class="avatar"><i class="bi bi-tree"></i></div>
+                    PRUDENCE
+                </div>
+
+                <div class="header-actions">
+                    <button type="button" id="voice-toggle" class="new-chat-btn" aria-pressed="false" aria-label="Aktifkan pembacaan suara otomatis">
+                        <i class="bi bi-volume-mute-fill"></i> Suara
+                    </button>
+                    <button type="button" id="new-chat-btn" class="new-chat-btn">
+                        <i class="bi bi-plus-lg"></i> Obrolan Baru
+                    </button>
+                </div>
+
+            </div>
+
+            <div id="chat-messages" class="chat-messages"></div>
+
+        </div>
+
+        <!-- ============ INPUT BAR ============ -->
+
+        <div class="chat-input-bar">
+
+            <i class="bi bi-feather leaf-icon"></i>
+
+            <input
+                type="text"
+                id="chat-input"
+                placeholder="Ketik pertanyaanmu di sini..."
+                maxlength="500">
+
+            <button
+                type="button"
+                id="voice-btn"
+                aria-label="Aktifkan mode suara. Klik atau ucapkan Prudence untuk mulai.">
+                <i class="bi bi-mic-fill"></i>
+            </button>
+
+            <button id="chat-send" aria-label="Kirim pesan">
+                <i class="bi bi-send-fill"></i>
+            </button>
+
+        </div>
+
+        <div id="voice-status" class="voice-status" role="status" aria-live="polite">
+            <span class="dot" aria-hidden="true"></span>
+            <span id="voice-status-text">Suara nonaktif</span>
+        </div>
+
+        <p class="footnote">
+            <i class="bi bi-shield-check"></i>
+            Jawaban dari PRUDENCE bersifat informatif, bukan keputusan resmi.
+        </p>
+
+    </main>
+
+</div>
+
+<!-- ================= Modal Password Claude ================= -->
+
+<div class="modal fade" id="claudePasswordModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 16px;">
+
+            <div class="modal-header">
+                <h6 class="modal-title">
+                    <i class="bi bi-lock-fill me-1"></i>
+                    Buka Claude Engine
+                </h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <p class="text-secondary small">
+                    Mesin ini dibatasi pemakaiannya. Masukkan password
+                    untuk mengaktifkan.
+                </p>
+
+                <input
+                    type="password"
+                    id="claude-password-input"
+                    class="form-control"
+                    placeholder="Password">
+
+                <div id="claude-password-error" class="text-danger small mt-2" style="display:none;"></div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="button" id="claude-unlock-btn" class="btn btn-success">Buka</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ================= Modal Tentang Sistem ================= -->
+
+<div class="modal fade" id="aboutModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 16px;">
+
+            <div class="modal-header">
+                <h6 class="modal-title"><i class="bi bi-info-circle me-1"></i> Tentang Sistem</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body small text-secondary">
+                <p>
+                    TRIP adalah sistem pendukung keputusan untuk
+                    pengembangan desa wisata di Kota Batu, menganalisis data
+                    survei warga untuk mengelompokkan dan memberi rekomendasi
+                    prioritas pengembangan tiap desa.
+                </p>
+                <p class="mb-0">
+                    PRUDENCE adalah asisten percakapan yang membantu warga
+                    memahami hasil analisis tersebut dengan bahasa yang
+                    sederhana.
+                </p>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% csrf_token %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+
+function getCookie(name) {
+
+    const value = `; ${document.cookie}`;
+
+    const parts = value.split(`; ${name}=`);
+
+    if (parts.length === 2) return parts.pop().split(";").shift();
+
+}
+
+const landingView = document.getElementById("landing-view");
+
+const chatView = document.getElementById("chat-view");
+
+const messagesEl = document.getElementById("chat-messages");
+
+const inputEl = document.getElementById("chat-input");
+
+const sendBtn = document.getElementById("chat-send");
+
+const newChatBtn = document.getElementById("new-chat-btn");
+
+const tabDeepseek = document.getElementById("tab-deepseek");
+
+const tabClaude = document.getElementById("tab-claude");
+
+const passwordModalEl = document.getElementById("claudePasswordModal");
+
+const passwordModal = new bootstrap.Modal(passwordModalEl);
+
+let currentEngine = "deepseek";
+
+let claudeUnlocked = {{ claude_unlocked|yesno:"true,false" }};
+
+let hasStartedChat = false;
+
+const ENGINE_LABELS = {
+
+    "deepseek": "Planning, Reasoning and User Engagement",
+
+    "claude": "Claude Engine",
+
+};
+
+function setActiveTab(engine) {
+
+    currentEngine = engine;
+
+    tabDeepseek.classList.toggle("active", engine === "deepseek");
+
+    tabClaude.classList.toggle("active", engine === "claude");
+
+}
+
+tabDeepseek.addEventListener("click", () => setActiveTab("deepseek"));
+
+tabClaude.addEventListener("click", () => {
+
+    if (claudeUnlocked) {
+
+        setActiveTab("claude");
+
+    } else {
+
+        document.getElementById("claude-password-error").style.display = "none";
+
+        document.getElementById("claude-password-input").value = "";
+
+        passwordModal.show();
+
+    }
+
+});
+
+document.getElementById("claude-unlock-btn").addEventListener("click", async () => {
+
+    const password = document.getElementById("claude-password-input").value;
+
+    const errorEl = document.getElementById("claude-password-error");
+
+    try {
+
+        const response = await fetch("{% url 'chatbot:chat-unlock' %}", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken"),
+            },
+
+            body: JSON.stringify({ password: password }),
+
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+
+            errorEl.innerText = data.error || "Gagal membuka.";
+
+            errorEl.style.display = "block";
+
+            return;
+
+        }
+
+        claudeUnlocked = true;
+
+        passwordModal.hide();
+
+        setActiveTab("claude");
+
+    } catch (error) {
+
+        errorEl.innerText = "Terjadi gangguan koneksi. Coba lagi.";
+
+        errorEl.style.display = "block";
+
+    }
+
+});
+
+function showChatView() {
+
+    if (hasStartedChat) return;
+
+    hasStartedChat = true;
+
+    landingView.style.display = "none";
+
+    chatView.style.display = "flex";
+
+}
+
+newChatBtn.addEventListener("click", () => {
+
+    hasStartedChat = false;
+
+    messagesEl.innerHTML = "";
+
+    chatView.style.display = "none";
+
+    landingView.style.display = "block";
+
+});
+
+function escapeHtml(text) {
+
+    const div = document.createElement("div");
+
+    div.innerText = text;
+
+    return div.innerHTML;
+
+}
+
+function renderBotText(text) {
+
+    let safe = escapeHtml(text);
+
+    // Link markdown [label](url) -> <a> (untuk link Google Maps dst.)
+    safe = safe.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g,
+        '<a href="$2" target="_blank" rel="noopener">$1</a>');
+
+    // Auto-link URL polos (hindari yang sudah di dalam href)
+    safe = safe.replace(/(^|[^"'=])(https?:\/\/[^\s<>]+)/g,
+        '$1<a href="$2" target="_blank" rel="noopener">$2</a>');
+
+    safe = safe.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+
+    safe = safe.replace(/^#{1,6}\s*/gm, "");
+
+    safe = safe.replace(/^-{3,}$/gm, "");
+
+    safe = safe.replace(/^[-*]\s+/gm, "• ");
+
+    safe = safe.replace(/\n{2,}/g, "<br><br>");
+
+    safe = safe.replace(/\n/g, "<br>");
+
+    return safe;
+
+}
+
+function addBubble(text, role, engineLabel) {
+
+    const row = document.createElement("div");
+
+    row.className = `bubble-row ${role === "user" ? "user" : "bot"}`;
+
+    const avatar = document.createElement("div");
+
+    avatar.className = `avatar ${role === "user" ? "user" : "bot"}`;
+
+    avatar.innerHTML = role === "user"
+        ? '<i class="bi bi-person-fill"></i>'
+        : '<i class="bi bi-tree"></i>';
+
+    const wrapper = document.createElement("div");
+
+    if (role !== "user" && engineLabel) {
+
+        const tag = document.createElement("div");
+
+        tag.className = "engine-tag";
+
+        tag.innerText = engineLabel;
+
+        wrapper.appendChild(tag);
+
+    }
+
+    const bubble = document.createElement("div");
+
+    bubble.className = `bubble ${role === "user" ? "user" : "bot"}`;
+
+    if (role === "user") {
+
+        bubble.innerText = text;
+
+    } else {
+
+        bubble.innerHTML = renderBotText(text);
+
+    }
+
+    wrapper.appendChild(bubble);
+
+    if (role !== "user") {
+        const controls = document.createElement("div");
+        controls.className = "bubble-voice-controls";
+        controls.dataset.text = text;
+        controls.innerHTML =
+            '<button type="button" class="bubble-voice-btn" data-voice-action="speak" aria-label="Bacakan jawaban ini" title="Baca">' +
+            '<i class="bi bi-volume-up" aria-hidden="true"></i> Baca</button>' +
+            '<button type="button" class="bubble-voice-btn" data-voice-action="pause" aria-label="Jeda pembacaan" title="Jeda">' +
+            '<i class="bi bi-pause-fill" aria-hidden="true"></i> Jeda</button>' +
+            '<button type="button" class="bubble-voice-btn" data-voice-action="stop" aria-label="Hentikan pembacaan" title="Hentikan">' +
+            '<i class="bi bi-stop-fill" aria-hidden="true"></i> Hentikan</button>';
+        wrapper.appendChild(controls);
+    }
+
+    row.appendChild(avatar);
+
+    row.appendChild(wrapper);
+
+    messagesEl.appendChild(row);
+
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+
+    return row;
+
+}
+
+function addTypingIndicator(engineLabel) {
+
+    const row = document.createElement("div");
+
+    row.className = "bubble-row bot";
+
+    const avatar = document.createElement("div");
+
+    avatar.className = "avatar bot";
+
+    avatar.innerHTML = '<i class="bi bi-tree"></i>';
+
+    const wrapper = document.createElement("div");
+
+    const tag = document.createElement("div");
+
+    tag.className = "engine-tag";
+
+    tag.innerText = engineLabel;
+
+    wrapper.appendChild(tag);
+
+    const bubble = document.createElement("div");
+
+    bubble.className = "bubble bot";
+
+    bubble.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+
+    wrapper.appendChild(bubble);
+
+    row.appendChild(avatar);
+
+    row.appendChild(wrapper);
+
+    messagesEl.appendChild(row);
+
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+
+    return row;
+
+}
+
+async function sendMessage(text) {
+
+    if (!text.trim()) return;
+
+    showChatView();
+
+    addBubble(text, "user");
+
+    inputEl.value = "";
+
+    sendBtn.disabled = true;
+
+    const loadingRow = addTypingIndicator(ENGINE_LABELS[currentEngine]);
+
+    try {
+
+        const response = await fetch("{% url 'chatbot:chat-message' %}", {
+
+            method: "POST",
+
+            headers: {
+
+                "Content-Type": "application/json",
+
+                "X-CSRFToken": getCookie("csrftoken"),
+
+            },
+
+            body: JSON.stringify({ message: text, engine: currentEngine }),
+
+        });
+
+        const rawText = await response.text();
+
+        let data;
+
+        try {
+
+            data = JSON.parse(rawText);
+
+        } catch (parseError) {
+
+            console.error("Respons server bukan JSON. Status:", response.status, "Isi:", rawText);
+
+            loadingRow.remove();
+
+            addBubble(
+                `Server mengembalikan error (status ${response.status}). Cek console browser (F12) atau terminal Django untuk detailnya.`,
+                "bot",
+                ENGINE_LABELS[currentEngine]
+            );
+
+            return;
+
+        }
+
+        loadingRow.remove();
+
+        if (!response.ok) {
+
+            addBubble(data.error || `Terjadi kesalahan (status ${response.status}).`, "bot", ENGINE_LABELS[currentEngine]);
+
+        } else {
+
+            addBubble(data.reply, "bot", ENGINE_LABELS[currentEngine]);
+
+            if (typeof window.speakReply === "function") {
+                window.speakReply(data.reply);
+            }
+
+        }
+
+    } catch (error) {
+
+        console.error("Fetch gagal:", error);
+
+        loadingRow.remove();
+
+        addBubble("Maaf, terjadi gangguan koneksi. Coba lagi ya.", "bot", ENGINE_LABELS[currentEngine]);
+
+    } finally {
+
+        sendBtn.disabled = false;
+
+        inputEl.focus();
+
+    }
+
+}
+
+sendBtn.addEventListener("click", () => sendMessage(inputEl.value));
+
+inputEl.addEventListener("keydown", (event) => {
+
+    if (event.key === "Enter") {
+
+        sendMessage(inputEl.value);
+
+    }
+
+});
+
+document.querySelectorAll(".suggestion-card").forEach((card) => {
+
+    card.addEventListener("click", () => {
+
+        sendMessage(card.dataset.text);
+
+    });
+
+});
+
+// Auto-send pertanyaan yang datang dari landing page (?q=...)
+(function () {
+
+    const params = new URLSearchParams(window.location.search);
+
+    const q = (params.get("q") || "").trim();
+
+    if (q) {
+        sendMessage(q);
+    }
+
+})();
+
+</script>
+
+<script>
+(function () {
+    // ================= VOICE (STT + TTS) =================
+    // STT memakai Web Speech API; TTS memakai speechSynthesis (browser-native,
+    // tanpa backend). Audio microphone TIDAK disimpan — hanya untuk transkrip.
+
+    const voiceBtn = document.getElementById("voice-btn");
+    const voiceToggle = document.getElementById("voice-toggle");
+    const statusEl = document.getElementById("voice-status");
+    const statusText = document.getElementById("voice-status-text");
+
+    let voiceEnabled = false;  // auto-read jawaban bot
+    let listening = false;
+    let voiceState = "idle";
+
+    const STATUS_TEXT = {
+        idle: "Suara siaga",
+        listening: "Mendengarkan...",
+        thinking: "Berpikir...",
+        speaking: "Membacakan jawaban...",
+        error: "Mikrofon tidak tersedia atau gagal",
+    };
+
+    function setVoiceState(state) {
+        voiceState = state;
+        if (statusEl && statusText) {
+            statusEl.className = "voice-status" + (state === "idle" ? "" : " " + state);
+            statusText.textContent = STATUS_TEXT[state] || "";
+        }
+        if (voiceBtn) {
+            voiceBtn.classList.toggle("listening", state === "listening");
+            voiceBtn.setAttribute("aria-label", state === "listening"
+                ? "Hentikan mendengarkan"
+                : "Aktifkan mode suara. Klik atau ucapkan Prudence untuk mulai.");
+        }
+    }
+
+    // ---- STT (Web Speech API) ----
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+
+    if (recognition) {
+        recognition.lang = "id-ID";
+        recognition.interimResults = false;
+        recognition.continuous = false;
+        recognition.onresult = function (e) {
+            let text = "";
+            for (let i = 0; i < e.results.length; i++) text += e.results[i][0].transcript;
+            // Lepas kata pemicu "Prudence" bila terucap di awal.
+            text = text.replace(/^(prudence|prudens|pru dence)\s*[,:.\-]?\s*/i, "").trim();
+            if (text) {
+                setVoiceState("thinking");
+                sendMessage(text);
+            } else {
+                setVoiceState("idle");
+            }
+        };
+        recognition.onerror = function () {
+            listening = false;
+            setVoiceState("error");
+        };
+        recognition.onend = function () {
+            listening = false;
+            if (voiceState === "listening") setVoiceState("idle");
+        };
+    }
+
+    // ---- TTS (SpeechSynthesis) ----
+    function speak(text) {
+        if (!("speechSynthesis" in window) || !text) {
+            setVoiceState("error");
+            return;
+        }
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = "id-ID";
+        const voices = window.speechSynthesis.getVoices();
+        const idVoice = voices.find(function (v) {
+            return v.lang && v.lang.toLowerCase().indexOf("id") === 0;
+        });
+        if (idVoice) u.voice = idVoice;
+        u.onstart = function () { setVoiceState("speaking"); };
+        u.onend = function () { setVoiceState("idle"); };
+        u.onerror = function () { setVoiceState("idle"); };
+        window.speechSynthesis.speak(u);
+    }
+
+    window.speakReply = function (text) {
+        if (voiceEnabled) speak(text);
+    };
+
+    function stopSpeak() {
+        if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+        if (voiceState === "speaking") setVoiceState("idle");
+    }
+
+    function pauseSpeak() {
+        if (!("speechSynthesis" in window)) return;
+        if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
+            window.speechSynthesis.pause();
+        } else if (window.speechSynthesis.paused) {
+            window.speechSynthesis.resume();
+        }
+    }
+
+    // ---- Tombol microphone ----
+    if (voiceBtn) {
+        voiceBtn.addEventListener("click", function () {
+            if (!recognition) {
+                setVoiceState("error");
+                if (statusText) statusText.textContent =
+                    "Browser tidak mendukung mikrofon. Gunakan teks.";
+                return;
+            }
+            if (listening) {
+                recognition.stop();
+                setVoiceState("idle");
+            } else {
+                stopSpeak();
+                try {
+                    recognition.start();
+                    listening = true;
+                    setVoiceState("listening");
+                } catch (err) {
+                    listening = false;
+                    setVoiceState("error");
+                }
+            }
+        });
+    } else {
+        setVoiceState("error");
+    }
+
+    // ---- Toggle Suara (auto-read) ----
+    if (voiceToggle) {
+        voiceToggle.addEventListener("click", function () {
+            voiceEnabled = !voiceEnabled;
+            voiceToggle.classList.toggle("active", voiceEnabled);
+            voiceToggle.setAttribute("aria-pressed", voiceEnabled ? "true" : "false");
+            voiceToggle.setAttribute("aria-label", voiceEnabled
+                ? "Nonaktifkan pembacaan suara otomatis"
+                : "Aktifkan pembacaan suara otomatis");
+            voiceToggle.innerHTML = voiceEnabled
+                ? '<i class="bi bi-volume-up-fill"></i> Suara: Aktif'
+                : '<i class="bi bi-volume-mute-fill"></i> Suara: Mati';
+            if (!voiceEnabled) stopSpeak();
+        });
+    }
+
+    // ---- Kontrol Baca/Jeda/Hentikan pada tiap jawaban bot ----
+    const messagesEl = document.getElementById("chat-messages");
+    if (messagesEl) {
+        messagesEl.addEventListener("click", function (e) {
+            const btn = e.target.closest(".bubble-voice-btn");
+            if (!btn) return;
+            const action = btn.getAttribute("data-voice-action");
+            const wrap = btn.closest(".bubble-voice-controls");
+            const text = (wrap && wrap.dataset.text) || "";
+            if (action === "speak") speak(text);
+            else if (action === "pause") pauseSpeak();
+            else if (action === "stop") stopSpeak();
+        });
+    }
+
+    // Preload daftar voice (beberapa browser perlu dipicu user dulu).
+    if ("speechSynthesis" in window) {
+        window.speechSynthesis.getVoices();
+        window.speechSynthesis.onvoiceschanged = function () {
+            window.speechSynthesis.getVoices();
+        };
+    }
+})();
+</script>
+
+</body>
+
+</html>

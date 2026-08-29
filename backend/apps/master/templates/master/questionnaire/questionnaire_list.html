@@ -1,0 +1,330 @@
+{% extends "base/crud_page.html" %}
+
+{% block title %}
+Questionnaire List
+{% endblock %}
+
+{% block page_title %}
+{{ indicator.name }}
+{% endblock %}
+
+{% block page_action %}
+
+<a
+    href="{% url 'master:questionnaire-by-variable' variable.id %}"
+    class="btn btn-secondary">
+
+    <i class="bi bi-arrow-left"></i>
+
+    Back
+
+</a>
+
+<a
+    href="{% url 'master:questionnaire-create' %}"
+    class="btn btn-primary">
+
+    <i class="bi bi-plus-circle"></i>
+
+    Add Questionnaire
+
+</a>
+
+<a
+    href="{% url 'master:questionnaire-delete-all' indicator.id %}"
+    class="btn btn-danger">
+
+    <i class="bi bi-trash"></i>
+
+    Delete All
+
+</a>
+
+{% endblock %}
+
+{% block search %}
+
+<form method="get" class="row mb-4">
+
+    <div class="col-md-5">
+
+        <input
+            type="search"
+            name="q"
+            value="{{ request.GET.q }}"
+            class="form-control"
+            placeholder="Search questionnaire...">
+
+    </div>
+
+    <div class="col-auto">
+
+        <button
+            class="btn btn-primary"
+            type="submit">
+
+            <i class="bi bi-search"></i>
+
+            Search
+
+        </button>
+
+    </div>
+
+    {% if request.GET.q %}
+
+    <div class="col-auto">
+
+        <a
+            href="{% url 'master:questionnaire-by-indicator' indicator.id %}"
+            class="btn btn-secondary">
+
+            Reset
+
+        </a>
+
+    </div>
+
+    {% endif %}
+
+</form>
+
+{% endblock %}
+
+{% block crud_content %}
+
+<div class="mb-3">
+
+<h5>
+
+Variable :
+<strong>{{ variable.name }}</strong>
+
+</h5>
+
+<h6>
+
+Indicator :
+<strong>{{ indicator.name }}</strong>
+
+</h6>
+
+<p class="text-muted">
+
+Total Questionnaire :
+<strong>{{ questionnaire_count }}</strong>
+
+</p>
+
+</div>
+
+<table class="table table-hover table-bordered">
+
+<thead class="table-light">
+
+<tr>
+
+<th width="80">Order</th>
+<th>Question</th>
+<th width="150">Answer Type</th>
+<th width="100">Required</th>
+<th width="100">Status</th>
+<th width="220">Action</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for questionnaire in questionnaires %}
+
+<tr>
+
+<td>
+
+{{ questionnaire.question_order }}
+
+</td>
+
+<td>
+
+{{ questionnaire.question }}
+
+</td>
+
+<td>
+
+{{ questionnaire.get_answer_type_display }}
+
+</td>
+
+<td>
+
+{% if questionnaire.is_required %}
+
+<span class="badge bg-primary">
+
+Yes
+
+</span>
+
+{% else %}
+
+<span class="badge bg-secondary">
+
+No
+
+</span>
+
+{% endif %}
+
+</td>
+
+<td>
+
+{% if questionnaire.is_active %}
+
+<span class="badge bg-success">
+
+Active
+
+</span>
+
+{% else %}
+
+<span class="badge bg-danger">
+
+Inactive
+
+</span>
+
+{% endif %}
+
+</td>
+
+<td>
+
+<a
+href="{% url 'master:questionnaire-detail' questionnaire.pk %}"
+class="btn btn-info btn-sm">
+
+Detail
+
+</a>
+
+<a
+href="{% url 'master:questionnaire-update' questionnaire.pk %}"
+class="btn btn-warning btn-sm">
+
+Edit
+
+</a>
+
+<a
+href="{% url 'master:questionnaire-delete' questionnaire.pk %}"
+class="btn btn-danger btn-sm">
+
+Delete
+
+</a>
+
+</td>
+
+</tr>
+
+{% empty %}
+
+<tr>
+
+<td colspan="6" class="text-center">
+
+No Questionnaire Available
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+{% if is_paginated %}
+
+<nav>
+
+<ul class="pagination justify-content-center">
+
+{% if page_obj.has_previous %}
+
+<li class="page-item">
+
+<a
+class="page-link"
+href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+
+Previous
+
+</a>
+
+</li>
+
+{% endif %}
+
+{% for i in paginator.page_range %}
+
+{% if page_obj.number == i %}
+
+<li class="page-item active">
+
+<span class="page-link">
+
+{{ i }}
+
+</span>
+
+</li>
+
+{% else %}
+
+<li class="page-item">
+
+<a
+class="page-link"
+href="?page={{ i }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+
+{{ i }}
+
+</a>
+
+</li>
+
+{% endif %}
+
+{% endfor %}
+
+{% if page_obj.has_next %}
+
+<li class="page-item">
+
+<a
+class="page-link"
+href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+
+Next
+
+</a>
+
+</li>
+
+{% endif %}
+
+</ul>
+
+</nav>
+
+{% endif %}
+
+{% endblock %}

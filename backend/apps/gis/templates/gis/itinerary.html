@@ -1,0 +1,271 @@
+{% extends "base/layout.html" %}
+{% load gis_extras %}
+
+{% block title %}
+Itinerary &amp; Unduh Excel
+{% endblock %}
+
+{% block content %}
+
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="page-title mb-1">Itinerary Perjalanan</h3>
+                <div class="page-subtitle">
+                    Susun rundown wisata Kota Batu, lalu unduh sebagai file
+                    Excel profesional.
+                </div>
+            </div>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label" for="{{ form.duration_days.id_for_label }}">{{ form.duration_days.label }}</label>
+                    {{ form.duration_days }}
+                    {{ form.duration_days.errors }}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="{{ form.start_date.id_for_label }}">{{ form.start_date.label }}</label>
+                    {{ form.start_date }}
+                    {{ form.start_date.errors }}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="{{ form.traveler_count.id_for_label }}">{{ form.traveler_count.label }}</label>
+                    {{ form.traveler_count }}
+                    {{ form.traveler_count.errors }}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="{{ form.transportation.id_for_label }}">{{ form.transportation.label }}</label>
+                    {{ form.transportation }}
+                    {{ form.transportation.errors }}
+                </div>
+
+                <div class="col-md-12">
+                    <label class="form-label">Transportasi (multi-kendaraan)</label>
+                    <div id="vehicle-repeater"></div>
+                    <button type="button" id="add-vehicle" class="btn btn-outline-success btn-sm mt-2">
+                        <i class="bi bi-plus-lg me-1"></i> Tambah Transportasi
+                    </button>
+                    <div class="form-text">
+                        Mis. Motor 2, Mobil 1. Biaya parkir dihitung per kendaraan.
+                    </div>
+                    {{ form.vehicles }}
+                    {{ form.vehicles.errors }}
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label" for="{{ form.budget.id_for_label }}">{{ form.budget.label }}</label>
+                    {{ form.budget }}
+                    {{ form.budget.errors }}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="{{ form.budget_scope.id_for_label }}">{{ form.budget_scope.label }}</label>
+                    {{ form.budget_scope }}
+                    {{ form.budget_scope.errors }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="{{ form.preferences.id_for_label }}">{{ form.preferences.label }}</label>
+                    {{ form.preferences }}
+                    <div class="form-text">{{ form.preferences.help_text }}</div>
+                    {{ form.preferences.errors }}
+                </div>
+
+                <div class="col-md-12">
+                    <div class="form-check form-check-inline">
+                        {{ form.elderly }}
+                        <label class="form-check-label" for="{{ form.elderly.id_for_label }}">{{ form.elderly.label }}</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        {{ form.children }}
+                        <label class="form-check-label" for="{{ form.children.id_for_label }}">{{ form.children.label }}</label>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-success mt-4">
+                <i class="bi bi-magic me-1"></i> Susun Rundown
+            </button>
+        </form>
+    </div>
+</div>
+
+{% if itinerary %}
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-4">
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="page-title mb-0">Rundown Perjalanan</h4>
+            <form method="post" action="{% url 'gis:itinerary-excel' %}">
+                {% csrf_token %}
+                {% for key, value in flat_params.items %}
+                <input type="hidden" name="{{ key }}" value="{{ value }}">
+                {% endfor %}
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-file-earmark-excel me-1"></i> Unduh Excel
+                </button>
+            </form>
+        </div>
+
+        <p class="text-muted small mb-4">
+            Estimasi tiket &amp; parkir:
+            <strong>{{ budget.known_total|idr }}</strong>
+            {% if budget.transport_estimate %}
+            &nbsp;·&nbsp; Estimasi bahan bakar:
+            <strong>{{ budget.transport_estimate.fuel_cost|idr }}</strong>
+            {% endif %}
+        </p>
+
+        {% for day in itinerary.days %}
+        <h6 class="text-success fw-bold mt-4 mb-2">
+            <i class="bi bi-calendar-day me-1"></i> Hari {{ day.day }}
+        </h6>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 160px;">Waktu</th>
+                        <th>Kegiatan</th>
+                        <th>Destinasi</th>
+                        <th>Tiket</th>
+                        <th>Jam Operasional</th>
+                        <th>Maps</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in day.items %}
+                    <tr>
+                        <td class="text-nowrap">{{ item.time }}</td>
+                        <td>
+                            {% if item.type == "lunch" %}
+                                <span class="badge bg-warning text-dark">Makan siang</span>
+                            {% else %}
+                                <span class="badge bg-light text-dark border">Wisata</span>
+                            {% endif %}
+                        </td>
+                        <td class="fw-semibold">{{ item.name }}</td>
+                        <td>
+                            {% if item.type == "lunch" %}
+                                —
+                            {% else %}
+                                {{ item.price_display|default:"Belum tersedia" }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.type == "destination" %}
+                                {{ item.operating_hours|default:"—" }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.type == "destination" and item.google_maps_url %}
+                                <a href="{{ item.google_maps_url }}" target="_blank" rel="noopener">
+                                    Buka Google Maps
+                                </a>
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-muted text-center py-3">Tidak ada kegiatan.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endfor %}
+
+        {% if itinerary.unscheduled %}
+        <div class="alert alert-warning mt-3">
+            <strong>Tidak dijadwalkan:</strong>
+            {% for item in itinerary.unscheduled %}
+                {{ item.name }} ({{ item.note }}){% if not forloop.last %}, {% endif %}
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <p class="text-muted small mt-3">{{ itinerary.note }}</p>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const box = document.getElementById("vehicle-repeater");
+    const input = document.getElementById("id_vehicles");
+    const btn = document.getElementById("add-vehicle");
+    if (!box || !input || !btn) return;
+
+    const VEHICLE_TYPES = ["Motor", "Mobil", "Bus", "Pickup", "Minibus"];
+
+    function esc(s) {
+        return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+            return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+        });
+    }
+    function getVehicles() {
+        try { return JSON.parse(input.value || "[]"); } catch (e) { return []; }
+    }
+    function setVehicles(data) { input.value = JSON.stringify(data); }
+    function read() {
+        return Array.prototype.map.call(
+            box.querySelectorAll(".vehicle-row"), function (row) {
+                return {
+                    type: row.querySelector(".vehicle-type").value,
+                    count: parseInt(row.querySelector(".vehicle-count").value || "0", 10),
+                };
+            }
+        ).filter(function (v) { return v.count > 0; });
+    }
+    function render() {
+        const vehicles = getVehicles();
+        box.innerHTML = vehicles.map(function (v, i) {
+            const opts = VEHICLE_TYPES.map(function (t) {
+                const sel = t === v.type ? " selected" : "";
+                return '<option value="' + esc(t) + '"' + sel + '>' + esc(t) + '</option>';
+            }).join("");
+            return '<div class="vehicle-row row g-2 align-items-end mb-2">' +
+                '<div class="col-5"><label class="form-label small mb-1">Jenis Kendaraan</label>' +
+                '<select class="form-select form-select-sm vehicle-type">' + opts + '</select></div>' +
+                '<div class="col-4"><label class="form-label small mb-1">Jumlah</label>' +
+                '<input type="number" min="1" class="form-control form-control-sm vehicle-count" value="' + (v.count || 1) + '"></div>' +
+                '<div class="col-3"><button type="button" class="btn btn-outline-danger btn-sm w-100" data-remove="' + i + '">Hapus</button></div>' +
+                '</div>';
+        }).join("");
+    }
+    btn.addEventListener("click", function () {
+        const v = read();
+        v.push({ type: "Motor", count: 1 });
+        setVehicles(v);
+        render();
+    });
+    box.addEventListener("click", function (e) {
+        const b = e.target.closest("[data-remove]");
+        if (!b) return;
+        const v = read();
+        v.splice(parseInt(b.getAttribute("data-remove"), 10), 1);
+        setVehicles(v);
+        render();
+    });
+    // Sinkronkan ke hidden input saat submit (form utama).
+    const form = document.querySelector("form");
+    if (form) {
+        form.addEventListener("submit", function () {
+            setVehicles(read());
+        });
+    }
+    render();
+})();
+</script>
+{% endblock %}

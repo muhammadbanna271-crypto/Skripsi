@@ -1,0 +1,56 @@
+{% extends "base/crud_page.html" %}
+
+{% block title %}
+Variable Detail
+{% endblock %}
+
+{% block page_title %}
+Variable Detail
+{% endblock %}
+
+{% block crud_content %}
+
+<table class="table table-bordered">
+
+    <tr>
+        <th width="200">Code</th>
+        <td>{{ variable.code }}</td>
+    </tr>
+
+    <tr>
+        <th>Name</th>
+        <td>{{ variable.name }}</td>
+    </tr>
+
+    <tr>
+        <th>Description</th>
+        <td>{{ variable.description|default:"-" }}</td>
+    </tr>
+
+    <tr>
+        <th>Weight</th>
+        <td>{{ variable.weight }}</td>
+    </tr>
+
+    <tr>
+        <th>Status</th>
+        <td>
+            {% if variable.is_active %}
+                Active
+            {% else %}
+                Inactive
+            {% endif %}
+        </td>
+    </tr>
+
+</table>
+
+<a
+    href="{% url 'master:variable-list' %}"
+    class="btn btn-secondary">
+
+    Back
+
+</a>
+
+{% endblock %}

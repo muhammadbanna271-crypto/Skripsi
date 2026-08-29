@@ -1,0 +1,94 @@
+{% extends "base/crud_page.html" %}
+
+{% block title %}
+Delete All Questionnaire
+{% endblock %}
+
+{% block page_title %}
+Delete All Questionnaire
+{% endblock %}
+
+{% block crud_content %}
+
+<div class="card border-danger">
+
+    <div class="card-body">
+
+        <h4 class="text-danger">
+
+            Delete All Questionnaire
+
+        </h4>
+
+        <p>
+
+            Indicator :
+
+            <strong>
+
+                {{ indicator.name }}
+
+            </strong>
+
+        </p>
+
+        <p>
+
+            Total Questionnaire :
+
+            <strong>
+
+                {{ questionnaires.count }}
+
+            </strong>
+
+        </p>
+
+        <div class="alert alert-danger">
+
+            Tindakan ini tidak dapat dibatalkan.
+
+            Ketik
+
+            <strong>
+
+                HAPUS
+
+            </strong>
+
+            untuk melanjutkan.
+
+        </div>
+
+        <form method="post">
+
+            {% csrf_token %}
+
+            <input
+                type="text"
+                name="confirmation"
+                class="form-control mb-3"
+                placeholder="Ketik HAPUS">
+
+            <button
+                class="btn btn-danger">
+
+                Delete All
+
+            </button>
+
+            <a
+                href="{% url 'master:questionnaire-by-indicator' indicator.id %}"
+                class="btn btn-secondary">
+
+                Cancel
+
+            </a>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}

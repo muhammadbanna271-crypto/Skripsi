@@ -1,0 +1,43 @@
+{% extends "base/crud_page.html" %}
+
+{% block title %}
+Delete Questionnaire
+{% endblock %}
+
+{% block page_title %}
+Delete Questionnaire
+{% endblock %}
+
+{% block crud_content %}
+
+<form method="post">
+
+    {% csrf_token %}
+
+    <div class="alert alert-danger">
+
+        Are you sure you want to delete
+
+        <strong>{{ questionnaire.question }}</strong>?
+
+    </div>
+
+    <button
+        type="submit"
+        class="btn btn-danger">
+
+        Delete
+
+    </button>
+
+    <a
+        href="{% url 'master:questionnaire-list' %}"
+        class="btn btn-secondary">
+
+        Cancel
+
+    </a>
+
+</form>
+
+{% endblock %}

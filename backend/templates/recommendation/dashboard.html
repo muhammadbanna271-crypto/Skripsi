@@ -1,0 +1,175 @@
+{% extends "base/layout.html" %}
+
+{% load static %}
+
+{% block title %}
+Recommendation
+{% endblock %}
+
+{% block content %}
+
+{% if analysis_stale %}
+<div class="alert alert-warning rounded-3 d-flex align-items-center">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    Konfigurasi variable berubah sejak terakhir dihitung. Silakan klik <strong>&quot;Hitung Ulang&quot;</strong> untuk memperbarui hasil.
+</div>
+{% endif %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <div>
+
+        <h2>
+
+            🏆 TOPSIS Recommendation
+
+        </h2>
+
+        <p class="text-muted mb-0">
+
+            Tourism village ranking based on the Decision Support System.
+
+            {% if computed_at %}
+                &middot; Terakhir dihitung: {{ computed_at|date:"d M Y H:i" }}
+            {% endif %}
+
+        </p>
+
+    </div>
+
+    <div>
+
+        {% if can_recalculate %}
+            <form method="post"
+                  action="{% url 'recommendation:recalculate' %}"
+                  style="display:inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-primary">
+                    Hitung Ulang
+                </button>
+            </form>
+        {% endif %}
+
+        <a
+            href="{% url 'analytics:dashboard' %}"
+            class="btn btn-success">
+
+            <i class="bi bi-bar-chart-line me-2"></i>
+
+            View Analytics
+
+        </a>
+
+    </div>
+
+</div>
+
+<div class="card chart-card">
+
+    <div class="card-header bg-white border-0 fw-bold">
+
+        Village Recommendation Ranking
+
+    </div>
+
+    <div class="card-body table-responsive">
+
+        <table class="table align-middle">
+
+            <thead>
+
+                <tr>
+
+                    <th>Rank</th>
+
+                    <th>Village</th>
+
+                    <th>Score</th>
+
+                    <th>Status</th>
+
+                    <th>Recommendation</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for item in ranking %}
+
+                <tr>
+
+                    <td>
+
+                        <span class="badge bg-success">
+
+                            {{ forloop.counter }}
+
+                        </span>
+
+                    </td>
+
+                    <td class="fw-semibold">
+
+                        {{ item.village_name }}
+
+                    </td>
+
+                    <td>
+
+                        <strong>
+
+                            {{ item.score|floatformat:4 }}
+
+                        </strong>
+
+                    </td>
+
+                    <td>
+
+                        <span class="badge bg-{{ item.badge }}">
+
+                            {{ item.status }}
+
+                        </span>
+
+                    </td>
+
+                    <td>
+
+                        {{ item.recommendation }}
+
+                    </td>
+
+                </tr>
+
+                {% empty %}
+
+                <tr>
+
+                    <td
+                        colspan="5"
+                        class="text-center py-5">
+
+                        {% if can_recalculate %}
+                            Belum ada data. Klik "Hitung Ulang" di atas.
+                        {% else %}
+                            No recommendation available.
+                        {% endif %}
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}

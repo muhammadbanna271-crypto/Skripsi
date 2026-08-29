@@ -1,0 +1,90 @@
+{% extends "base/crud_page.html" %}
+
+{% block title %}
+Elevasi Wilayah
+{% endblock %}
+
+{% block page_title %}
+Elevasi Wilayah
+{% endblock %}
+
+{% block page_subtitle %}
+Kelola data ketinggian dan statistik elevasi wilayah.
+{% endblock %}
+
+{% block page_action %}
+<a href="{% url 'gis:manage-elevation-create' %}" class="btn btn-success rounded-3 px-4">
+    <i class="bi bi-plus-circle me-2"></i>
+    Tambah Elevasi
+</a>
+{% endblock %}
+
+{% block search %}
+<form method="get">
+    <div class="row g-3">
+        <div class="col-md-5">
+            <input type="search" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Cari desa atau sumber...">
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-success"><i class="bi bi-search me-2"></i>Cari</button>
+        </div>
+        {% if request.GET.q %}
+        <div class="col-auto">
+            <a href="{% url 'gis:manage-elevation-list' %}" class="btn btn-outline-secondary">Reset</a>
+        </div>
+        {% endif %}
+    </div>
+</form>
+{% endblock %}
+
+{% block crud_content %}
+<div class="table-responsive">
+    <table class="table align-middle">
+        <thead>
+            <tr>
+                <th>Desa/Kelurahan</th>
+                <th class="text-end">Min (m)</th>
+                <th class="text-end">Max (m)</th>
+                <th class="text-end">Rata-rata (m)</th>
+                <th class="text-end">Std (m)</th>
+                <th class="text-center">Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for e in elevations %}
+            <tr>
+                <td class="fw-semibold">{{ e.village.name }}</td>
+                <td class="text-end">{{ e.min_elevation|default:"—" }}</td>
+                <td class="text-end">{{ e.max_elevation|default:"—" }}</td>
+                <td class="text-end">{{ e.mean_elevation|default:"—" }}</td>
+                <td class="text-end">{{ e.std_deviation|default:"—" }}</td>
+                <td class="text-center text-nowrap">
+                    <a href="{% url 'gis:manage-elevation-update' e.pk %}" class="btn btn-outline-warning btn-sm"><i class="bi bi-pencil"></i></a>
+                    <a href="{% url 'gis:manage-elevation-delete' e.pk %}" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i></a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center py-5 text-muted">Belum ada data elevasi wilayah.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if is_paginated %}
+<nav class="mt-4">
+    <ul class="pagination justify-content-end">
+        {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+        {% endif %}
+        {% for i in paginator.page_range %}
+        <li class="page-item {% if page_obj.number == i %}active{% endif %}"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

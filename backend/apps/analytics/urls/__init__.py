@@ -1,0 +1,1 @@
+from .analytics_urls import urlpatterns

@@ -1,0 +1,40 @@
+{% extends "base/crud_page.html" %}
+
+{% block title %}
+Cluster Detail
+{% endblock %}
+
+{% block page_title %}
+Cluster Detail
+{% endblock %}
+
+{% block crud_content %}
+
+<table class="table table-bordered">
+
+    <tr>
+        <th width="200">Code</th>
+        <td>{{ cluster.code }}</td>
+    </tr>
+
+    <tr>
+        <th>Name</th>
+        <td>{{ cluster.name }}</td>
+    </tr>
+
+    <tr>
+        <th>Description</th>
+        <td>{{ cluster.description }}</td>
+    </tr>
+
+</table>
+
+<a
+    href="{% url 'master:cluster-list' %}"
+    class="btn btn-secondary">
+
+    Back
+
+</a>
+
+{% endblock %}

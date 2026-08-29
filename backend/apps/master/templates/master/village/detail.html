@@ -1,0 +1,73 @@
+{% extends "base/crud_page.html" %}
+
+{% block title %}
+Village Detail
+{% endblock %}
+
+{% block page_title %}
+Village Detail
+{% endblock %}
+
+{% block crud_content %}
+
+<table class="table table-bordered">
+
+    <tr>
+        <th width="200">Code</th>
+        <td>{{ village.code }}</td>
+    </tr>
+
+    <tr>
+        <th>Name</th>
+        <td>{{ village.name }}</td>
+    </tr>
+
+    <tr>
+        <th>District</th>
+        <td>{{ village.district }}</td>
+    </tr>
+
+    <tr>
+        <th>Cluster</th>
+        <td>{{ village.cluster|default:"-" }}</td>
+    </tr>
+
+    <tr>
+        <th>Latitude</th>
+        <td>{{ village.latitude }}</td>
+    </tr>
+
+    <tr>
+        <th>Longitude</th>
+        <td>{{ village.longitude }}</td>
+    </tr>
+
+    <tr>
+        <th>Status</th>
+
+        <td>
+
+            {% if village.is_active %}
+
+                Active
+
+            {% else %}
+
+                Inactive
+
+            {% endif %}
+
+        </td>
+
+    </tr>
+
+</table>
+
+<a href="{% url 'master:village-list' %}"
+   class="btn btn-secondary">
+
+    Back
+
+</a>
+
+{% endblock %}

@@ -1,0 +1,88 @@
+PENGEMBANGAN MASA DEPAN TRIP
+
+Catatan untuk pengembang berikutnya (adik tingkat).
+Status TRIP saat ini: sudah selesai dan cukup untuk versi awal, siap dikembangkan jadi aplikasi wisata.
+
+
+RINGKASAN SISTEM SAAT INI
+
+TRIP (Tourism Resource Integration Platform) adalah DSS berbasis Django untuk evaluasi dan rekomendasi desa wisata Kota Batu, hasil kolaborasi dengan Bappelitbangda.
+
+Yang sudah berjalan:
+
+- Master data: desa, kecamatan, cluster, variable (X/Y/Z), indikator, kuesioner.
+- Dynamic Variable Modeling: role Predictor, Mediator, Response, urutan yang tersimpan, mediator layer dari 0 sampai N, dan kode X1 sampai Xn, Y1 sampai Yn, Z1 sampai Zn dibuat otomatis. Tidak ada hard-code jumlah atau urutan variable.
+- Alur data: Survey ke Response, lalu scoring, TOPSIS ranking, K-Means clustering, feature importance, sampai rekomendasi dan dashboard analitik.
+- Chatbot (Claude dan DeepSeek) yang bisa menjawab pertanyaan seputar desa wisata.
+- 56 test otomatis.
+
+
+IDE FITUR MASA DEPAN
+
+1. Peta wisata, desa ditampilkan di peta (Leaflet) dengan marker cluster.
+2. Tagging desa, kategorisasi seperti kuliner, alam, budaya, petualangan.
+3. Database geografis per desa, isinya kondisi, ketinggian, aksesibilitas, cuaca.
+4. Multi-model analysis, lebih akurat dari K-Means saja (DBSCAN, Hierarchical, GMM).
+5. AI rekomendasi wisata berdasarkan jumlah orang, kondisi atau preferensi, dan kendaraan.
+6. Database harga untuk tiket, makan, penginapan, transport supaya bisa hitung budget.
+7. Trip planner untuk menyusun itinerary beberapa desa dalam budget dan waktu.
+
+
+SARAN ARSITEKTUR
+
+Jangan taruh semua data di model Village. Pisahkan jadi beberapa tabel:
+
+- VillageProfile, hubungan 1-1 dengan Village, isinya data geografis dan kondisi desa.
+- Tag dan VillageTag, many-to-many, untuk tagging desa.
+- Attraction, tempat wisata per desa, isinya nama, tipe, durasi, harga tiket.
+- PriceCatalog, harga item seperti makan, penginapan, transport.
+- Transport, jenis kendaraan, biaya per km, kapasitas.
+
+Prinsip lain:
+
+- Integrasi lewat PRUDENCE: rekomendasi dan trip planner diakses pengguna lewat chatbot PRUDENCE, bukan lewat UI terpisah. Engine di belakangnya deterministik, PRUDENCE yang memberi narasi dan menggali kebutuhan pengguna (jumlah orang, kendaraan, budget).
+- Multi-model: tambah DBSCAN, Hierarchical, atau GMM di samping K-Means, lalu pilih otomatis yang terbaik lewat silhouette score. Jangan tulis ulang pipeline yang sudah ada.
+- AI rekomendasi: engine deterministik (content-based filter: tag, budget, kendaraan, jumlah orang) dipanggil sebagai tool oleh PRUDENCE. Jangan bangun AI dari nol.
+- Trip planner: mulai dari greedy atau knapsack (pilih desa yang muat di budget dan waktu) sebagai tool PRUDENCE. Jangan langsung full TSP karena itu sumber pembengkakan biaya.
+
+
+RENCANA FASE
+
+Fase 1, prioritas tinggi: model data VillageProfile, Tag, Attraction, PriceCatalog, Transport plus admin dan import. Estimasi sekitar 35 ribu token.
+
+Fase 2, prioritas tinggi: peta GIS dengan Leaflet, marker cluster, dan popup profil desa. Sekitar 40 ribu token.
+
+Fase 3, prioritas tinggi: engine rekomendasi constraint (tag, budget, kendaraan, jumlah). Sekitar 40 ribu token.
+
+Fase 4, prioritas sedang: multi-model clustering dan auto-pilih terbaik. Sekitar 35 ribu token.
+
+Fase 5, prioritas rendah dan paling mahal: trip planner untuk itinerary berdasarkan budget, waktu, jarak. Sekitar 50 ribu token.
+
+Fase 6, prioritas rendah: integrasi chatbot dan dashboard UI. Sekitar 30 ribu token.
+
+Urutan yang disarankan: fase 1, 2, 3 dulu. Tunda fase 4 sampai 6.
+
+
+PETA KODE
+
+Tempat menambah kode nanti:
+
+- Model master (desa, variable, indikator): backend/apps/master/models/
+- Single source of truth konfigurasi variable: backend/apps/master/services/variable_configuration_service.py
+- Endpoint API konfigurasi (reorder, move, layer): backend/apps/master/views/variable_config_views.py
+- Analisis dan ML: backend/apps/analytics/ (folder services dan ml)
+- Rekomendasi (TOPSIS): backend/apps/recommendation/
+- Chatbot PRUDENCE (tool dan service): backend/apps/chatbot/ — daftar tool terdaftar di tools/village_tools.py, tambahkan tool rekomendasi dan trip planner di sini.
+- UI drag-and-drop: backend/apps/master/templates/master/variable/config.html
+
+
+PRINSIP PENTING
+
+1. Jangan hard-code jumlah atau urutan variable, selalu baca dari VariableConfigurationService.
+2. Variable Configuration adalah single source of truth untuk UI, kuesioner, analisis, dan dashboard.
+3. Tulis test untuk tiap fitur baru (python manage.py test).
+4. Jangan over-engineer, fitur yang kurang berguna hanya akan menambah beban komputasi
+5. Pertahankan permission: visitor read-only, staff dan superuser boleh mengubah.
+
+
+Dokumen ini panduan pengembangan, bukan spesifikasi final. Sesuaikan dengan kebutuhan riset dan arahan dosen pembimbing.

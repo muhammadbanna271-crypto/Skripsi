@@ -1,0 +1,236 @@
+{% extends "base/crud_page.html" %}
+
+{% block title %}
+Indicator List
+{% endblock %}
+
+{% block page_title %}
+{{ variable.name }}
+{% endblock %}
+
+{% block page_action %}
+
+<a href="{% url 'master:questionnaire-list' %}"
+   class="btn btn-secondary">
+
+    <i class="bi bi-arrow-left"></i>
+
+    Back
+
+</a>
+
+{% endblock %}
+
+{% block search %}
+
+<div class="card mb-4">
+
+    <div class="card-body">
+
+        <h5>{{ variable.name }}</h5>
+
+        <p class="mb-2">
+            Total Indicator :
+            <strong>{{ indicator_count }}</strong>
+        </p>
+
+        <p>
+            Total Questionnaire :
+            <strong>{{ questionnaire_count }}</strong>
+        </p>
+
+        <form method="get" class="row">
+
+            <div class="col-md-5">
+
+                <input
+                    type="search"
+                    name="q"
+                    value="{{ request.GET.q }}"
+                    class="form-control"
+                    placeholder="Search indicator...">
+
+            </div>
+
+            <div class="col-auto">
+
+                <button class="btn btn-primary">
+
+                    <i class="bi bi-search"></i>
+
+                    Search
+
+                </button>
+
+            </div>
+
+            {% if request.GET.q %}
+
+            <div class="col-auto">
+
+                <a
+                    href="{% url 'master:questionnaire-by-variable' variable.id %}"
+                    class="btn btn-secondary">
+
+                    Reset
+
+                </a>
+
+            </div>
+
+            {% endif %}
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block crud_content %}
+
+<table class="table table-hover table-bordered">
+
+    <thead class="table-light">
+
+        <tr>
+
+            <th width="120">Code</th>
+
+            <th>Indicator</th>
+
+            <th width="170">Questionnaire</th>
+
+            <th width="220">Action</th>
+
+        </tr>
+
+    </thead>
+
+    <tbody>
+
+    {% for indicator in indicators %}
+
+        <tr>
+
+            <td>{{ indicator.code }}</td>
+
+            <td>{{ indicator.name }}</td>
+
+            <td>
+
+                <span class="badge bg-primary">
+
+                    {{ indicator.questionnaire_count }}
+
+                </span>
+
+            </td>
+
+            <td>
+
+                <a
+                    href="{% url 'master:questionnaire-by-indicator' indicator.id %}"
+                    class="btn btn-info btn-sm">
+
+                    View Questionnaires
+
+                </a>
+
+            </td>
+
+        </tr>
+
+    {% empty %}
+
+        <tr>
+
+            <td colspan="4" class="text-center">
+
+                No Indicator Available
+
+            </td>
+
+        </tr>
+
+    {% endfor %}
+
+    </tbody>
+
+</table>
+
+{% if is_paginated %}
+
+<nav>
+
+<ul class="pagination justify-content-center">
+
+{% if page_obj.has_previous %}
+
+<li class="page-item">
+
+<a class="page-link"
+href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+
+Previous
+
+</a>
+
+</li>
+
+{% endif %}
+
+{% for i in paginator.page_range %}
+
+{% if page_obj.number == i %}
+
+<li class="page-item active">
+
+<span class="page-link">
+
+{{ i }}
+
+</span>
+
+</li>
+
+{% else %}
+
+<li class="page-item">
+
+<a class="page-link"
+href="?page={{ i }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+
+{{ i }}
+
+</a>
+
+</li>
+
+{% endif %}
+
+{% endfor %}
+
+{% if page_obj.has_next %}
+
+<li class="page-item">
+
+<a class="page-link"
+href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+
+Next
+
+</a>
+
+</li>
+
+{% endif %}
+
+</ul>
+
+</nav>
+
+{% endif %}
+
+{% endblock %}

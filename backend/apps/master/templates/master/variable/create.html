@@ -1,0 +1,53 @@
+{% extends "base/crud_page.html" %}
+
+{% block title %}
+Create Variable
+{% endblock %}
+
+{% block page_title %}
+Create Variable
+{% endblock %}
+
+{% block crud_content %}
+
+<form method="post">
+
+    {% csrf_token %}
+
+    {% for field in form %}
+
+    <div class="mb-3">
+
+        <label class="form-label">
+
+            {{ field.label }}
+
+        </label>
+
+        {{ field }}
+
+        {{ field.errors }}
+
+    </div>
+
+    {% endfor %}
+
+    <button
+        type="submit"
+        class="btn btn-success">
+
+        Save
+
+    </button>
+
+    <a
+        href="{% url 'master:variable-list' %}"
+        class="btn btn-secondary">
+
+        Cancel
+
+    </a>
+
+</form>
+
+{% endblock %}

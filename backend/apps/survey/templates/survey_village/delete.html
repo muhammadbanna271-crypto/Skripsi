@@ -1,0 +1,77 @@
+{% extends "base/layout.html" %}
+
+{% block title %}
+Delete Survey Village
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="row justify-content-center">
+
+        <div class="col-lg-6">
+
+            <div class="card shadow border-danger">
+
+                <div class="card-header bg-danger text-white">
+
+                    Delete Survey Village
+
+                </div>
+
+                <div class="card-body">
+
+                    <p>
+
+                        Are you sure you want to delete
+
+                        <strong>
+
+                            {{ object.village.name }}
+
+                        </strong>
+
+                        from
+
+                        <strong>
+
+                            {{ object.survey }}
+
+                        </strong>?
+
+                    </p>
+
+                    <form method="post">
+
+                        {% csrf_token %}
+
+                        <button
+                            type="submit"
+                            class="btn btn-danger">
+
+                            Delete
+
+                        </button>
+
+                        <a
+                            href="{% url 'survey:survey-village-list' %}"
+                            class="btn btn-secondary">
+
+                            Cancel
+
+                        </a>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

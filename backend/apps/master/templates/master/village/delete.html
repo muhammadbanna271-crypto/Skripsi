@@ -1,0 +1,47 @@
+{% extends "base/crud_page.html" %}
+
+{% block title %}
+Delete Village
+{% endblock %}
+
+{% block page_title %}
+Delete Village
+{% endblock %}
+
+{% block crud_content %}
+
+<form method="post">
+
+    {% csrf_token %}
+
+    <div class="alert alert-danger">
+
+        Are you sure you want to delete
+
+        <strong>
+
+            {{ village }}
+
+        </strong>
+
+        ?
+
+    </div>
+
+    <button type="submit"
+            class="btn btn-danger">
+
+        Delete
+
+    </button>
+
+    <a href="{% url 'master:village-list' %}"
+       class="btn btn-secondary">
+
+        Cancel
+
+    </a>
+
+</form>
+
+{% endblock %}

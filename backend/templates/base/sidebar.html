@@ -1,0 +1,353 @@
+{% url 'dashboard:dashboard' as dashboard_url %}
+{% url 'master:district-list' as district_url %}
+{% url 'master:village-list' as village_url %}
+{% url 'master:cluster-list' as cluster_url %}
+{% url 'master:variable-list' as variable_url %}
+{% url 'master:indicator-list' as indicator_url %}
+{% url 'master:questionnaire-list' as questionnaire_url %}
+{% url 'survey:survey-list' as survey_url %}
+{% url 'survey:survey-village-list' as survey_village_url %}
+{% url 'respondent:respondent-list' as respondent_url %}
+{% url 'response:response-list' as response_url %}
+{% url 'analytics:dashboard' as analytics_url %}
+{% url 'recommendation:dashboard' as recommendation_url %}
+{% url 'gis:map' as gis_map_url %}
+{% url 'gis:destinations' as gis_destinations_url %}
+{% url 'gis:itinerary' as gis_itinerary_url %}
+{% url 'chatbot:chat-page' as chatbot_url %}
+{% load static %}
+<div class="sidebar">
+
+    <div class="sidebar-header">
+
+        <h4>
+
+            TRIP
+
+        </h4>
+
+        <small>
+
+            Tourism Resource Integration Platform
+
+        </small>
+
+    </div>
+
+    <div class="sidebar-menu">
+
+        <ul class="nav flex-column">
+
+            <li>
+
+                <a
+                    href="/"
+                    class="nav-link {% if request.path == '/' %}active{% endif %}">
+
+                    <i class="bi bi-compass"></i>
+
+                    Jelajahi
+
+                </a>
+
+            </li>
+
+            <li class="menu-title">
+
+                WISATA
+
+            </li>
+
+            <li>
+
+                <a
+                    href="{{ gis_map_url }}"
+                    class="nav-link {% if gis_map_url in request.path %}active{% endif %}">
+
+                    <i class="bi bi-map"></i>
+
+                    Peta Wisata
+
+                </a>
+
+            </li>
+
+            <li>
+
+                <a
+                    href="{{ gis_destinations_url }}"
+                    class="nav-link {% if gis_destinations_url in request.path %}active{% endif %}">
+
+                    <i class="bi bi-signpost-2"></i>
+
+                    Destinasi Wisata
+
+                </a>
+
+            </li>
+
+            <li>
+
+                <a
+                    href="{{ gis_itinerary_url }}"
+                    class="nav-link {% if gis_itinerary_url in request.path %}active{% endif %}">
+
+                    <i class="bi bi-calendar-check"></i>
+
+                    Itinerary
+
+                </a>
+
+            </li>
+
+            <li>
+
+                <a
+                    href="{{ chatbot_url }}"
+                    target="_blank"
+                    class="nav-link">
+
+                    <i class="bi bi-chat-heart"></i>
+
+                    PRUDENCE Chatbot
+
+                </a>
+
+            </li>
+
+            {% if request.user.is_staff or request.user.is_superuser %}
+
+            <li class="menu-title">
+
+                INTERNAL (STAFF)
+
+            </li>
+
+            <li>
+
+                <a
+                    href="{{ dashboard_url }}"
+                    class="nav-link {% if request.path == dashboard_url %}active{% endif %}">
+
+                    <i class="bi bi-speedometer2"></i>
+
+                    Dashboard
+
+                </a>
+
+            </li>
+
+            <li class="menu-title">
+
+                MASTER DATA
+
+            </li>
+
+            <li>
+
+                <a
+                    href="{{ district_url }}"
+                    class="nav-link {% if district_url in request.path %}active{% endif %}">
+
+                    <i class="bi bi-map"></i>
+
+                    District
+
+                </a>
+
+            </li>
+
+            <li>
+
+                <a
+                    href="{{ village_url }}"
+                    class="nav-link {% if village_url in request.path %}active{% endif %}">
+
+                    <i class="bi bi-geo-alt"></i>
+
+                    Village
+
+                </a>
+
+            </li>
+
+            <li>
+
+                <a
+                    href="{{ cluster_url }}"
+                    class="nav-link {% if cluster_url in request.path %}active{% endif %}">
+
+                    <i class="bi bi-diagram-3"></i>
+
+                    Cluster
+
+                </a>
+
+            </li>
+
+            <li>
+
+                <a
+                    href="{{ variable_url }}"
+                    class="nav-link {% if variable_url in request.path %}active{% endif %}">
+
+                    <i class="bi bi-boxes"></i>
+
+                    Variable
+
+                </a>
+
+            </li>
+
+            <li>
+
+                <a
+                    href="{{ indicator_url }}"
+                    class="nav-link {% if indicator_url in request.path %}active{% endif %}">
+
+                    <i class="bi bi-bar-chart-line"></i>
+
+                    Indicator
+
+                </a>
+
+            </li>
+
+            <li>
+
+                <a
+                    href="{{ questionnaire_url }}"
+                    class="nav-link {% if questionnaire_url in request.path %}active{% endif %}">
+
+                    <i class="bi bi-ui-checks-grid"></i>
+
+                    Questionnaire
+
+                </a>
+
+            </li>
+
+            <li class="menu-title">
+
+                SURVEY
+
+            </li>
+
+            <li>
+
+                <a
+                    href="{{ survey_url }}"
+                    class="nav-link {% if survey_url in request.path %}active{% endif %}">
+
+                    <i class="bi bi-clipboard-data"></i>
+
+                    Survey
+
+                </a>
+
+            </li>
+
+            <li>
+
+                <a
+                    href="{{ survey_village_url }}"
+                    class="nav-link {% if survey_village_url in request.path %}active{% endif %}">
+
+                    <i class="bi bi-pin-map"></i>
+
+                    Survey Village
+
+                </a>
+
+            </li>
+
+            <li>
+
+                <a
+                    href="{{ respondent_url }}"
+                    class="nav-link {% if respondent_url in request.path %}active{% endif %}">
+
+                    <i class="bi bi-people"></i>
+
+                    Respondent
+
+                </a>
+
+            </li>
+
+            <li>
+
+                <a
+                    href="{{ response_url }}"
+                    class="nav-link {% if response_url in request.path %}active{% endif %}">
+
+                    <i class="bi bi-clipboard-check"></i>
+
+                    Response
+
+                </a>
+
+            </li>
+
+            <li class="menu-title">
+
+                ANALYTICS
+
+            </li>
+
+            <li>
+
+                <a
+                    href="{{ analytics_url }}"
+                    class="nav-link {% if analytics_url in request.path %}active{% endif %}">
+
+                    <i class="bi bi-graph-up-arrow"></i>
+
+                    Analytics
+
+                </a>
+
+            </li>
+
+            <li>
+
+                <a
+                    href="{{ recommendation_url }}"
+                    class="nav-link {% if recommendation_url in request.path %}active{% endif %}">
+
+                    <i class="bi bi-award"></i>
+
+                    Recommendation
+
+                </a>
+
+            </li>
+
+            {% endif %}
+
+        </ul>
+
+    </div>
+
+    <div class="sidebar-footer">
+
+        <form
+            method="post"
+            action="{% url 'logout' %}">
+
+            {% csrf_token %}
+
+            <button
+                class="btn btn-light logout-btn">
+
+                <i class="bi bi-box-arrow-right"></i>
+
+                Logout
+
+            </button>
+
+        </form>
+
+    </div>
+
+</div>

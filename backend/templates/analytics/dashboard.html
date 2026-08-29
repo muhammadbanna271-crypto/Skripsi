@@ -1,0 +1,406 @@
+{% extends "base/layout.html" %}
+
+{% load static %}
+
+{% block title %}
+Analytics Dashboard
+{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <div>
+
+        <h2 class="fw-bold mb-1">
+            Analytics Dashboard
+        </h2>
+
+        <p class="text-muted mb-0">
+            TRIP Analytics
+        </p>
+
+    </div>
+
+    <a
+        href="{% url 'analytics:ml-dashboard' %}"
+        class="btn btn-primary btn-lg">
+
+        <i class="bi bi-diagram-3 me-2"></i>
+
+        ML Analytics
+    </a>
+
+</div>
+
+<div class="row g-4">
+
+    <div class="col-md-2">
+
+        <div class="card kpi-card">
+
+            <div class="card-body text-center">
+
+                <div class="kpi-title">
+
+                    Total Village
+
+                </div>
+
+                <div class="kpi-value">
+
+                    {{ total_village }}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="col-md-2">
+
+        <div class="card kpi-card">
+
+            <div class="card-body text-center">
+
+                <div class="kpi-title">
+
+                    Total Survey
+
+                </div>
+
+                <div class="kpi-value">
+
+                    {{ total_survey }}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="col-md-2">
+
+        <div class="card kpi-card">
+
+            <div class="card-body text-center">
+
+                <div class="kpi-title">
+
+                    Respondent
+
+                </div>
+
+                <div class="kpi-value">
+
+                    {{ total_respondent }}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="col-md-2">
+
+        <div class="card kpi-card">
+
+            <div class="card-body text-center">
+
+                <div class="kpi-title">
+
+                    Response
+
+                </div>
+
+                <div class="kpi-value">
+
+                    {{ total_response }}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="col-md-4">
+
+        <div class="card kpi-card">
+
+            <div class="card-body text-center">
+
+                <div class="kpi-title">
+
+                    Average Score
+
+                </div>
+
+                <div class="display-5 fw-bold text-success">
+
+                    {{ average_score|floatformat:2 }}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="row mt-4 g-4">
+
+    <div class="col-lg-8">
+
+        <div class="card chart-card">
+
+            <div class="card-header bg-white border-0 fw-bold">
+
+                Likert Distribution
+
+            </div>
+
+            <div class="card-body">
+
+                <canvas id="barChart"></canvas>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="col-lg-4">
+
+        <div class="card chart-card">
+
+            <div class="card-header bg-white border-0 fw-bold">
+
+                Percentage
+
+            </div>
+
+            <div class="card-body">
+
+                <canvas id="pieChart"></canvas>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="row mt-4">
+
+    <div class="col-12">
+
+        <div class="card chart-card">
+
+            <div class="card-header bg-white border-0 fw-bold">
+
+                Village Ranking
+
+            </div>
+
+            <div class="card-body table-responsive">
+
+                <table class="table align-middle">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>#</th>
+                            <th>Village</th>
+                            <th>Respondent</th>
+                            <th>Responses</th>
+                            <th>Average</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for item in village_scores %}
+
+                        <tr>
+
+                            <td>{{ forloop.counter }}</td>
+
+                            <td>{{ item.village.name }}</td>
+
+                            <td>{{ item.respondent_count }}</td>
+
+                            <td>{{ item.response_count }}</td>
+
+                            <td>
+
+                                <strong>
+
+                                    {{ item.average_score }}
+
+                                </strong>
+
+                            </td>
+
+                        </tr>
+
+                        {% empty %}
+
+                        <tr>
+
+                            <td colspan="5" class="text-center">
+
+                                No Data
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="row mt-4">
+
+    <div class="col-12">
+
+        <div class="card chart-card">
+
+            <div class="card-header bg-white border-0 fw-bold">
+
+                Indicator Average Score
+
+            </div>
+
+            <div class="card-body table-responsive">
+
+                <table class="table align-middle">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Indicator</th>
+
+                            <th>Average Score</th>
+
+                            <th>Total Response</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for item in indicator_scores %}
+
+                        <tr>
+
+                            <td>{{ item.questionnaire__indicator__name }}</td>
+
+                            <td>{{ item.average|floatformat:2 }}</td>
+
+                            <td>{{ item.total }}</td>
+
+                        </tr>
+
+                        {% empty %}
+
+                        <tr>
+
+                            <td colspan="3" class="text-center">
+
+                                No Data
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{{ likert_distribution|json_script:"likert-data" }}
+
+{% endblock %}
+
+{% block extra_js %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const likert = JSON.parse(
+        document.getElementById("likert-data").textContent
+    );
+
+    const labels = likert.map(item => item.label);
+    const totals = likert.map(item => item.total);
+
+    new Chart(
+        document.getElementById("barChart"),
+        {
+            type: "bar",
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "Total Response",
+                    data: totals,
+                }]
+            }
+        }
+    );
+
+    new Chart(
+        document.getElementById("pieChart"),
+        {
+            type: "pie",
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: totals,
+                }]
+            }
+        }
+    );
+
+});
+
+</script>
+
+{% endblock %}

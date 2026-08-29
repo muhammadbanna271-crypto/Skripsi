@@ -1,0 +1,506 @@
+{% extends "base/crud_page.html" %}
+
+{% block title %}Variable Configuration{% endblock %}
+
+{% block page_title %}Variable Configuration{% endblock %}
+
+{% block page_subtitle %}
+Atur urutan &amp; peran variable (Predictor / Mediator / Response). Drag untuk reorder
+atau pindah antar grup. Perubahan tersimpan ke database sebagai sumber kebenaran.
+{% endblock %}
+
+{% block page_action %}
+{% if can_edit %}
+<button id="btn-add-layer" class="btn btn-outline-success rounded-3 px-4">
+    <i class="bi bi-plus-circle me-2"></i> Add Mediator Layer
+</button>
+{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .drop-zone {
+        background: #f8f9fa;
+        border: 2px dashed #dee2e6;
+        border-radius: 1rem;
+        padding: 0.75rem;
+        min-height: 120px;
+        transition: border-color .15s, background .15s;
+    }
+    .drop-zone.drag-over {
+        border-color: #0d6efd;
+        background: #e7f1ff;
+    }
+    .drop-zone-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+    .var-card {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 0.6rem;
+        padding: 0.5rem 0.75rem;
+        margin-bottom: 0.4rem;
+        cursor: grab;
+        box-shadow: 0 1px 2px rgba(0,0,0,.04);
+    }
+    .var-card.dragging { opacity: .4; }
+    .var-card.no-drag { cursor: default; }
+    .drag-handle { color: #adb5bd; cursor: grab; }
+    .drop-zone-empty {
+        color: #adb5bd;
+        font-style: italic;
+        font-size: .85rem;
+        padding: .5rem;
+        text-align: center;
+    }
+    .is-loading { opacity: .6; pointer-events: none; }
+</style>
+{% endblock %}
+
+{% block crud_content %}
+
+<div id="var-config" data-can-edit="{% if can_edit %}1{% else %}0{% endif %}">
+
+    {% if errors %}
+    <div class="alert alert-warning rounded-3">
+        <strong>Konfigurasi perlu perhatian:</strong>
+        <ul class="mb-0">
+            {% for e in errors %}<li>{{ e }}</li>{% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <div class="row g-4">
+
+        {# ============ PREDICTOR ============ #}
+        <div class="col-md-4">
+            <div class="drop-zone" data-role="predictor" data-layer="">
+                <div class="drop-zone-header">
+                    <span><i class="bi bi-box-arrow-right text-primary me-2"></i>PREDICTOR</span>
+                    <span class="text-muted small">X1 &hellip; Xn</span>
+                </div>
+                <div class="drop-zone-body">
+                    {% for v in predictors %}
+                        {% include "master/variable/_var_card.html" with v=v %}
+                    {% empty %}
+                        <div class="drop-zone-empty">Tidak ada predictor.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        {# ============ MEDIATOR ============ #}
+        <div class="col-md-4">
+            <div class="drop-zone-header mb-2">
+                <span><i class="bi bi-diagram-2 text-warning me-2"></i>MEDIATOR</span>
+                <span class="text-muted small">Y1 &hellip; Yn</span>
+            </div>
+
+            {% for panel in layer_panels %}
+            <div class="drop-zone mb-3 {% if not panel.is_active %}opacity-50{% endif %}"
+                 data-role="mediator" data-layer="{{ panel.number }}">
+                <div class="drop-zone-header">
+                    <span>
+                        Layer {{ panel.number }}{% if panel.name %} &mdash; {{ panel.name }}{% endif %}
+                        {% if not panel.is_active %}<span class="badge bg-secondary ms-1">nonaktif</span>{% endif %}
+                    </span>
+                    {% if can_edit %}
+                    <span>
+                        {% if panel.is_active %}
+                        <button class="btn btn-sm btn-outline-secondary"
+                                data-action="deactivate-layer" data-layer-id="{{ panel.id }}">
+                            Nonaktifkan
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger"
+                                data-action="remove-layer" data-layer-id="{{ panel.id }}">
+                            Hapus
+                        </button>
+                        {% else %}
+                        <button class="btn btn-sm btn-outline-success"
+                                data-action="activate-layer" data-layer-id="{{ panel.id }}">
+                            Aktifkan
+                        </button>
+                        {% endif %}
+                    </span>
+                    {% endif %}
+                </div>
+                <div class="drop-zone-body">
+                    {% for v in panel.variables %}
+                        {% include "master/variable/_var_card.html" with v=v %}
+                    {% empty %}
+                        <div class="drop-zone-empty">Layer kosong.</div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-muted small">Belum ada mediator layer.</div>
+            {% endfor %}
+        </div>
+
+        {# ============ RESPONSE ============ #}
+        <div class="col-md-4">
+            <div class="drop-zone" data-role="response" data-layer="">
+                <div class="drop-zone-header">
+                    <span><i class="bi bi-arrow-return-right text-success me-2"></i>RESPONSE / TARGET</span>
+                    <span class="text-muted small">Z1 &hellip; Zn</span>
+                </div>
+                <div class="drop-zone-body">
+                    {% for v in responses %}
+                        {% include "master/variable/_var_card.html" with v=v %}
+                    {% empty %}
+                        <div class="drop-zone-empty">Tidak ada response.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{# hidden form untuk memastikan csrf cookie tersedia #}
+<form style="display:none">{% csrf_token %}</form>
+
+<div id="toast-area" class="position-fixed bottom-0 end-0 p-3" style="z-index:1080"></div>
+
+{# ===== Modal Add Mediator Layer (menggantikan window.prompt) ===== #}
+<div class="modal fade" id="add-layer-modal" tabindex="-1"
+     aria-labelledby="add-layer-modal-label" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="add-layer-modal-label">Add Mediator Layer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-3">Create a new mediator layer.</p>
+                <label class="form-label" for="layer-name-input">Layer Name</label>
+                <input type="text" class="form-control" id="layer-name-input"
+                       placeholder="Enter mediator layer name...">
+                <div id="layer-name-error" class="text-danger small mt-2 d-none">
+                    Layer name is required.
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-outline-secondary rounded-3"
+                        data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success rounded-3 px-4"
+                        id="layer-create-btn">Create Layer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    "use strict";
+
+    var root = document.getElementById("var-config");
+    if (!root) return;
+
+    var canEdit = root.getAttribute("data-can-edit") === "1";
+
+    var URLs = {
+        reorder: "{% url 'master:variable-reorder' %}",
+        move: "{% url 'master:variable-move' %}",
+        addLayer: "{% url 'master:layer-add' %}",
+        deactivateLayer: "{% url 'master:layer-deactivate' 999999 %}",
+        activateLayer: "{% url 'master:layer-activate' 999999 %}",
+        removeLayer: "{% url 'master:layer-remove' 999999 %}"
+    };
+
+    function getCookie(name) {
+        var value = null;
+        if (document.cookie && document.cookie !== "") {
+            var cookies = document.cookie.split(";");
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + "=")) {
+                    value = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return value;
+    }
+
+    function toast(message, ok) {
+        var area = document.getElementById("toast-area");
+        var el = document.createElement("div");
+        el.className = "alert alert-" + (ok ? "success" : "danger") + " shadow rounded-3";
+        el.textContent = message;
+        area.appendChild(el);
+        setTimeout(function () { el.remove(); }, 3500);
+    }
+
+    function post(url, data) {
+        return fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken") || "",
+                "X-Requested-With": "XMLHttpRequest"
+            },
+            body: JSON.stringify(data)
+        }).then(function (res) {
+            return res.json().then(function (json) {
+                return { status: res.status, json: json };
+            });
+        });
+    }
+
+    function setLoading(on) {
+        root.classList.toggle("is-loading", on);
+    }
+
+    function cardIdsInZone(zone) {
+        var cards = zone.querySelectorAll(".var-card");
+        return Array.prototype.map.call(cards, function (c) {
+            return parseInt(c.getAttribute("data-id"), 10);
+        });
+    }
+
+    var dragging = null;
+
+    // ---- drag start/end pada kartu ----
+    document.addEventListener("dragstart", function (e) {
+        var card = e.target.closest ? e.target.closest(".var-card") : null;
+        if (!card || !canEdit) return;
+        dragging = {
+            id: card.getAttribute("data-id"),
+            role: card.getAttribute("data-role"),
+            layer: card.getAttribute("data-layer") || ""
+        };
+        e.dataTransfer.setData("text/plain", dragging.id);
+        e.dataTransfer.effectAllowed = "move";
+        card.classList.add("dragging");
+    });
+
+    document.addEventListener("dragend", function () {
+        document.querySelectorAll(".var-card.dragging").forEach(function (c) {
+            c.classList.remove("dragging");
+        });
+        document.querySelectorAll(".drop-zone.drag-over").forEach(function (z) {
+            z.classList.remove("drag-over");
+        });
+        dragging = null;
+    });
+
+    // ---- drop zones ----
+    document.querySelectorAll(".drop-zone").forEach(function (zone) {
+        zone.addEventListener("dragover", function (e) {
+            if (!canEdit) return;
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "move";
+            zone.classList.add("drag-over");
+        });
+        zone.addEventListener("dragleave", function (e) {
+            zone.classList.remove("drag-over");
+        });
+        zone.addEventListener("drop", function (e) {
+            e.preventDefault();
+            zone.classList.remove("drag-over");
+            if (!canEdit || !dragging) return;
+
+            var targetRole = zone.getAttribute("data-role");
+            var targetLayer = zone.getAttribute("data-layer") || "";
+            handleDrop(dragging, targetRole, targetLayer, zone, e.clientY);
+        });
+    });
+
+    function insertionIndex(zoneBody, clientY) {
+        var cards = zoneBody.querySelectorAll(".var-card");
+        var idx = 0;
+        for (var i = 0; i < cards.length; i++) {
+            var rect = cards[i].getBoundingClientRect();
+            if (clientY > rect.top + rect.height / 2) idx = i + 1;
+        }
+        return idx;
+    }
+
+    function handleDrop(src, targetRole, targetLayer, zone, clientY) {
+        var zoneBody = zone.querySelector(".drop-zone-body");
+
+        if (src.role === targetRole && src.layer === targetLayer) {
+            // Reorder dalam grup yang sama
+            var ids = cardIdsInZone(zoneBody);
+            var without = ids.filter(function (id) { return id !== parseInt(src.id, 10); });
+            without.splice(insertionIndex(zoneBody, clientY), 0, parseInt(src.id, 10));
+            saveReorder(targetRole, without, targetLayer);
+        } else {
+            // Pindah antar grup/layer pada posisi drop (1-based)
+            var position = insertionIndex(zoneBody, clientY) + 1;
+            saveMove(src.id, targetRole, targetLayer, position);
+        }
+    }
+
+    function saveReorder(role, orderedIds, layer) {
+        setLoading(true);
+        post(URLs.reorder, { role: role, ordered_ids: orderedIds, layer: layer || null })
+            .then(function (res) {
+                setLoading(false);
+                if (res.status === 200 && res.json.success) {
+                    toast("Urutan disimpan.", true);
+                    setTimeout(function () { location.reload(); }, 350);
+                } else {
+                    toast(res.json.error || "Gagal menyimpan urutan.", false);
+                }
+            })
+            .catch(function () {
+                setLoading(false);
+                toast("Gagal terhubung ke server.", false);
+            });
+    }
+
+    function saveMove(id, role, layer, position) {
+        setLoading(true);
+        post(URLs.move, {
+            variable_id: parseInt(id, 10),
+            new_role: role,
+            layer: layer ? parseInt(layer, 10) : null,
+            position: position || null
+        })
+            .then(function (res) {
+                setLoading(false);
+                if (res.status === 200 && res.json.success) {
+                    toast("Variable dipindahkan.", true);
+                    setTimeout(function () { location.reload(); }, 350);
+                } else {
+                    toast(res.json.error || "Gagal memindahkan variable.", false);
+                }
+            })
+            .catch(function () {
+                setLoading(false);
+                toast("Gagal terhubung ke server.", false);
+            });
+    }
+
+    // ---- tombol layer ----
+    function layerUrl(kind, layerId) {
+        return URLs[kind].replace("999999", layerId);
+    }
+
+    document.addEventListener("click", function (e) {
+        var btn = e.target.closest ? e.target.closest("button[data-action]") : null;
+        if (!btn || !canEdit) return;
+
+        var action = btn.getAttribute("data-action");
+        var layerId = btn.getAttribute("data-layer-id");
+
+        var label = {
+            "deactivate-layer": "Nonaktifkan layer ini?",
+            "activate-layer": "Aktifkan kembali layer ini?",
+            "remove-layer": "Hapus layer ini? Variable di dalamnya dipindah/dinonaktifkan."
+        }[action];
+
+        if (label && !window.confirm(label)) return;
+
+        setLoading(true);
+        post(layerUrl(action === "deactivate-layer" ? "deactivateLayer" :
+                      action === "activate-layer" ? "activateLayer" : "removeLayer", layerId), {})
+            .then(function (res) {
+                setLoading(false);
+                if (res.status === 200 && res.json.success) {
+                    toast("Berhasil.", true);
+                    setTimeout(function () { location.reload(); }, 350);
+                } else {
+                    toast(res.json.error || "Gagal.", false);
+                }
+            })
+            .catch(function () { setLoading(false); toast("Gagal terhubung.", false); });
+    });
+
+    // ---- Add Mediator Layer (custom modal, bukan window.prompt) ----
+    function submitAddLayer(name) {
+        setLoading(true);
+        post(URLs.addLayer, { name: name })
+            .then(function (res) {
+                setLoading(false);
+                if (res.status === 200 && res.json.success) {
+                    toast("Layer ditambahkan.", true);
+                    setTimeout(function () { location.reload(); }, 350);
+                } else {
+                    toast(res.json.error || "Gagal menambah layer.", false);
+                }
+            })
+            .catch(function () {
+                setLoading(false);
+                toast("Gagal terhubung.", false);
+            });
+    }
+
+    var addLayerModalEl = document.getElementById("add-layer-modal");
+    var layerNameInput = document.getElementById("layer-name-input");
+    var layerNameError = document.getElementById("layer-name-error");
+    var layerCreateBtn = document.getElementById("layer-create-btn");
+
+    var addLayerModal = addLayerModalEl
+        ? new bootstrap.Modal(addLayerModalEl, { keyboard: true })
+        : null;
+
+    function hideLayerNameError() {
+        if (layerNameError) layerNameError.classList.add("d-none");
+    }
+
+    function showLayerNameError() {
+        if (layerNameError) layerNameError.classList.remove("d-none");
+    }
+
+    function openAddLayerModal() {
+        if (!canEdit) return;
+        if (layerNameInput) layerNameInput.value = "";
+        hideLayerNameError();
+        if (addLayerModal) addLayerModal.show();
+    }
+
+    function createLayerFromModal() {
+        var name = (layerNameInput ? layerNameInput.value : "").trim();
+        if (!name) {
+            showLayerNameError();
+            if (layerNameInput) layerNameInput.focus();
+            return;
+        }
+        hideLayerNameError();
+        if (addLayerModal) addLayerModal.hide();
+        submitAddLayer(name);
+    }
+
+    var addLayerBtn = document.getElementById("btn-add-layer");
+    if (addLayerBtn) {
+        addLayerBtn.addEventListener("click", openAddLayerModal);
+    }
+
+    if (layerCreateBtn) {
+        layerCreateBtn.addEventListener("click", createLayerFromModal);
+    }
+
+    if (layerNameInput) {
+        // Enter untuk submit.
+        layerNameInput.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                createLayerFromModal();
+            }
+        });
+
+        if (addLayerModalEl) {
+            addLayerModalEl.addEventListener("shown.bs.modal", function () {
+                layerNameInput.focus();
+            });
+            addLayerModalEl.addEventListener("hidden.bs.modal", function () {
+                hideLayerNameError();
+            });
+        }
+    }
+})();
+</script>
+{% endblock %}

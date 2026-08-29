@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}
+Recommendation Report
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+<h2>
+
+Recommendation Report
+
+</h2>
+
+<hr>
+
+<table class="table table-bordered">
+
+<thead>
+
+<tr>
+
+<th>No</th>
+
+<th>Village</th>
+
+<th>Score</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for item in recommendations %}
+
+<tr>
+
+<td>{{ forloop.counter }}</td>
+
+<td>{{ item.village }}</td>
+
+<td>{{ item.score|floatformat:4 }}</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+{% endblock %}

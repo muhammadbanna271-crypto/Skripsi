@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}
+Recommendation Detail
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+<h2>
+
+Recommendation Detail
+
+</h2>
+
+<hr>
+
+<table class="table table-bordered">
+
+<tr>
+
+<th width="250">
+
+Village
+
+</th>
+
+<td>
+
+{{ recommendation.village }}
+
+</td>
+
+</tr>
+
+<tr>
+
+<th>
+
+TOPSIS Score
+
+</th>
+
+<td>
+
+{{ recommendation.score|floatformat:4 }}
+
+</td>
+
+</tr>
+
+</table>
+
+</div>
+
+{% endblock %}

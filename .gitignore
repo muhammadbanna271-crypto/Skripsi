@@ -1,0 +1,146 @@
+# ==========================================
+# TRIP
+# Smart Tourism Village Decision Support System
+# .gitignore
+# ==========================================
+
+
+# ================= Python =================
+
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+
+# ================= Virtual Environment =================
+
+venv/
+.venv/
+env/
+ENV/
+
+
+# ================= Environment =================
+
+.env
+.env.*
+!.env.example
+
+
+# ================= Django =================
+
+db.sqlite3
+db.sqlite3-journal
+local_settings.py
+
+media/
+staticfiles/
+
+
+# ================= Python Cache =================
+
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+
+# ================= Coverage =================
+
+.coverage
+coverage.xml
+htmlcov/
+nosetests.xml
+
+
+# ================= Logs =================
+
+*.log
+logs/
+
+
+# ================= IDE =================
+
+.vscode/
+.idea/
+
+
+# ================= Operating System =================
+
+.DS_Store
+Thumbs.db
+desktop.ini
+
+
+# ================= Build =================
+
+build/
+dist/
+*.egg-info/
+
+
+# ================= Jupyter =================
+
+.ipynb_checkpoints/
+
+
+# ================= Machine Learning =================
+
+*.pkl
+*.joblib
+*.h5
+*.onnx
+
+
+# ================= Dataset =================
+
+datasets/raw/
+datasets/backup/
+
+# ================= Data Fixtures (dumpdata — sensitif) =================
+
+data.json
+initial_data.json
+backend/data.json
+backend/initial_data.json
+
+
+# ================= Export Files =================
+
+# Generated export files only
+media/exports/
+media/reports/
+
+
+# ================= Undo Backup =================
+
+backups/undo/*.json
+
+
+# ================= Temporary Files =================
+
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+
+
+# ================= Compressed Files =================
+
+*.zip
+*.rar
+*.7z
+*.tar.gz
+
+
+# ================= Docker =================
+
+docker-compose.override.yml
+
+
+# ================= Misc =================
+
+*.pid
+*.seed
+*.out

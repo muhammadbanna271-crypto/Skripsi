@@ -1,0 +1,107 @@
+{% extends "base/layout.html" %}
+
+{% block title %}
+Recommendation
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+<h2 class="mb-4">
+
+TOPSIS Recommendation
+
+</h2>
+
+<div class="card shadow">
+
+<div class="card-body">
+
+<table class="table table-striped">
+
+<thead>
+
+<tr>
+
+<th>Rank</th>
+
+<th>Village</th>
+
+<th>Score</th>
+
+<th>Status</th>
+
+<th>Recommendation</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for item in ranking %}
+
+<tr>
+
+<td>
+
+{{ forloop.counter }}
+
+</td>
+
+<td>
+
+{{ item.village.name }}
+
+</td>
+
+<td>
+
+{{ item.score|floatformat:4 }}
+
+</td>
+
+<td>
+
+<span class="badge bg-{{ item.badge }}">
+
+{{ item.status }}
+
+</span>
+
+</td>
+
+<td>
+
+{{ item.recommendation }}
+
+</td>
+
+</tr>
+
+{% empty %}
+
+<tr>
+
+<td colspan="5">
+
+No recommendation available.
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,119 @@
+{% extends "base/crud_page.html" %}
+
+{% block title %}
+Delete Respondent
+{% endblock %}
+
+{% block page_title %}
+Delete Respondent
+{% endblock %}
+
+{% block crud_content %}
+
+<form method="post">
+
+    {% csrf_token %}
+
+    <div class="alert alert-danger">
+
+        <h5>
+
+            Delete Respondent
+
+        </h5>
+
+        <p>
+
+            Are you sure you want to delete this respondent?
+
+        </p>
+
+        <table class="table table-sm">
+
+            <tr>
+
+                <th width="150">
+
+                    NIK
+
+                </th>
+
+                <td>
+
+                    {{ respondent.nik }}
+
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <th>
+
+                    Name
+
+                </th>
+
+                <td>
+
+                    {{ respondent.name }}
+
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <th>
+
+                    Survey
+
+                </th>
+
+                <td>
+
+                    {{ respondent.survey_village.survey.name }}
+
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <th>
+
+                    Village
+
+                </th>
+
+                <td>
+
+                    {{ respondent.survey_village.village.name }}
+
+                </td>
+
+            </tr>
+
+        </table>
+
+    </div>
+
+    <button
+        type="submit"
+        class="btn btn-danger">
+
+        Delete
+
+    </button>
+
+    <a
+        href="{% url 'respondent:respondent-list' %}"
+        class="btn btn-secondary">
+
+        Cancel
+
+    </a>
+
+</form>
+
+{% endblock %}

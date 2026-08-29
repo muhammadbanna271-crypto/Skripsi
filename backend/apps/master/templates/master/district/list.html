@@ -1,0 +1,315 @@
+{% extends "base/crud_page.html" %}
+
+{% block title %}
+District List
+{% endblock %}
+
+{% block page_title %}
+District List
+{% endblock %}
+
+{% block page_subtitle %}
+Manage district master data.
+{% endblock %}
+
+{% block page_action %}
+
+<a
+ href="{% url 'master:district-create' %}"
+ class="btn btn-success rounded-3 px-4">
+
+<i class="bi bi-plus-circle me-2"></i>
+
+
+Add District
+
+</a>
+
+{% endblock %}
+
+{% block search %}
+
+<form method="get">
+
+<div class="row g-3">
+
+
+    <div class="col-md-5">
+
+
+        <input
+            type="search"
+            name="q"
+            value="{{ request.GET.q }}"
+            class="form-control"
+            placeholder="Search district...">
+
+
+    </div>
+
+
+    <div class="col-auto">
+
+
+        <button
+            type="submit"
+            class="btn btn-success">
+
+
+            <i class="bi bi-search me-2"></i>
+
+
+            Search
+
+
+        </button>
+
+
+    </div>
+
+
+    {% if request.GET.q %}
+
+
+    <div class="col-auto">
+
+
+        <a
+            href="{% url 'master:district-list' %}"
+            class="btn btn-outline-secondary">
+
+
+            Reset
+
+
+        </a>
+
+
+    </div>
+
+
+    {% endif %}
+
+
+</div>
+
+</form>
+
+{% endblock %}
+
+{% block crud_content %}
+
+<div class="table-responsive">
+
+<table class="table align-middle">
+
+
+    <thead>
+
+
+        <tr>
+
+
+            <th>Code</th>
+            <th>District</th>
+            <th>Status</th>
+            <th class="text-center">Action</th>
+
+
+        </tr>
+
+
+    </thead>
+
+
+    <tbody>
+
+
+        {% for district in districts %}
+
+
+        <tr>
+
+
+            <td>{{ district.code }}</td>
+
+
+            <td class="fw-semibold">
+
+
+                {{ district.name }}
+
+
+            </td>
+
+
+            <td>
+
+
+                <span class="badge bg-success">
+
+
+                    Active
+
+
+                </span>
+
+
+            </td>
+
+
+            <td class="text-center">
+
+
+                <a
+                    href="{% url 'master:district-detail' district.pk %}"
+                    class="btn btn-outline-primary btn-sm">
+
+
+                    <i class="bi bi-eye"></i>
+
+
+                </a>
+
+
+                <a
+                    href="{% url 'master:district-update' district.pk %}"
+                    class="btn btn-outline-warning btn-sm">
+
+
+                    <i class="bi bi-pencil"></i>
+
+
+                </a>
+
+
+                <a
+                    href="{% url 'master:district-delete' district.pk %}"
+                    class="btn btn-outline-danger btn-sm">
+
+
+                    <i class="bi bi-trash"></i>
+
+
+                </a>
+
+
+            </td>
+
+
+        </tr>
+
+
+        {% empty %}
+
+
+        <tr>
+
+
+            <td
+                colspan="4"
+                class="text-center py-5">
+
+
+                No district data available.
+
+
+            </td>
+
+
+        </tr>
+
+
+        {% endfor %}
+
+
+    </tbody>
+
+
+</table>
+
+</div>
+
+{% if is_paginated %}
+
+<nav class="mt-4">
+
+<ul class="pagination justify-content-end">
+
+
+    {% if page_obj.has_previous %}
+
+
+    <li class="page-item">
+
+
+        <a
+            class="page-link"
+            href="?page={{ page_obj.previous_page_number }}">
+
+
+            Previous
+
+
+        </a>
+
+
+    </li>
+
+
+    {% endif %}
+
+
+    {% for i in paginator.page_range %}
+
+
+    <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+
+
+        <a
+            class="page-link"
+            href="?page={{ i }}">
+
+
+            {{ i }}
+
+
+        </a>
+
+
+    </li>
+
+
+    {% endfor %}
+
+
+    {% if page_obj.has_next %}
+
+
+    <li class="page-item">
+
+
+        <a
+            class="page-link"
+            href="?page={{ page_obj.next_page_number }}">
+
+
+            Next
+
+
+        </a>
+
+
+    </li>
+
+
+    {% endif %}
+
+
+</ul>
+
+</nav>
+
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,24 @@
+{% if can_edit %}
+<div class="var-card" draggable="true"
+     data-id="{{ v.id }}"
+     data-role="{{ v.role }}"
+     data-layer="{% if v.mediator_layer %}{{ v.mediator_layer }}{% endif %}">
+    <span class="drag-handle" title="Drag untuk reorder / pindah">
+        <i class="bi bi-grip-vertical"></i>
+    </span>
+    <div>
+        <strong>{{ v.code }}</strong>
+        <span class="text-muted">&mdash; {{ v.name }}</span>
+    </div>
+</div>
+{% else %}
+<div class="var-card no-drag"
+     data-id="{{ v.id }}"
+     data-role="{{ v.role }}"
+     data-layer="{% if v.mediator_layer %}{{ v.mediator_layer }}{% endif %}">
+    <div>
+        <strong>{{ v.code }}</strong>
+        <span class="text-muted">&mdash; {{ v.name }}</span>
+    </div>
+</div>
+{% endif %}

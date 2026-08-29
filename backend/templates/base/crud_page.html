@@ -1,0 +1,60 @@
+{% extends "base/layout.html" %}
+
+{% block content %}
+
+<div class="card border-0 shadow-sm rounded-4">
+
+    <div class="card-body p-4">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+
+            <div>
+
+                <h3 class="page-title mb-1">
+
+                    {% block page_title %}
+                    {% endblock %}
+
+                </h3>
+
+                <div class="page-subtitle">
+
+                    {% block page_subtitle %}
+                    {% endblock %}
+
+                </div>
+
+            </div>
+
+            <div>
+
+                {% block page_action %}
+                {% endblock %}
+
+            </div>
+
+        </div>
+
+        {# Pesan (messages) sudah dirender oleh base/layout.html          #}
+        {# lewat {% include "base/messages.html" %} — jangan diulang di  #}
+        {# sini, karena bikin setiap alert tampil dua kali.              #}
+
+        <div class="mb-4">
+
+            {% block search %}
+            {% endblock %}
+
+        </div>
+
+        <div class="crud-content">
+
+            {% block crud_content %}
+            {% endblock %}
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

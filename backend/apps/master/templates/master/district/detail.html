@@ -1,0 +1,121 @@
+{% extends "base/crud_page.html" %}
+
+{% block title %}
+District Detail
+{% endblock %}
+
+{% block page_title %}
+District Detail
+{% endblock %}
+
+{% block page_action %}
+
+<a
+    href="{% url 'master:district-list' %}"
+    class="btn btn-secondary">
+
+    <i class="bi bi-arrow-left"></i>
+
+    Back
+
+</a>
+
+{% endblock %}
+
+{% block crud_content %}
+
+<div class="row">
+
+    <div class="col-md-6">
+
+        <table class="table table-bordered">
+
+            <tbody>
+
+                <tr>
+
+                    <th width="200">
+                        District Code
+                    </th>
+
+                    <td>
+
+                        {{ district.code }}
+
+                    </td>
+
+                </tr>
+
+                <tr>
+
+                    <th>
+                        District Name
+                    </th>
+
+                    <td>
+
+                        {{ district.name }}
+
+                    </td>
+
+                </tr>
+
+                <tr>
+
+                    <th>
+                        Created At
+                    </th>
+
+                    <td>
+
+                        {{ district.created_at }}
+
+                    </td>
+
+                </tr>
+
+                <tr>
+
+                    <th>
+                        Updated At
+                    </th>
+
+                    <td>
+
+                        {{ district.updated_at }}
+
+                    </td>
+
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<hr>
+
+<a
+    href="{% url 'master:district-update' district.pk %}"
+    class="btn btn-warning">
+
+    <i class="bi bi-pencil-square"></i>
+
+    Edit
+
+</a>
+
+<a
+    href="{% url 'master:district-delete' district.pk %}"
+    class="btn btn-danger">
+
+    <i class="bi bi-trash"></i>
+
+    Delete
+
+</a>
+
+{% endblock %}

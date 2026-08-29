@@ -1,0 +1,664 @@
+{% extends "base/crud_page.html" %}
+
+{% block title %}
+{{ form_title }}
+{% endblock %}
+
+{% block page_title %}
+{{ form_title }}
+{% endblock %}
+
+{% block extra_css %}
+<link
+    href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"
+    rel="stylesheet">
+{% endblock %}
+
+{% block crud_content %}
+
+<form method="post" id="destination-form">
+
+    {% csrf_token %}
+
+    <input type="hidden" name="next" value="{{ request.GET.next }}">
+
+    {% if form.non_field_errors %}
+    <div class="alert alert-danger">
+        {{ form.non_field_errors }}
+    </div>
+    {% endif %}
+
+    {% for field in form %}
+
+    {% if field.name == "category_prices" or field.name == "wahana_data" or field.name == "bundle_data" or field.name == "parking_data" %}
+
+    {{ field }}
+
+    {% if field.errors %}
+    <div class="text-danger small">
+        {{ field.errors }}
+    </div>
+    {% endif %}
+
+    {% else %}
+
+    <div class="mb-3">
+
+        <label class="form-label" for="{{ field.id_for_label }}">
+            {{ field.label }}
+        </label>
+
+        {{ field }}
+
+        {% if field.errors %}
+        <div class="text-danger small">
+            {{ field.errors }}
+        </div>
+        {% endif %}
+
+        {% if field.help_text %}
+        <div class="form-text">
+            {{ field.help_text }}
+        </div>
+        {% endif %}
+
+    </div>
+
+    {% if field.name == "longitude" %}
+
+    <div class="mb-3">
+
+        <button
+            type="button"
+            id="location-picker-btn"
+            class="btn btn-outline-success">
+            <i class="bi bi-geo-alt me-1"></i>
+            Pilih lokasi dari peta
+        </button>
+
+        <div id="location-picker" style="display:none;" class="mt-2">
+            <div
+                id="picker-map"
+                style="height: 280px; border-radius: 10px; border: 1px solid #e1e0d9;">
+            </div>
+            <small class="text-muted d-block mt-1">
+                Klik pada peta untuk mengisi latitude &amp; longitude secara
+                otomatis.
+            </small>
+        </div>
+
+    </div>
+
+    {% endif %}
+
+    {% if field.name == "google_maps_query" %}
+
+    <div class="mb-3">
+        <button
+            type="button"
+            id="gmaps-open"
+            class="btn btn-outline-primary btn-sm me-2">
+            <i class="bi bi-box-arrow-up-right me-1"></i>
+            Buka Google Maps
+        </button>
+        <button
+            type="button"
+            id="gmaps-search"
+            class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-search me-1"></i>
+            Cari di Google Maps
+        </button>
+        <div class="form-text">
+            Kolom boleh diedit manual. Bila kosong, sistem memakai
+            Nama Destinasi + desa + Kota Batu.
+        </div>
+    </div>
+
+    {% endif %}
+
+    {% endif %}
+
+    {% endfor %}
+
+    {# ---------- Dynamic repeater: wahana, kategori, bundle ---------- #}
+
+    <div class="mb-3">
+        <label class="form-label">Wahana Tambahan</label>
+        <div id="ride-repeater"></div>
+        <button type="button" id="add-ride" class="btn btn-outline-success btn-sm">
+            <i class="bi bi-plus-lg me-1"></i> Tambah Wahana
+        </button>
+        <div class="form-text">
+            Wahana/atraksi yang bayar tambahan di atas tiket masuk.
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Harga per Kategori</label>
+        <div id="category-repeater"></div>
+        <button type="button" id="add-category" class="btn btn-outline-success btn-sm">
+            <i class="bi bi-plus-lg me-1"></i> Tambah Kategori
+        </button>
+        <div class="form-text">
+            Harga tiket berdasarkan kategori (mis. Dewasa / Anak-anak).
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Tiket Bundle</label>
+        <div id="bundle-repeater"></div>
+        <button type="button" id="add-bundle" class="btn btn-outline-success btn-sm">
+            <i class="bi bi-plus-lg me-1"></i> Tambah Bundle
+        </button>
+        <div class="form-text">
+            Paket gabungan tiket masuk dan/atau wahana dengan harga tersendiri.
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Biaya Parkir per Kendaraan</label>
+        <div id="parking-repeater"></div>
+        <button type="button" id="add-parking" class="btn btn-outline-success btn-sm">
+            <i class="bi bi-plus-lg me-1"></i> Tambah Jenis Kendaraan
+        </button>
+        <div class="form-text">
+            Tarif parkir berdasarkan jenis kendaraan (mis. Motor, Mobil, Bus).
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-success">
+        <i class="bi bi-check-lg me-1"></i>
+        {{ submit_label }}
+    </button>
+
+    <a href="{{ cancel_url }}" class="btn btn-secondary">
+        Batal
+    </a>
+
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function () {
+    let pickerMap = null;
+    let pickerMarker = null;
+
+    function initPicker() {
+        if (pickerMap) return;
+
+        pickerMap = L.map("picker-map").setView([-7.8695, 112.5236], 12);
+        L.tileLayer(
+            "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+            {
+                maxZoom: 19,
+                attribution: "&copy; OpenStreetMap contributors",
+            }
+        ).addTo(pickerMap);
+
+        const latInput = document.getElementById("id_latitude");
+        const lngInput = document.getElementById("id_longitude");
+
+        pickerMap.on("click", function (e) {
+            latInput.value = e.latlng.lat.toFixed(7);
+            lngInput.value = e.latlng.lng.toFixed(7);
+            if (pickerMarker) {
+                pickerMarker.setLatLng(e.latlng);
+            } else {
+                pickerMarker = L.marker(e.latlng).addTo(pickerMap);
+            }
+        });
+
+        // Pre-fill marker dari nilai yang sudah ada (mode update).
+        const lat = parseFloat(latInput.value);
+        const lng = parseFloat(lngInput.value);
+        if (!isNaN(lat) && !isNaN(lng)) {
+            pickerMarker = L.marker([lat, lng]).addTo(pickerMap);
+            pickerMap.setView([lat, lng], 15);
+        }
+
+        setTimeout(function () { pickerMap.invalidateSize(); }, 80);
+    }
+
+    const btn = document.getElementById("location-picker-btn");
+    if (btn) {
+        btn.addEventListener("click", function () {
+            const box = document.getElementById("location-picker");
+            const isHidden = box.style.display === "none";
+            box.style.display = isHidden ? "block" : "none";
+            if (isHidden) initPicker();
+        });
+    }
+})();
+</script>
+<script>
+(function () {
+    // Tampilkan field "Alasan Nonaktif" hanya bila status = Nonaktif.
+    const statusSelect = document.getElementById("id_is_active");
+    const reasonInput = document.getElementById("id_status_reason");
+    if (!statusSelect || !reasonInput) return;
+
+    function toggleReason() {
+        const isInactive = statusSelect.value === "False";
+        const wrapper = reasonInput.closest(".mb-3");
+        if (wrapper) {
+            wrapper.style.display = isInactive ? "" : "none";
+        }
+    }
+
+    statusSelect.addEventListener("change", toggleReason);
+    toggleReason();
+})();
+</script>
+<script>
+(function () {
+    // Toggle kolom jam / harga tiket / biaya parkir sesuai checkbox.
+    const is24h = document.getElementById("id_is_open_24_hours");
+    const isFree = document.getElementById("id_is_free");
+    const isFreeParking = document.getElementById("id_is_free_parking");
+    const ticketType = document.getElementById("id_ticket_type");
+
+    const timeFieldIds = ["id_opening_time", "id_closing_time"];
+
+    // Kolom harga tiket (nonaktif bila "Gratis masuk" dicentang).
+    const entryPriceFieldIds = [
+        "id_ticket_type",
+        "id_ticket_price_weekday",
+        "id_ticket_price_weekend",
+        "id_price_description",
+        "id_category_prices",
+        "id_price_source",
+        "id_price_source_type",
+        "id_price_source_url",
+    ];
+
+    // Kolom parkir terpisah dari harga tiket (nonaktif hanya bila
+    // "Bebas biaya parkir" dicentang).
+    const parkingFieldIds = ["id_parking_cost"];
+
+    function setDisabled(ids, disabled) {
+        ids.forEach(function (id) {
+            const el = document.getElementById(id);
+            if (el) el.disabled = disabled;
+        });
+    }
+
+    function applyToggle() {
+        if (is24h) setDisabled(timeFieldIds, is24h.checked);
+
+        if (isFree && isFree.checked) {
+            setDisabled(entryPriceFieldIds, true);
+        } else {
+            setDisabled(entryPriceFieldIds, false);
+            const isCategory = ticketType && ticketType.value === "category";
+            setDisabled(["id_category_prices"], !isCategory);
+        }
+
+        if (isFreeParking) {
+            setDisabled(parkingFieldIds, isFreeParking.checked);
+        }
+    }
+
+    if (is24h) is24h.addEventListener("change", applyToggle);
+    if (isFree) isFree.addEventListener("change", applyToggle);
+    if (isFreeParking) isFreeParking.addEventListener("change", applyToggle);
+    if (ticketType) ticketType.addEventListener("change", applyToggle);
+    applyToggle();
+})();
+</script>
+<script>
+(function () {
+    // Dynamic repeater untuk Wahana / Kategori / Bundle. Data disimpan ke
+    // hidden input JSON (field backend), tanpa staff menulis JSON manual.
+    // Backend kemudian menyinkronkan JSON ini ke model relational
+    // (Wahana & TicketBundle), bukan menyimpannya sebagai JSON besar.
+    var PRICING_TYPE_OPTIONS = {{ form.pricing_type_options_json|safe }};
+
+    function esc(s) {
+        return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+            return { "&": "&amp;", "<": "&lt;", ">": "&gt;",
+                     '"': "&quot;", "'": "&#39;" }[c];
+        });
+    }
+    function getJSON(id) {
+        var el = document.getElementById(id);
+        if (!el || !el.value) return [];
+        try { return JSON.parse(el.value); } catch (e) { return []; }
+    }
+    function setJSON(id, data) {
+        var el = document.getElementById(id);
+        if (el) el.value = JSON.stringify(data);
+    }
+
+    var rideBox = document.getElementById("ride-repeater");
+    var categoryBox = document.getElementById("category-repeater");
+    var bundleBox = document.getElementById("bundle-repeater");
+    var parkingBox = document.getElementById("parking-repeater");
+    if (!rideBox || !categoryBox || !bundleBox || !parkingBox) return;
+
+    var wahanas = getJSON("id_wahana_data");
+    var categories = getJSON("id_category_prices");
+    var bundles = getJSON("id_bundle_data");
+    var parkingFees = getJSON("id_parking_data");
+
+    function bundleNames() {
+        return bundles.map(function (b) {
+            return (b && b.name || "").trim();
+        }).filter(Boolean);
+    }
+
+    function wahanaNames() {
+        return wahanas.map(function (r) {
+            return (r && r.name || "").trim();
+        }).filter(Boolean);
+    }
+
+    function pricingOptions(selected) {
+        return PRICING_TYPE_OPTIONS.map(function (o) {
+            var sel = o.value === selected ? " selected" : "";
+            return '<option value="' + esc(o.value) + '"' + sel + '>' + esc(o.label) + '</option>';
+        }).join("");
+    }
+
+    function readWahanas() {
+        return Array.prototype.map.call(
+            rideBox.querySelectorAll(".repeater-row"), function (row) {
+                var idVal = row.getAttribute("data-id");
+                var name = row.querySelector(".ride-name").value.trim();
+                var pricingType = row.querySelector(".ride-pricing").value;
+                var priceVal = row.querySelector(".ride-price").value;
+                var price = null;
+                if (pricingType === "INDEPENDENT_PRICE") {
+                    price = priceVal === "" ? null : Number(priceVal);
+                }
+                var bundle_names = [];
+                if (pricingType === "INCLUDED_IN_PACKAGE") {
+                    bundle_names = Array.prototype.map.call(
+                        row.querySelectorAll(".ride-bundle:checked"),
+                        function (cb) { return cb.value; }
+                    );
+                }
+                return {
+                    id: idVal ? parseInt(idVal, 10) : null,
+                    name: name,
+                    pricing_type: pricingType,
+                    price: price,
+                    bundle_names: bundle_names
+                };
+            }
+        ).filter(function (r) { return r.name; });
+    }
+    function readCategories() {
+        return Array.prototype.map.call(
+            categoryBox.querySelectorAll(".repeater-row"), function (row) {
+                var name = row.querySelector(".category-name").value.trim();
+                var priceVal = row.querySelector(".category-price").value;
+                return { category: name, price: priceVal === "" ? null : Number(priceVal) };
+            }
+        ).filter(function (c) { return c.category; });
+    }
+    function readBundles() {
+        return Array.prototype.map.call(
+            bundleBox.querySelectorAll(".repeater-row"), function (row) {
+                var idVal = row.getAttribute("data-id");
+                var name = row.querySelector(".bundle-name").value.trim();
+                var includesHtm = row.querySelector(".bundle-htm").checked;
+                var selected = Array.prototype.map.call(
+                    row.querySelectorAll(".bundle-ride:checked"),
+                    function (cb) { return cb.value; }
+                );
+                var priceVal = row.querySelector(".bundle-price").value;
+                return {
+                    id: idVal ? parseInt(idVal, 10) : null,
+                    name: name,
+                    includes_entry_ticket: includesHtm,
+                    ride_names: selected,
+                    price: priceVal === "" ? null : Number(priceVal)
+                };
+            }
+        ).filter(function (b) { return b.name; });
+    }
+    function readParking() {
+        return Array.prototype.map.call(
+            parkingBox.querySelectorAll(".repeater-row"), function (row) {
+                var idVal = row.getAttribute("data-id");
+                var vehicleType = row.querySelector(".parking-vehicle").value.trim();
+                var priceVal = row.querySelector(".parking-price").value;
+                return {
+                    id: idVal ? parseInt(idVal, 10) : null,
+                    vehicle_type: vehicleType,
+                    price: priceVal === "" ? null : Number(priceVal)
+                };
+            }
+        ).filter(function (p) { return p.vehicle_type; });
+    }
+
+    function renderWahanas() {
+        var bundleOptions = bundleNames();
+        rideBox.innerHTML = wahanas.map(function (r, i) {
+            var idAttr = r.id ? ' data-id="' + esc(r.id) + '"' : "";
+            var bundleChecks = bundleOptions.map(function (n) {
+                var checked = (r.bundle_names || []).indexOf(n) >= 0 ? "checked" : "";
+                return '<div class="form-check form-check-inline">' +
+                    '<input type="checkbox" class="form-check-input ride-bundle" value="' + esc(n) + '" ' + checked + '>' +
+                    '<label class="form-check-label">' + esc(n) + '</label></div>';
+            }).join("");
+            if (!bundleOptions.length) {
+                bundleChecks = '<span class="text-muted small">Isi tiket bundle dulu di bagian bawah.</span>';
+            }
+            return '<div class="repeater-row border rounded p-2 mb-2"' + idAttr + '>' +
+                '<div class="row g-2 align-items-end">' +
+                '<div class="col-4"><label class="form-label small mb-1">Nama Wahana</label>' +
+                '<input type="text" class="form-control form-control-sm ride-name" value="' + esc(r.name) + '"></div>' +
+                '<div class="col-4"><label class="form-label small mb-1">Kategori Harga</label>' +
+                '<select class="form-select form-select-sm ride-pricing">' + pricingOptions(r.pricing_type) + '</select></div>' +
+                '<div class="col-3"><label class="form-label small mb-1">Harga (Rp)</label>' +
+                '<input type="number" min="0" class="form-control form-control-sm ride-price" value="' + (r.price == null ? "" : esc(r.price)) + '"></div>' +
+                '<div class="col-1"><button type="button" class="btn btn-outline-danger btn-sm w-100" data-remove-ride="' + i + '">Hapus</button></div>' +
+                '<div class="col-12 ride-bundle-wrap" style="display:none;">' +
+                '<label class="form-label small mb-1">Paket/Tiket yang berlaku</label>' +
+                '<div>' + bundleChecks + '</div></div>' +
+                '</div></div>';
+        }).join("");
+        syncPriceFieldState();
+    }
+    function renderCategories() {
+        categoryBox.innerHTML = categories.map(function (c, i) {
+            return '<div class="repeater-row border rounded p-2 mb-2">' +
+                '<div class="row g-2 align-items-end">' +
+                '<div class="col-6"><label class="form-label small mb-1">Nama Kategori</label>' +
+                '<input type="text" class="form-control form-control-sm category-name" value="' + esc(c.category) + '"></div>' +
+                '<div class="col-4"><label class="form-label small mb-1">Harga (Rp)</label>' +
+                '<input type="number" min="0" class="form-control form-control-sm category-price" value="' + (c.price == null ? "" : esc(c.price)) + '"></div>' +
+                '<div class="col-2"><button type="button" class="btn btn-outline-danger btn-sm w-100" data-remove-category="' + i + '">Hapus</button></div>' +
+                '</div></div>';
+        }).join("");
+    }
+    function renderBundles() {
+        var names = wahanaNames();
+        bundleBox.innerHTML = bundles.map(function (b, i) {
+            var idAttr = b.id ? ' data-id="' + esc(b.id) + '"' : "";
+            var rideChecks = names.map(function (n) {
+                var checked = (b.ride_names || []).indexOf(n) >= 0 ? "checked" : "";
+                return '<div class="form-check form-check-inline">' +
+                    '<input type="checkbox" class="form-check-input bundle-ride" value="' + esc(n) + '" ' + checked + '>' +
+                    '<label class="form-check-label">' + esc(n) + '</label></div>';
+            }).join("");
+            if (!names.length) {
+                rideChecks = '<span class="text-muted small">Isi wahana dulu di bagian atas.</span>';
+            }
+            return '<div class="repeater-row border rounded p-2 mb-2"' + idAttr + '>' +
+                '<div class="row g-2 align-items-end">' +
+                '<div class="col-6"><label class="form-label small mb-1">Nama Bundle</label>' +
+                '<input type="text" class="form-control form-control-sm bundle-name" value="' + esc(b.name) + '"></div>' +
+                '<div class="col-4"><label class="form-label small mb-1">Harga Bundle (Rp)</label>' +
+                '<input type="number" min="0" class="form-control form-control-sm bundle-price" value="' + (b.price == null ? "" : esc(b.price)) + '"></div>' +
+                '<div class="col-2"><button type="button" class="btn btn-outline-danger btn-sm w-100" data-remove-bundle="' + i + '">Hapus</button></div>' +
+                '<div class="col-12"><div class="form-check form-check-inline">' +
+                '<input type="checkbox" class="form-check-input bundle-htm" ' + (b.includes_entry_ticket ? "checked" : "") + '>' +
+                '<label class="form-check-label">Termasuk HTM</label></div></div>' +
+                '<div class="col-12"><label class="form-label small mb-1">Wahana yang termasuk</label><div>' + rideChecks + '</div></div>' +
+                '</div></div>';
+        }).join("");
+    }
+    function renderParking() {
+        parkingBox.innerHTML = parkingFees.map(function (p, i) {
+            var idAttr = p.id ? ' data-id="' + esc(p.id) + '"' : "";
+            return '<div class="repeater-row border rounded p-2 mb-2"' + idAttr + '>' +
+                '<div class="row g-2 align-items-end">' +
+                '<div class="col-5"><label class="form-label small mb-1">Jenis Kendaraan</label>' +
+                '<input type="text" class="form-control form-control-sm parking-vehicle" placeholder="Motor" value="' + esc(p.vehicle_type) + '"></div>' +
+                '<div class="col-4"><label class="form-label small mb-1">Biaya (Rp)</label>' +
+                '<input type="number" min="0" class="form-control form-control-sm parking-price" value="' + (p.price == null ? "" : esc(p.price)) + '"></div>' +
+                '<div class="col-3"><button type="button" class="btn btn-outline-danger btn-sm w-100" data-remove-parking="' + i + '">Hapus</button></div>' +
+                '</div></div>';
+        }).join("");
+    }
+
+    function syncPriceFieldState() {
+        Array.prototype.forEach.call(
+            rideBox.querySelectorAll(".repeater-row"), function (row) {
+                var pricing = row.querySelector(".ride-pricing");
+                var priceInput = row.querySelector(".ride-price");
+                var bundleWrap = row.querySelector(".ride-bundle-wrap");
+                if (!pricing || !priceInput) return;
+                var isIndependent = pricing.value === "INDEPENDENT_PRICE";
+                var isPackage = pricing.value === "INCLUDED_IN_PACKAGE";
+                priceInput.disabled = !isIndependent;
+                priceInput.placeholder = isIndependent ? "" : "Otomatis tidak diperlukan";
+                if (!isIndependent) priceInput.value = "";
+                if (bundleWrap) bundleWrap.style.display = isPackage ? "block" : "none";
+            }
+        );
+    }
+
+    document.getElementById("add-ride").addEventListener("click", function () {
+        wahanas = readWahanas();
+        bundles = readBundles();
+        wahanas.push({ id: null, name: "", pricing_type: "INDEPENDENT_PRICE", price: null, bundle_names: [] });
+        renderWahanas();
+        renderBundles();
+    });
+    document.getElementById("add-category").addEventListener("click", function () {
+        categories = readCategories();
+        categories.push({ category: "", price: null });
+        renderCategories();
+    });
+    document.getElementById("add-bundle").addEventListener("click", function () {
+        bundles = readBundles();
+        bundles.push({ id: null, name: "", includes_entry_ticket: false, ride_names: [], price: null });
+        renderBundles();
+    });
+    document.getElementById("add-parking").addEventListener("click", function () {
+        parkingFees = readParking();
+        parkingFees.push({ id: null, vehicle_type: "", price: null });
+        renderParking();
+    });
+
+    rideBox.addEventListener("click", function (e) {
+        var btn = e.target.closest("[data-remove-ride]");
+        if (!btn) return;
+        wahanas = readWahanas();
+        bundles = readBundles();
+        var index = parseInt(btn.getAttribute("data-remove-ride"), 10);
+        var name = (wahanas[index] && wahanas[index].name || "").trim();
+        var usedIn = bundles.filter(function (b) {
+            return (b.ride_names || []).indexOf(name) >= 0;
+        });
+        if (usedIn.length && name) {
+            var names = usedIn.map(function (b) { return b.name; }).join(", ");
+            var ok = window.confirm(
+                "Wahana ini masih digunakan oleh bundle: " + names +
+                ". Yakin ingin menghapusnya?"
+            );
+            if (!ok) return;
+        }
+        wahanas.splice(index, 1);
+        renderWahanas();
+        renderBundles();
+    });
+    categoryBox.addEventListener("click", function (e) {
+        var btn = e.target.closest("[data-remove-category]");
+        if (!btn) return;
+        categories = readCategories();
+        categories.splice(parseInt(btn.getAttribute("data-remove-category"), 10), 1);
+        renderCategories();
+    });
+    bundleBox.addEventListener("click", function (e) {
+        var btn = e.target.closest("[data-remove-bundle]");
+        if (!btn) return;
+        bundles = readBundles();
+        bundles.splice(parseInt(btn.getAttribute("data-remove-bundle"), 10), 1);
+        renderBundles();
+    });
+    parkingBox.addEventListener("click", function (e) {
+        var btn = e.target.closest("[data-remove-parking]");
+        if (!btn) return;
+        parkingFees = readParking();
+        parkingFees.splice(parseInt(btn.getAttribute("data-remove-parking"), 10), 1);
+        renderParking();
+    });
+
+    rideBox.addEventListener("change", function (e) {
+        if (e.target.classList.contains("ride-pricing")) syncPriceFieldState();
+    });
+
+    var form = document.getElementById("destination-form");
+    if (form) {
+        form.addEventListener("submit", function () {
+            setJSON("id_wahana_data", readWahanas());
+
+            // ``id_category_prices`` adalah model JSONField yang di-disable
+            // toggle saat tiket bukan "Per kategori". Input yang disabled
+            // TIDAK ikut terkirim saat submit, jadi pastikan selalu aktif
+            // dan isinya benar (kosong bila bukan kategori, supaya data
+            // kategori lama tidak ikut tersimpan).
+            var catEl = document.getElementById("id_category_prices");
+            if (catEl) {
+                catEl.disabled = false;
+                var ticketTypeEl = document.getElementById("id_ticket_type");
+                var isCategory = ticketTypeEl && ticketTypeEl.value === "category";
+                catEl.value = JSON.stringify(isCategory ? readCategories() : []);
+            }
+
+            setJSON("id_bundle_data", readBundles());
+            setJSON("id_parking_data", readParking());
+        });
+    }
+
+    // --- Google Maps search (dari query nama, bukan koordinat) ---
+    function currentGmapsQuery() {
+        var q = (document.getElementById("id_google_maps_query") || {}).value || "";
+        if (q.trim()) return q.trim();
+        var name = (document.getElementById("id_name") || {}).value || "";
+        var village = "";
+        var vs = document.getElementById("id_village");
+        if (vs && vs.selectedIndex >= 0) {
+            village = vs.options[vs.selectedIndex].text.trim();
+            if (village === "---------") village = "";
+        }
+        return [name, village, "Kota Batu"].filter(Boolean).join(" ");
+    }
+    function openGmaps(query) {
+        if (!query) return;
+        window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(query), "_blank");
+    }
+    var gmapsOpen = document.getElementById("gmaps-open");
+    if (gmapsOpen) gmapsOpen.addEventListener("click", function () {
+        var q = (document.getElementById("id_google_maps_query") || {}).value || "";
+        openGmaps(q.trim() || currentGmapsQuery());
+    });
+    var gmapsSearch = document.getElementById("gmaps-search");
+    if (gmapsSearch) gmapsSearch.addEventListener("click", function () {
+        openGmaps(currentGmapsQuery());
+    });
+
+    renderWahanas();
+    renderCategories();
+    renderBundles();
+    renderParking();
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base/crud_page.html" %}
+
+{% block title %}
+Survey Detail
+{% endblock %}
+
+{% block page_title %}
+Survey Detail
+{% endblock %}
+
+{% block crud_content %}
+
+<table class="table table-bordered">
+
+    <tr>
+        <th width="220">Survey Name</th>
+        <td>{{ survey.name }}</td>
+    </tr>
+
+    <tr>
+        <th>Description</th>
+        <td>{{ survey.description|default:"-" }}</td>
+    </tr>
+
+    <tr>
+        <th>Start Date</th>
+        <td>{{ survey.start_date }}</td>
+    </tr>
+
+    <tr>
+        <th>End Date</th>
+        <td>{{ survey.end_date }}</td>
+    </tr>
+
+    <tr>
+        <th>Status</th>
+        <td>
+            {% if survey.is_active %}
+                <span class="badge bg-success">Active</span>
+            {% else %}
+                <span class="badge bg-danger">Inactive</span>
+            {% endif %}
+        </td>
+    </tr>
+
+</table>
+
+<a
+    href="{% url 'survey:survey-list' %}"
+    class="btn btn-secondary">
+
+    Back
+
+</a>
+
+{% endblock %}

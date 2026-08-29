@@ -1,0 +1,248 @@
+{% extends "base/crud_page.html" %}
+
+{% block title %}
+Survey List
+{% endblock %}
+
+{% block page_title %}
+Survey List
+{% endblock %}
+
+{% block page_action %}
+
+<a href="{% url 'survey:survey-create' %}" class="btn btn-primary">
+    <i class="bi bi-plus-circle"></i>
+    Add Survey
+</a>
+
+{% endblock %}
+
+{% block search %}
+
+<form method="get" class="row mb-3">
+
+    <div class="col-md-4">
+
+        <input
+            type="search"
+            name="q"
+            value="{{ request.GET.q }}"
+            class="form-control"
+            placeholder="Search survey...">
+
+    </div>
+
+    <div class="col-auto">
+
+        <button class="btn btn-primary">
+
+            <i class="bi bi-search"></i>
+
+            Search
+
+        </button>
+
+    </div>
+
+    {% if request.GET.q %}
+
+    <div class="col-auto">
+
+        <a
+            href="{% url 'survey:survey-list' %}"
+            class="btn btn-secondary">
+
+            Reset
+
+        </a>
+
+    </div>
+
+    {% endif %}
+
+</form>
+
+{% endblock %}
+
+{% block crud_content %}
+
+<table class="table table-hover table-bordered">
+
+    <thead class="table-light">
+
+        <tr>
+
+            <th width="70">No</th>
+
+            <th>Name</th>
+
+            <th width="150">Start Date</th>
+
+            <th width="150">End Date</th>
+
+            <th width="100">Status</th>
+
+            <th width="320">Action</th>
+
+        </tr>
+
+    </thead>
+
+    <tbody>
+
+        {% for survey in surveys %}
+
+        <tr>
+
+            <td>{{ forloop.counter }}</td>
+
+            <td>{{ survey.name }}</td>
+
+            <td>{{ survey.start_date }}</td>
+
+            <td>{{ survey.end_date }}</td>
+
+            <td>
+
+                {% if survey.is_active %}
+
+                <span class="badge bg-success">
+
+                    Active
+
+                </span>
+
+                {% else %}
+
+                <span class="badge bg-danger">
+
+                    Inactive
+
+                </span>
+
+                {% endif %}
+
+            </td>
+
+            <td>
+
+                <a
+                    href="{% url 'survey:survey-detail' survey.id %}"
+                    class="btn btn-info btn-sm">
+
+                    Detail
+
+                </a>
+
+                <a
+                    href="{% url 'survey:survey-update' survey.id %}"
+                    class="btn btn-warning btn-sm">
+
+                    Edit
+
+                </a>
+
+                <a
+                    href="{% url 'survey:survey-delete' survey.id %}"
+                    class="btn btn-danger btn-sm">
+
+                    Delete
+
+                </a>
+
+            </td>
+
+        </tr>
+
+        {% empty %}
+
+        <tr>
+
+            <td colspan="6" class="text-center">
+
+                No Survey Available
+
+            </td>
+
+        </tr>
+
+        {% endfor %}
+
+    </tbody>
+
+</table>
+
+{% if is_paginated %}
+
+<nav>
+
+<ul class="pagination justify-content-center">
+
+{% if page_obj.has_previous %}
+
+<li class="page-item">
+
+<a class="page-link"
+href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+
+Previous
+
+</a>
+
+</li>
+
+{% endif %}
+
+{% for i in paginator.page_range %}
+
+{% if page_obj.number == i %}
+
+<li class="page-item active">
+
+<span class="page-link">
+
+{{ i }}
+
+</span>
+
+</li>
+
+{% else %}
+
+<li class="page-item">
+
+<a class="page-link"
+href="?page={{ i }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+
+{{ i }}
+
+</a>
+
+</li>
+
+{% endif %}
+
+{% endfor %}
+
+{% if page_obj.has_next %}
+
+<li class="page-item">
+
+<a class="page-link"
+href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+
+Next
+
+</a>
+
+</li>
+
+{% endif %}
+
+</ul>
+
+</nav>
+
+{% endif %}
+
+{% endblock %}

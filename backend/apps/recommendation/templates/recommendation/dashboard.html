@@ -1,0 +1,404 @@
+{% extends "base/layout.html" %}
+
+{% block title %}
+Recommendation Dashboard
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    {% if analysis_stale %}
+    <div class="alert alert-warning rounded-3 d-flex align-items-center">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        Konfigurasi variable berubah sejak terakhir dihitung. Silakan klik <strong>&quot;Hitung Ulang&quot;</strong> untuk memperbarui hasil.
+    </div>
+    {% endif %}
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2 class="fw-bold mb-0">
+                TOPSIS Recommendation
+            </h2>
+
+            <small class="text-muted">
+                Village Decision Support System
+                {% if computed_at %}
+                    &middot; Terakhir dihitung: {{ computed_at|date:"d M Y H:i" }}
+                {% endif %}
+            </small>
+
+        </div>
+
+        <div>
+
+            {% if can_recalculate %}
+                <form method="post"
+                      action="{% url 'recommendation:recalculate' %}"
+                      style="display:inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-primary">
+                        Hitung Ulang
+                    </button>
+                </form>
+            {% endif %}
+
+            <a href="{% url 'recommendation:export-excel' %}"
+               class="btn btn-success">
+
+                Export Excel
+
+            </a>
+
+            <a href="{% url 'recommendation:export-pdf' %}"
+               class="btn btn-danger">
+
+                Export PDF
+
+            </a>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-lg-4">
+
+            <div class="card shadow border-0">
+
+                <div class="card-body">
+
+                    <small class="text-muted">
+
+                        Total Village
+
+                    </small>
+
+                    <h2>
+
+                        {{ result|length }}
+
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-lg-4">
+
+            <div class="card shadow border-0">
+
+                <div class="card-body">
+
+                    <small class="text-muted">
+
+                        Total Indicator
+
+                    </small>
+
+                    <h2>
+
+                        {{ indicators|length }}
+
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-lg-4">
+
+            <div class="card shadow border-0">
+
+                <div class="card-body">
+
+                    <small class="text-muted">
+
+                        Best Village
+
+                    </small>
+
+                    <h5>
+
+                        {% if result %}
+
+                            {{ result.0.village_name }}
+
+                            <br>
+
+                            <span class="badge bg-success">
+
+                                {{ result.0.score|floatformat:4 }}
+
+                            </span>
+
+                        {% else %}
+
+                            -
+
+                        {% endif %}
+
+                    </h5>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="row">
+
+        <div class="col-lg-5">
+
+            <div class="card shadow">
+
+                <div class="card-header">
+
+                    TOPSIS Preference
+
+                </div>
+
+                <div class="card-body">
+
+                    <canvas id="rankingChart"></canvas>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="col-lg-7">
+
+            <div class="card shadow">
+
+                <div class="card-header">
+
+                    Ranking
+
+                </div>
+
+                <div class="card-body">
+
+                    <table class="table table-hover">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>Rank</th>
+
+                                <th>Village</th>
+
+                                <th>Preference</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                        {% for item in result %}
+
+                            <tr>
+
+                                <td>
+
+                                    {{ forloop.counter }}
+
+                                </td>
+
+                                <td>
+
+                                    {{ item.village_name }}
+
+                                </td>
+
+                                <td>
+
+                                    <span class="badge bg-primary">
+
+                                        {{ item.score|floatformat:4 }}
+
+                                    </span>
+
+                                </td>
+
+                            </tr>
+
+                        {% empty %}
+
+                            <tr>
+
+                                <td colspan="3" class="text-center">
+
+                                    {% if can_recalculate %}
+                                        Belum ada data. Klik "Hitung Ulang" di atas.
+                                    {% else %}
+                                        No recommendation available.
+                                    {% endif %}
+
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="card shadow mt-4">
+
+        <div class="card-header">
+
+            Indicator Weight
+
+        </div>
+
+        <div class="card-body">
+
+            <table class="table table-bordered">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Code</th>
+
+                        <th>Name</th>
+
+                        <th>Weight</th>
+
+                        <th>Type</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                {% for indicator in indicators %}
+
+                    <tr>
+
+                        <td>
+
+                            {{ indicator.code }}
+
+                        </td>
+
+                        <td>
+
+                            {{ indicator.name }}
+
+                        </td>
+
+                        <td>
+
+                            {{ indicator.weight }}
+
+                        </td>
+
+                        <td>
+
+                            {{ indicator.criterion_type }}
+
+                        </td>
+
+                    </tr>
+
+                {% empty %}
+
+                    <tr>
+
+                        <td colspan="4" class="text-center">
+
+                            No indicator.
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+{{ result|json_script:"ranking-data" }}
+<script>
+
+const ranking =
+    JSON.parse(
+        document.getElementById("ranking-data").textContent
+    );
+
+const labels =
+    ranking.map(
+        x => x.village_name
+    );
+
+const values =
+    ranking.map(
+        x => x.score
+    );
+
+new Chart(
+    document.getElementById("rankingChart"),
+    {
+        type: "bar",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "Preference",
+                data: values
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 1
+                }
+            }
+        }
+    }
+);
+</script>
+{% endblock %}
