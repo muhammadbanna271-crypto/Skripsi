@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -5,229 +6,897 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TRIP — Jelajahi Wisata Kota Batu</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet">
 
     <style>
         :root {
-            --forest-1: #14532d;
-            --forest-2: #166534;
-            --forest-3: #22c55e;
-            --cream: #f7faf5;
-            --ink: #22301f;
-            --muted: #6b7f6d;
+            --bg: #fafaf7;
+            --surface: #ffffff;
+            --ink: #1f2a22;
+            --forest: #163b2a;
+            --accent: #1f7a44;
+            --accent-dark: #176135;
+            --muted: #6b7568;
+            --line: #e6e7e0;
+            --line-strong: #d5d8cf;
+            --thumb-bg: #eef0ea;
         }
-        * { box-sizing: border-box; }
-        body { font-family: "Inter", system-ui, -apple-system, sans-serif; background: var(--cream); margin: 0; color: var(--ink); }
 
-        .topbar {
-            display: flex; align-items: center; gap: 18px;
-            padding: 14px 28px; background: #fff;
-            border-bottom: 1px solid #e9efe6; position: sticky; top: 0; z-index: 20;
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--ink);
+            font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-size: 15px;
+            line-height: 1.55;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
         }
-        .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; color: var(--forest-1); font-size: 1.05rem; text-decoration: none; }
-        .brand .logo { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg, var(--forest-2), var(--forest-3)); color: #fff; display: flex; align-items: center; justify-content: center; }
-        .topbar nav { display: flex; gap: 4px; margin-left: 8px; }
-        .topbar nav a { color: var(--muted); text-decoration: none; font-size: 0.86rem; font-weight: 600; padding: 7px 12px; border-radius: 8px; }
-        .topbar nav a:hover { color: var(--forest-1); background: #eef7ec; }
-        .topbar .spacer { flex: 1; }
-        .btn-forest { background: var(--forest-2); color: #fff; border: none; border-radius: 999px; padding: 9px 18px; font-weight: 600; font-size: 0.85rem; text-decoration: none; }
-        .btn-forest:hover { background: var(--forest-1); color: #fff; }
+
+        a { color: inherit; }
+
+        .container {
+            width: min(94vw, 1500px);
+            margin: 0 auto;
+        }
+
+        /* ---------- Navbar ---------- */
+
+        .nav {
+            position: sticky;
+            top: 0;
+            z-index: 30;
+            background: var(--surface);
+            border-bottom: 1px solid var(--line);
+        }
+        .nav-inner {
+            display: flex;
+            align-items: center;
+            gap: 22px;
+            height: 56px;
+        }
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: var(--forest);
+            text-decoration: none;
+            letter-spacing: 0.02em;
+            white-space: nowrap;
+        }
+        .brand i { color: var(--accent); font-size: 1.1rem; }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+        .nav-links a {
+            padding: 6px 13px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--muted);
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .nav-links a:hover { color: var(--ink); }
+        .nav-links a.active {
+            color: var(--forest);
+            font-weight: 600;
+            text-decoration: underline;
+            text-decoration-color: var(--accent);
+            text-decoration-thickness: 2px;
+            text-underline-offset: 8px;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: auto;
+        }
+        .nav-auth {
+            display: inline-flex;
+            align-items: center;
+            height: 34px;
+            padding: 0 15px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--forest);
+            border: 1px solid var(--line-strong);
+            border-radius: 6px;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .nav-auth:hover { border-color: var(--accent); color: var(--accent-dark); }
+
+        .nav-toggle {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            border: 1px solid var(--line-strong);
+            border-radius: 6px;
+            background: transparent;
+            color: var(--forest);
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        /* ---------- Hero ---------- */
 
         .hero {
-            text-align: center; padding: 56px 20px 40px;
-            background: linear-gradient(135deg, #f4f9ee, #ffffff);
+            position: relative;
+            overflow: hidden;
+            background: var(--forest);
         }
-        .hero .eyebrow { color: var(--forest-3); font-weight: 700; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.6px; }
-        .hero h1 { font-size: 2.4rem; font-weight: 800; color: var(--forest-1); margin: 10px 0 8px; }
-        .hero p { color: var(--muted); font-size: 1rem; max-width: 560px; margin: 0 auto 22px; }
-
-        .chatbox {
-            max-width: 640px; margin: 0 auto; display: flex; gap: 8px;
-            background: #fff; border: 1px solid #e2e8e2; border-radius: 999px;
-            padding: 8px 8px 8px 20px; box-shadow: 0 8px 24px rgba(20,83,45,0.08);
+        .hero::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: url("{% static 'images/login-bg.png' %}") center / cover no-repeat;
+            filter: brightness(0.55) saturate(1.05);
         }
-        .chatbox input { border: none; outline: none; flex: 1; font-size: 0.95rem; background: transparent; }
-        .chatbox button { border: none; border-radius: 50%; width: 44px; height: 44px; background: linear-gradient(135deg, var(--forest-2), var(--forest-3)); color: #fff; flex-shrink: 0; }
-
-        .hero-cta { margin-top: 18px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
-        .hero-cta a { border-radius: 999px; padding: 10px 20px; font-size: 0.85rem; font-weight: 600; text-decoration: none; }
-        .hero-cta .solid { background: var(--forest-2); color: #fff; }
-        .hero-cta .ghost { background: #fff; color: var(--forest-2); border: 1px solid #d9e6da; }
-
-        .chips { max-width: 760px; margin: 22px auto 0; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-        .chip { background: #fff; border: 1px solid #e2e8e2; border-radius: 999px; padding: 7px 14px; font-size: 0.8rem; cursor: pointer; color: #3a4a3b; }
-        .chip:hover { border-color: var(--forest-3); }
-
-        .section { max-width: 1080px; margin: 0 auto; padding: 40px 24px; }
-        .section h2 { font-size: 1.5rem; font-weight: 800; color: var(--forest-1); margin-bottom: 6px; }
-        .section .sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 20px; }
-
-        #map { height: 380px; border-radius: 18px; border: 1px solid #e1e0d9; }
-
-        .dest-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
-        .dest-card {
-            background: #fff; border: 1px solid #e9efe6; border-radius: 16px; overflow: hidden;
-            display: flex; flex-direction: column; transition: all 0.15s ease; text-decoration: none; color: inherit;
+        .hero-inner {
+            position: relative;
+            padding: 40px 0 42px;
+            color: #fff;
         }
-        .dest-card:hover { border-color: var(--forest-3); box-shadow: 0 8px 20px rgba(34,197,94,0.12); transform: translateY(-2px); }
-        .dest-card .thumb { height: 110px; background: linear-gradient(135deg, #dff0dc, #f4f9ee); display: flex; align-items: center; justify-content: center; font-size: 2rem; color: var(--forest-2); }
-        .dest-card .body { padding: 14px; flex: 1; }
-        .dest-card .body h3 { font-size: 1rem; font-weight: 700; margin: 0 0 4px; }
-        .dest-card .body .meta { font-size: 0.8rem; color: var(--muted); }
-        .dest-card .price { font-size: 0.82rem; font-weight: 700; color: var(--forest-2); margin-top: 6px; }
+        .overline {
+            margin: 0 0 8px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #bfe3c8;
+        }
+        .hero h1 {
+            margin: 0 0 8px;
+            font-size: clamp(26px, 3.2vw, 34px);
+            font-weight: 700;
+            line-height: 1.15;
+            letter-spacing: -0.01em;
+        }
+        .hero .lead {
+            margin: 0 0 20px;
+            max-width: 560px;
+            font-size: 0.98rem;
+            color: rgba(255, 255, 255, 0.88);
+        }
 
-        .cta-band { background: linear-gradient(135deg, var(--forest-1), var(--forest-2)); color: #fff; text-align: center; padding: 48px 24px; border-radius: 22px; }
-        .cta-band h2 { color: #fff; }
-        .cta-band .btn-forest { background: #fff; color: var(--forest-1); }
+        .search {
+            display: flex;
+            align-items: center;
+            max-width: 560px;
+            background: #fff;
+            border-radius: 6px;
+            padding: 5px 5px 5px 15px;
+        }
+        .search input {
+            flex: 1;
+            border: none;
+            outline: none;
+            background: transparent;
+            font-size: 0.95rem;
+            color: var(--ink);
+            padding: 8px 0;
+            min-width: 0;
+        }
+        .search button {
+            border: none;
+            background: var(--forest);
+            color: #fff;
+            font-size: 0.88rem;
+            font-weight: 600;
+            padding: 9px 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .search button:hover { background: var(--accent-dark); }
 
-        footer { text-align: center; color: var(--muted); font-size: 0.8rem; padding: 30px; }
+        .quick {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px;
+            margin-top: 14px;
+        }
+        .quick a {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.86rem;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.92);
+            text-decoration: none;
+        }
+        .quick a:hover { color: #fff; text-decoration: underline; }
 
-        @media (max-width: 700px) {
-            .topbar nav { display: none; }
-            .hero h1 { font-size: 1.8rem; }
+        /* ---------- Explore 3-column ---------- */
+
+        main { padding: 22px 0 0; }
+
+        .explore-grid {
+            display: grid;
+            grid-template-columns: 230px minmax(0, 1fr) 290px;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .map-head {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .map-head h2 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--forest);
+            letter-spacing: -0.01em;
+        }
+        .map-head .link {
+            font-size: 0.83rem;
+            font-weight: 600;
+            color: var(--accent);
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .map-head .link:hover { color: var(--accent-dark); }
+
+        #map {
+            height: clamp(440px, 54vh, 600px);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--thumb-bg);
+        }
+
+        /* Sidebar (kategori) */
+
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 16px;
+        }
+        .panel h3 {
+            margin: 0 0 10px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--muted);
+        }
+        .cat-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .cat-list li + li { margin-top: 2px; }
+        .cat-list button {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 8px 10px;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            font-size: 0.88rem;
+            color: var(--ink);
+            cursor: pointer;
+            text-align: left;
+        }
+        .cat-list button:hover { background: var(--thumb-bg); }
+        .cat-list button.active {
+            background: #eaf3ec;
+            color: var(--forest);
+            font-weight: 600;
+        }
+        .cat-list .count { font-size: 0.76rem; color: var(--muted); }
+        .cat-list button.active .count { color: var(--accent-dark); }
+
+        /* Right panel */
+
+        .right-panel { display: flex; flex-direction: column; gap: 16px; }
+
+        .fact-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+        }
+        .fact {
+            text-align: center;
+            padding: 10px 4px;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            background: var(--bg);
+        }
+        .fact .num {
+            display: block;
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--forest);
+            line-height: 1.1;
+        }
+        .fact .label {
+            font-size: 0.72rem;
+            color: var(--muted);
+        }
+
+        .chat-card p {
+            margin: 0 0 12px;
+            font-size: 0.86rem;
+            color: var(--muted);
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: var(--forest);
+            color: #fff;
+            border-radius: 6px;
+            padding: 10px 16px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .btn:hover { background: var(--accent-dark); color: #fff; }
+        .btn-block { width: 100%; }
+
+        /* ---------- Destinations ---------- */
+
+        .destinations { padding: 28px 0 4px; }
+
+        .section-head {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 14px;
+        }
+        .section-head h2 {
+            margin: 0 0 2px;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--forest);
+            letter-spacing: -0.01em;
+        }
+        .section-head p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: var(--muted);
+        }
+        .section-head .link {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--accent);
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .section-head .link:hover { color: var(--accent-dark); }
+
+        .filter {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .filter button {
+            border: 1px solid var(--line-strong);
+            background: var(--surface);
+            color: var(--ink);
+            font-size: 0.85rem;
+            font-weight: 500;
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .filter button:hover { border-color: var(--accent); }
+        .filter button.active {
+            background: var(--forest);
+            border-color: var(--forest);
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .dest-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 16px;
+        }
+        .dest {
+            display: flex;
+            flex-direction: column;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            overflow: hidden;
+            text-decoration: none;
+            color: inherit;
+        }
+        .dest:hover { border-color: var(--line-strong); }
+
+        .thumb {
+            aspect-ratio: 16 / 10;
+            background: var(--thumb-bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: var(--accent);
+            font-size: 26px;
+        }
+        .thumb .thumb-label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .dest .body { padding: 12px 14px 14px; }
+        .dest h3 {
+            margin: 0 0 3px;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--ink);
+            line-height: 1.3;
+        }
+        .dest .meta {
+            font-size: 12.5px;
+            color: var(--muted);
+            line-height: 1.4;
+        }
+        .dest .price {
+            margin-top: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--accent-dark);
+        }
+
+        .empty {
+            grid-column: 1 / -1;
+            padding: 20px 0 4px;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        /* ---------- Plan CTA ---------- */
+
+        .plan { padding: 26px 0 36px; }
+        .plan-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            border-top: 1px solid var(--line);
+            padding-top: 24px;
+        }
+        .plan h2 {
+            margin: 0 0 4px;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--forest);
+        }
+        .plan p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: var(--muted);
+            max-width: 640px;
+        }
+
+        /* ---------- Footer ---------- */
+
+        footer {
+            border-top: 1px solid var(--line);
+            padding: 20px 0 28px;
+            color: var(--muted);
+        }
+        .foot-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            color: var(--forest);
+            margin-bottom: 4px;
+        }
+        .foot-brand i { color: var(--accent); }
+        footer p { margin: 0 0 2px; font-size: 0.88rem; }
+        footer small { font-size: 0.76rem; color: var(--muted); }
+
+        /* ---------- Map popup ---------- */
+
+        .dest-popup { line-height: 1.5; font-size: 0.85rem; }
+        .dest-popup .name { font-weight: 700; font-size: 0.95rem; color: var(--forest); }
+        .dest-popup .muted { color: var(--muted); }
+        .dest-popup a { color: var(--accent); text-decoration: none; }
+        .dest-popup a:hover { color: var(--accent-dark); text-decoration: underline; }
+
+        /* ---------- Responsive ---------- */
+
+        @media (max-width: 1120px) {
+            .explore-grid { grid-template-columns: 210px minmax(0, 1fr); }
+            .right-panel {
+                grid-column: 1 / -1;
+                flex-direction: row;
+            }
+            .right-panel .panel { flex: 1; }
+        }
+
+        @media (max-width: 760px) {
+            .nav-inner { gap: 12px; }
+            .nav-toggle { display: inline-flex; }
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 56px;
+                left: 0;
+                right: 0;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0;
+                padding: 8px 20px 14px;
+                background: var(--surface);
+                border-bottom: 1px solid var(--line);
+            }
+            .nav.open .nav-links { display: flex; }
+            .nav-links a {
+                padding: 10px 0;
+                font-size: 0.95rem;
+                border-bottom: 1px solid var(--line);
+            }
+            .nav-links a:last-child { border-bottom: none; }
+            .nav-links a.active { text-decoration: none; }
+
+            .hero-inner { padding: 28px 0 30px; }
+
+            main { padding-top: 16px; }
+            .explore-grid { grid-template-columns: 1fr; gap: 14px; }
+            .map-col { order: 1; }
+            .sidebar { order: 2; }
+            .right-panel { order: 3; flex-direction: column; }
+            #map { height: 340px; }
+
+            .dest-grid { grid-template-columns: 1fr; }
+            .plan-inner { flex-direction: column; align-items: flex-start; gap: 14px; }
         }
     </style>
 </head>
 <body>
 
-<div class="topbar">
-    <a class="brand" href="/">
-        <span class="logo"><i class="bi bi-tree"></i></span>
-        TRIP
-    </a>
-    <nav>
-        <a href="/">Jelajahi</a>
-        <a href="{% url 'gis:map' %}">Peta Wisata</a>
-        <a href="{% url 'gis:destinations' %}">Destinasi</a>
-        <a href="{% url 'gis:itinerary' %}">Itinerary</a>
-        <a href="{% url 'chatbot:chat-page' %}">Chatbot</a>
-    </nav>
-    <div class="spacer"></div>
-    {% if user.is_authenticated %}
-        <a class="btn-forest" href="{% url 'dashboard:dashboard' %}">
-            <i class="bi bi-person-circle me-1"></i>{{ user.username }}
-        </a>
-    {% else %}
-        <a class="btn-forest" href="{% url 'login' %}">Masuk</a>
-    {% endif %}
-</div>
+<header class="nav" id="nav">
+    <div class="container nav-inner">
+        <a class="brand" href="/"><i class="bi bi-tree"></i> TRIP</a>
 
-<div class="hero">
-    <div class="eyebrow">🌿 AI Travel Assistant</div>
-    <h1>Ke mana kamu ingin pergi di Kota Batu?</h1>
-    <p>Tanya PRUDENCE tentang destinasi, rekomendasi wisata, atau buat itinerary perjalananmu.</p>
-    <form class="chatbox" id="hero-chat" onsubmit="return submitChat(event)">
-        <i class="bi bi-feather" style="color:#22c55e"></i>
-        <input type="text" id="hero-input" placeholder="Tanya tentang wisata Kota Batu..." maxlength="500">
-        <button type="submit" aria-label="Kirim pertanyaan"><i class="bi bi-send-fill"></i></button>
-    </form>
-    <div class="hero-cta">
-        <a class="solid" href="{% url 'chatbot:chat-page' %}"><i class="bi bi-chat-dots me-1"></i>Tanya tentang wisata</a>
-        <a class="ghost" href="{% url 'gis:itinerary' %}"><i class="bi bi-calendar-check me-1"></i>Buat Itinerary</a>
-        <a class="ghost" href="{% url 'gis:map' %}"><i class="bi bi-map me-1"></i>Jelajahi Peta Wisata</a>
+        <nav class="nav-links">
+            <a class="active" href="/">Jelajahi</a>
+            <a href="{% url 'gis:map' %}">Peta Wisata</a>
+            <a href="{% url 'gis:destinations' %}">Destinasi</a>
+            <a href="{% url 'gis:itinerary' %}">Itinerary</a>
+            <a href="{% url 'chatbot:chat-page' %}">Chatbot</a>
+        </nav>
+
+        <div class="nav-actions">
+            {% if user.is_authenticated %}
+            <a class="nav-auth" href="{% url 'dashboard:dashboard' %}">{{ user.username }}</a>
+            {% else %}
+            <a class="nav-auth" href="{% url 'login' %}">Masuk</a>
+            {% endif %}
+            <button class="nav-toggle" id="nav-toggle" type="button" aria-label="Menu" aria-expanded="false">
+                <i class="bi bi-list"></i>
+            </button>
+        </div>
     </div>
-    <div class="chips" id="chips">
-        <button class="chip" data-q="Wisata alam apa yang cocok untuk keluarga?">🌿 Wisata alam untuk keluarga</button>
-        <button class="chip" data-q="Rekomendasikan wisata murah di Kota Batu">💰 Wisata murah</button>
-        <button class="chip" data-q="Saya punya waktu 1 hari, sebaiknya ke mana?">🕐 1 hari ke mana?</button>
-        <button class="chip" data-q="Buatkan itinerary wisata Kota Batu untuk saya">🗺️ Buat itinerary</button>
-        <button class="chip" data-q="Wisata yang cocok untuk anak-anak apa saja?">👨‍👩‍👧 Wisata anak-anak</button>
+</header>
+
+<section class="hero">
+    <div class="container hero-inner">
+        <p class="overline">Kota Batu · Jawa Timur</p>
+        <h1>Jelajahi Kota Batu</h1>
+        <p class="lead">Temukan destinasi wisata, bandingkan harga tiket, dan susun itinerary harian.</p>
+        <form class="search" id="search" role="search">
+            <input id="q" type="text" placeholder="Cari atau tanya wisata Kota Batu…" maxlength="500" aria-label="Cari atau tanya wisata">
+            <button type="submit">Tanya</button>
+        </form>
+        <div class="quick">
+            <a href="{% url 'gis:map' %}"><i class="bi bi-map"></i> Buka Peta</a>
+            <a href="{% url 'gis:itinerary' %}"><i class="bi bi-calendar3"></i> Buat Itinerary</a>
+        </div>
     </div>
-</div>
+</section>
 
-<div class="section">
-    <h2>Peta Wisata Kota Batu</h2>
-    <p class="sub">Temukan destinasi di sekitar Kota Batu. Klik marker untuk detail.</p>
-    <div id="map"></div>
-</div>
+<main class="container">
+    <section class="explore-grid">
+        <aside class="sidebar panel">
+            <h3>Kategori Wisata</h3>
+            <ul class="cat-list" id="cat-list"></ul>
+        </aside>
 
-<div class="section">
-    <h2>Jelajahi Destinasi</h2>
-    <p class="sub">Beberapa destinasi wisata populer.</p>
-    <div class="dest-grid">
-        {% for dest in destinations %}
-        <a class="dest-card" href="{{ dest.google_maps_url }}" target="_blank" rel="noopener">
-            <div class="thumb"><i class="bi bi-signpost-2"></i></div>
-            <div class="body">
-                <h3>{{ dest.name }}</h3>
-                <div class="meta">
-                    {% if dest.village %}{{ dest.village.name }}{% endif %}
-                    {% if dest.tourism_type %} · {{ dest.tourism_type }}{% endif %}
-                </div>
-                <div class="price">{{ dest.price_display }}</div>
+        <div class="map-col">
+            <div class="map-head">
+                <h2>Peta Wisata Kota Batu</h2>
+                <a class="link" href="{% url 'gis:map' %}">Buka peta penuh <i class="bi bi-arrow-up-right"></i></a>
             </div>
-        </a>
-        {% empty %}
-        <p class="sub">Belum ada destinasi wisata.</p>
-        {% endfor %}
+            <div id="map"></div>
+        </div>
+
+        <aside class="right-panel">
+            <div class="panel">
+                <h3>Fakta Kota Batu</h3>
+                <div class="fact-grid">
+                    <div class="fact"><span class="num" id="fact-dest">—</span><span class="label">Destinasi</span></div>
+                    <div class="fact"><span class="num" id="fact-village">—</span><span class="label">Desa</span></div>
+                    <div class="fact"><span class="num" id="fact-cat">—</span><span class="label">Kategori</span></div>
+                </div>
+            </div>
+            <div class="panel chat-card">
+                <h3>Chat dengan PRUDENCE</h3>
+                <p>Asisten wisata AI untuk membantu merencanakan perjalananmu.</p>
+                <a class="btn btn-block" href="{% url 'chatbot:chat-page' %}">Mulai Chat</a>
+            </div>
+        </aside>
+    </section>
+
+    <section class="destinations">
+        <div class="section-head">
+            <div>
+                <h2>Jelajahi Destinasi</h2>
+                <p>Destinasi wisata populer di Kota Batu.</p>
+            </div>
+            <a class="link" href="{% url 'gis:destinations' %}">Lihat semua <i class="bi bi-arrow-up-right"></i></a>
+        </div>
+        <div class="filter" id="filter"></div>
+        <div class="dest-grid" id="dest-grid"></div>
+    </section>
+
+    <section class="plan">
+        <div class="plan-inner">
+            <div>
+                <h2>Rencanakan Liburanmu</h2>
+                <p>Pilih destinasi, budget, dan durasi perjalanan. TRIP membantu menyusun itinerary yang sesuai.</p>
+            </div>
+            <a class="btn" href="{% url 'gis:itinerary' %}">Buat Itinerary <i class="bi bi-arrow-right"></i></a>
+        </div>
+    </section>
+</main>
+
+<footer>
+    <div class="container">
+        <div class="foot-brand"><i class="bi bi-tree"></i> TRIP</div>
+        <p>Asisten eksplorasi wisata Kota Batu.</p>
+        <small>© 2026 Universitas Brawijaya</small>
     </div>
-</div>
+</footer>
 
-<div class="section">
-    <div class="cta-band">
-        <h2>Siap rencanakan liburanmu?</h2>
-        <p>Buat itinerary harian lengkap dengan estimasi biaya dan Google Maps.</p>
-        <a class="btn-forest" href="{% url 'gis:itinerary' %}"><i class="bi bi-calendar-check me-1"></i>Mulai Buat Itinerary</a>
-    </div>
-</div>
-
-<footer>TRIP — Asisten wisata Kota Batu. Informasi bersifat informatif.</footer>
-
-{% csrf_token %}
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 (function () {
+    // ---- Mobile navigation ----
+    var nav = document.getElementById("nav");
+    var toggle = document.getElementById("nav-toggle");
+    toggle.addEventListener("click", function () {
+        var open = nav.classList.toggle("open");
+        toggle.setAttribute("aria-expanded", open);
+        toggle.innerHTML = open ? '<i class="bi bi-x-lg"></i>' : '<i class="bi bi-list"></i>';
+    });
+
+    // ---- Search -> chatbot ----
     function submitChat(e) {
         e.preventDefault();
-        const q = document.getElementById("hero-input").value.trim();
+        var q = document.getElementById("q").value.trim();
         if (q) window.location.href = "{% url 'chatbot:chat-page' %}?q=" + encodeURIComponent(q);
         return false;
     }
-    document.getElementById("hero-chat").onsubmit = submitChat;
+    document.getElementById("search").onsubmit = submitChat;
 
-    document.querySelectorAll("#chips .chip").forEach(function (chip) {
-        chip.addEventListener("click", function () {
-            window.location.href = "{% url 'chatbot:chat-page' %}?q=" + encodeURIComponent(chip.dataset.q);
+    // ---- Helpers ----
+    function escapeHtml(s) {
+        var div = document.createElement("div");
+        div.innerText = s == null ? "" : String(s);
+        return div.innerHTML;
+    }
+    function catLabel(name) {
+        return String(name || "").replace(/(^|\s)\S/g, function (c) { return c.toUpperCase(); });
+    }
+    var CATEGORY_ICONS = {
+        "alam": "bi-tree",
+        "budaya": "bi-bank",
+        "edukasi": "bi-book",
+        "fotografi": "bi-camera",
+        "keluarga": "bi-people",
+        "museum": "bi-building",
+        "panorama": "bi-image",
+        "petualangan": "bi-compass",
+        "sejarah": "bi-journal-richtext",
+        "taman rekreasi": "bi-flower2"
+    };
+    function catIcon(name) {
+        return CATEGORY_ICONS[String(name).toLowerCase()] || "bi-signpost-2";
+    }
+    function firstCategory(p) {
+        if (p.categories && p.categories.length) return p.categories[0];
+        return p.tourism_type || "wisata";
+    }
+    function matchesCategory(f, cat) {
+        if (!cat) return true;
+        var p = f.properties || {};
+        if ((p.categories || []).indexOf(cat) !== -1) return true;
+        return (p.tourism_type || "") === cat;
+    }
+
+    // ---- State ----
+    var state = { features: [], activeCategory: "" };
+    var map, markerLayer;
+
+    function deriveCategories(features) {
+        var counts = {};
+        features.forEach(function (f) {
+            var cats = (f.properties && f.properties.categories) || [];
+            if (!cats.length && f.properties.tourism_type) cats = [f.properties.tourism_type];
+            cats.forEach(function (c) { counts[c] = (counts[c] || 0) + 1; });
         });
-    });
+        return Object.keys(counts).map(function (name) {
+            return { name: name, count: counts[name] };
+        }).sort(function (a, b) { return b.count - a.count; });
+    }
 
-    // --- Map ---
-    const mapEl = document.getElementById("map");
-    if (mapEl) {
-        const map = L.map("map").setView([-7.8695, 112.5236], 12);
+    // ---- Map ----
+    function initMap(features) {
+        map = L.map("map", { scrollWheelZoom: false }).setView([-7.8695, 112.5236], 12);
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
             maxZoom: 19,
             attribution: "&copy; OpenStreetMap contributors",
         }).addTo(map);
+        markerLayer = L.layerGroup().addTo(map);
+        drawMarkers(features);
+    }
+    function drawMarkers(features) {
+        markerLayer.clearLayers();
+        features.forEach(function (f) {
+            var p = f.properties || {};
+            if (!f.geometry || !f.geometry.coordinates) return;
+            if (!matchesCategory(f, state.activeCategory)) return;
+            var lng = f.geometry.coordinates[0];
+            var lat = f.geometry.coordinates[1];
 
-        fetch("{% url 'gis:api-destinations-geojson' %}")
-            .then(r => r.json())
-            .then(data => {
-                (data.features || []).forEach(f => {
-                    const p = f.properties || {};
-                    if (f.geometry && f.geometry.coordinates) {
-                        const [lng, lat] = f.geometry.coordinates;
-                        const popup = document.createElement("div");
-                        popup.innerHTML =
-                            '<strong>' + escapeHtml(p.name || "") + '</strong><br>' +
-                            '<span style="font-size:0.85rem">' + escapeHtml(p.price_display || "Belum tersedia") + '</span><br>' +
-                            '<a href="' + escapeHtml(p.google_maps_url || "#") + '" target="_blank" rel="noopener">Buka Google Maps</a> · ' +
-                            '<a href="{% url "chatbot:chat-page" %}?q=' + encodeURIComponent("Info destinasi " + (p.name || "")) + '">Tanya Chatbot</a>';
-                        L.marker([lat, lng]).addTo(map).bindPopup(popup);
-                    }
-                });
-            })
-            .catch(() => {});
+            var popup = document.createElement("div");
+            popup.className = "dest-popup";
+            popup.innerHTML =
+                '<div class="name">' + escapeHtml(p.name || "") + '</div>' +
+                '<div class="muted">' + escapeHtml(p.village_name || "") +
+                    (p.tourism_type ? ' · ' + escapeHtml(catLabel(p.tourism_type)) : '') + '</div>' +
+                '<div style="margin-top:4px"><b>Harga:</b> ' + escapeHtml(p.price_display || "Belum tersedia") + '</div>' +
+                '<a href="' + escapeHtml(p.google_maps_url || "#") + '" target="_blank" rel="noopener">Buka di Google Maps</a> · ' +
+                '<a href="{% url "chatbot:chat-page" %}?q=' + encodeURIComponent("Info destinasi " + (p.name || "")) + '">Tanya Chatbot</a>';
+
+            L.marker([lat, lng]).addTo(markerLayer).bindPopup(popup);
+        });
     }
 
-    function escapeHtml(s) {
-        const div = document.createElement("div");
-        div.innerText = s == null ? "" : String(s);
-        return div.innerHTML;
+    // ---- Facts ----
+    function renderFacts(features) {
+        var villages = {};
+        var cats = {};
+        features.forEach(function (f) {
+            var p = f.properties || {};
+            if (p.village_name) villages[p.village_name] = 1;
+            (p.categories || []).forEach(function (c) { cats[c] = 1; });
+        });
+        document.getElementById("fact-dest").textContent = features.length;
+        document.getElementById("fact-village").textContent = Object.keys(villages).length;
+        document.getElementById("fact-cat").textContent = Object.keys(cats).length;
     }
+
+    // ---- Sidebar + filter + destinations ----
+    function renderSidebar(categories) {
+        var list = document.getElementById("cat-list");
+        list.innerHTML = "";
+        var all = document.createElement("li");
+        all.innerHTML = '<button data-cat="" class="' + (state.activeCategory === "" ? "active" : "") + '">' +
+            '<span>Semua Destinasi</span><span class="count">' + state.features.length + '</span></button>';
+        list.appendChild(all);
+
+        categories.forEach(function (c) {
+            var li = document.createElement("li");
+            li.innerHTML = '<button data-cat="' + escapeHtml(c.name) + '" class="' + (state.activeCategory === c.name ? "active" : "") + '">' +
+                '<span><i class="bi ' + catIcon(c.name) + '" style="margin-right:8px;color:var(--accent)"></i>' + escapeHtml(catLabel(c.name)) + '</span>' +
+                '<span class="count">' + c.count + '</span></button>';
+            list.appendChild(li);
+        });
+    }
+
+    function renderFilter(categories) {
+        var el = document.getElementById("filter");
+        el.innerHTML = "";
+        var items = [{ name: "", count: state.features.length }].concat(categories.slice(0, 6));
+        items.forEach(function (c) {
+            var b = document.createElement("button");
+            b.type = "button";
+            b.textContent = c.name ? catLabel(c.name) : "Semua";
+            b.dataset.cat = c.name;
+            if (state.activeCategory === c.name) b.classList.add("active");
+            el.appendChild(b);
+        });
+    }
+
+    function renderDestinations() {
+        var grid = document.getElementById("dest-grid");
+        grid.innerHTML = "";
+        var list = state.features.filter(function (f) { return matchesCategory(f, state.activeCategory); });
+        if (!list.length) {
+            grid.innerHTML = '<div class="empty">Tidak ada destinasi untuk kategori ini.</div>';
+            return;
+        }
+        list.forEach(function (f) {
+            var p = f.properties || {};
+            var cat = firstCategory(p);
+            var village = p.village_name || "Kota Batu";
+
+            var card = document.createElement("a");
+            card.className = "dest";
+            card.href = p.google_maps_url || "#";
+            card.target = "_blank";
+            card.rel = "noopener";
+            card.innerHTML =
+                '<div class="thumb"><i class="bi ' + catIcon(cat) + '"></i><span class="thumb-label">' + escapeHtml(catLabel(cat)) + '</span></div>' +
+                '<div class="body">' +
+                    '<h3>' + escapeHtml(p.name) + '</h3>' +
+                    '<div class="meta">' + escapeHtml(catLabel(cat)) + ' · ' + escapeHtml(village) + '</div>' +
+                    '<div class="price">' + escapeHtml(p.price_display || "Belum tersedia") + '</div>' +
+                '</div>';
+            grid.appendChild(card);
+        });
+    }
+
+    function setCategory(cat) {
+        state.activeCategory = cat;
+        drawMarkers(state.features);
+        var categories = deriveCategories(state.features);
+        renderSidebar(categories);
+        renderFilter(categories);
+        renderDestinations();
+    }
+
+    // ---- Wire up category clicks (event delegation) ----
+    document.getElementById("cat-list").addEventListener("click", function (e) {
+        var btn = e.target.closest("button");
+        if (!btn) return;
+        setCategory(btn.dataset.cat);
+    });
+    document.getElementById("filter").addEventListener("click", function (e) {
+        var btn = e.target.closest("button");
+        if (!btn) return;
+        setCategory(btn.dataset.cat);
+    });
+
+    // ---- Load data ----
+    fetch("{% url 'gis:api-destinations-geojson' %}")
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            state.features = data.features || [];
+            initMap(state.features);
+            renderFacts(state.features);
+            var categories = deriveCategories(state.features);
+            renderSidebar(categories);
+            renderFilter(categories);
+            renderDestinations();
+        })
+        .catch(function () {
+            document.getElementById("dest-grid").innerHTML =
+                '<div class="empty">Gagal memuat data destinasi.</div>';
+        });
 })();
 </script>
 </body>
