@@ -122,7 +122,7 @@
 
     {# ---------- Dynamic repeater: wahana, kategori, bundle ---------- #}
 
-    <div class="mb-3">
+    <div class="mb-3" id="block-rides">
         <label class="form-label">Wahana Tambahan</label>
         <div id="ride-repeater"></div>
         <button type="button" id="add-ride" class="btn btn-outline-success btn-sm">
@@ -133,7 +133,7 @@
         </div>
     </div>
 
-    <div class="mb-3">
+    <div class="mb-3" id="block-categories">
         <label class="form-label">Harga per Kategori</label>
         <div id="category-repeater"></div>
         <button type="button" id="add-category" class="btn btn-outline-success btn-sm">
@@ -144,7 +144,7 @@
         </div>
     </div>
 
-    <div class="mb-3">
+    <div class="mb-3" id="block-bundles">
         <label class="form-label">Tiket Bundle</label>
         <div id="bundle-repeater"></div>
         <button type="button" id="add-bundle" class="btn btn-outline-success btn-sm">
@@ -155,7 +155,7 @@
         </div>
     </div>
 
-    <div class="mb-3">
+    <div class="mb-3" id="block-parking">
         <label class="form-label">Biaya Parkir per Kendaraan</label>
         <div id="parking-repeater"></div>
         <button type="button" id="add-parking" class="btn btn-outline-success btn-sm">
@@ -181,6 +181,48 @@
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function () {
+    // Toggle field berdasarkan "Jenis Tempat" (restaurant vs destinasi wisata).
+    var placeType = document.getElementById("id_place_type");
+    if (!placeType) return;
+
+    var attractionOnly = [
+        "is_free", "ticket_type", "ticket_price_weekday",
+        "ticket_price_weekend", "price_description",
+        "price_source", "price_source_type", "price_source_url",
+    ];
+    var restaurantOnly = [
+        "price_min", "price_max", "ambiance", "cuisine_types",
+    ];
+    var attractionBlocks = ["block-rides", "block-categories", "block-bundles"];
+
+    function togglePlaceType() {
+        var isRestaurant = placeType.value === "restaurant";
+        attractionOnly.forEach(function (name) {
+            var el = document.getElementById("id_" + name);
+            if (el) {
+                var wrap = el.closest(".mb-3");
+                if (wrap) wrap.style.display = isRestaurant ? "none" : "";
+            }
+        });
+        restaurantOnly.forEach(function (name) {
+            var el = document.getElementById("id_" + name);
+            if (el) {
+                var wrap = el.closest(".mb-3");
+                if (wrap) wrap.style.display = isRestaurant ? "" : "none";
+            }
+        });
+        attractionBlocks.forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el) el.style.display = isRestaurant ? "none" : "";
+        });
+    }
+
+    placeType.addEventListener("change", togglePlaceType);
+    togglePlaceType();
+})();
+</script>
 <script>
 (function () {
     let pickerMap = null;
@@ -608,7 +650,12 @@
     var form = document.getElementById("destination-form");
     if (form) {
         form.addEventListener("submit", function () {
-            setJSON("id_wahana_data", readWahanas());
+            var placeTypeEl = document.getElementById("id_place_type");
+            var isRestaurant = placeTypeEl && placeTypeEl.value === "restaurant";
+
+            // Restaurant tidak punya wahana/bundle — kosongkan data relasional
+            // supaya tidak ikut tersimpan (konsisten dengan backend).
+            setJSON("id_wahana_data", isRestaurant ? [] : readWahanas());
 
             // ``id_category_prices`` adalah model JSONField yang di-disable
             // toggle saat tiket bukan "Per kategori". Input yang disabled
@@ -619,11 +666,11 @@
             if (catEl) {
                 catEl.disabled = false;
                 var ticketTypeEl = document.getElementById("id_ticket_type");
-                var isCategory = ticketTypeEl && ticketTypeEl.value === "category";
+                var isCategory = !isRestaurant && ticketTypeEl && ticketTypeEl.value === "category";
                 catEl.value = JSON.stringify(isCategory ? readCategories() : []);
             }
 
-            setJSON("id_bundle_data", readBundles());
+            setJSON("id_bundle_data", isRestaurant ? [] : readBundles());
             setJSON("id_parking_data", readParking());
         });
     }

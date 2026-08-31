@@ -685,14 +685,6 @@ class TripPlanningService:
             return ticket + meal + parking_per
 
         def pick_restaurant():
-            candidates = [
-                r for r in restaurants
-                if per_person_budget is None
-                or cls._meal_cost(r) <= per_person_budget
-            ]
-            if not candidates:
-                return None
-
             def dist(r):
                 if (
                     current_location
@@ -707,7 +699,37 @@ class TripPlanningService:
                     )
                 return 9999
 
-            return min(candidates, key=dist)
+            # Filter jam buka: restaurant harus buka pada jam makan. Yang
+            # hampir tutup (tutup sebelum jam makan selesai) diberi prioritas
+            # rendah; yang jamnya belum diketahui tetap jadi kandidat.
+            candidates = []
+            for r in restaurants:
+                if (
+                    per_person_budget is not None
+                    and cls._meal_cost(r) > per_person_budget
+                ):
+                    continue
+
+                status = r.is_open_at_time(lunch_start)
+                if status is False:
+                    continue  # tutup pada jam makan -> jangan dipilih
+
+                if status is None:
+                    rank = 1  # jam buka belum diketahui
+                else:
+                    closing = (
+                        r.closing_time.hour * 60 + r.closing_time.minute
+                    )
+                    # 0 = buka penuh, 2 = tutup sebelum jam makan selesai.
+                    rank = 0 if closing >= lunch_end else 2
+
+                candidates.append((r, rank))
+
+            if not candidates:
+                return None
+
+            candidates.sort(key=lambda item: (item[1], dist(item[0])))
+            return candidates[0][0]
 
         def lunch_item(restaurant):
             if restaurant is None:

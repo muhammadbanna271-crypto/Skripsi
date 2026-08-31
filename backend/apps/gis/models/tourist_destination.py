@@ -627,6 +627,25 @@ class TouristDestination(BaseModel):
         return format_idr(price)
 
     @property
+    def price_type_display(self):
+        """Label "Tipe Harga" konsisten di seluruh UI.
+
+        Prioritas: Gratis (``is_free``) > Berbayar (fixed/category) >
+        "Belum diketahui". Restaurant ditandai "Range Harga" karena tidak
+        punya tiket masuk. Dipakai dashboard/list supaya "Gratis" tidak
+        pernah tampil sebagai "Belum diketahui".
+        """
+        if self.place_type == "restaurant":
+            return "Range Harga"
+        if self.is_free:
+            return "Gratis"
+        if self.ticket_type == "fixed":
+            return "Berbayar"
+        if self.ticket_type == "category":
+            return "Per Kategori"
+        return "Belum diketahui"
+
+    @property
     def parking_display(self):
         """Ringkasan biaya parkir siap tampil (UI/chatbot/Excel)."""
         if self.is_free_parking:
@@ -772,3 +791,25 @@ class TouristDestination(BaseModel):
         Apakah buka pada ``day`` (datetime.date)? Return True/False/None.
         """
         return self.is_open_on_weekday(day.weekday())
+
+    def is_open_at_time(self, total_minutes):
+        """
+        Apakah buka pada jam tertentu (menit sejak 00:00)?
+
+        Return True/False/None:
+          - True  : dipastikan buka pada menit tersebut,
+          - False : dipastikan TUTUP,
+          - None  : jam buka belum diketahui (tidak bisa dipastikan).
+
+        Dipakai chatbot & itinerary engine (satu sumber logika yang sama).
+        """
+        if self.is_open_24_hours:
+            return True
+        if self.opening_time is None or self.closing_time is None:
+            return None
+        opening = self.opening_time.hour * 60 + self.opening_time.minute
+        closing = self.closing_time.hour * 60 + self.closing_time.minute
+        if closing <= opening:
+            # Buka melewati tengah malam (mis. 22:00–02:00).
+            return total_minutes >= opening or total_minutes < closing
+        return opening <= total_minutes < closing

@@ -48,8 +48,7 @@ Kelola data destinasi wisata Kota Batu.
                 <th>Tipe</th>
                 <th>Tipe Harga</th>
                 <th>Hari Tutup</th>
-                <th class="text-end">Harga Weekday</th>
-                <th class="text-end">Harga Weekend</th>
+                <th class="text-end">Harga</th>
                 <th>Sumber Harga</th>
                 <th>Status</th>
                 <th class="text-center">Aksi</th>
@@ -61,10 +60,9 @@ Kelola data destinasi wisata Kota Batu.
                 <td class="fw-semibold">{{ d.name }}</td>
                 <td>{{ d.village.name|default:"—" }}</td>
                 <td>{{ d.tourism_type|default:"—" }}</td>
-                <td>{% if d.is_free %}Gratis{% else %}{{ d.get_ticket_type_display }}{% endif %}</td>
+                <td>{{ d.price_type_display }}</td>
                 <td>{{ d.closed_days_display|default:"—" }}</td>
-                <td class="text-end">{{ d.ticket_price_weekday|idr|default:"—" }}</td>
-                <td class="text-end">{{ d.ticket_price_weekend|idr|default:"—" }}</td>
+                <td class="text-end">{{ d.price_display }}</td>
                 <td>{{ d.price_source|default:"—" }}</td>
                 <td>
                     {% if d.is_active %}
@@ -87,7 +85,7 @@ Kelola data destinasi wisata Kota Batu.
             </tr>
             {% empty %}
             <tr>
-                <td colspan="10" class="text-center py-5 text-muted">Belum ada destinasi wisata.</td>
+                <td colspan="9" class="text-center py-5 text-muted">Belum ada destinasi wisata.</td>
             </tr>
             {% endfor %}
         </tbody>

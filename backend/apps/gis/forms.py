@@ -9,6 +9,7 @@ from common.forms import BootstrapModelForm
 
 from apps.gis.models import (
     CLOSED_DAY_CHOICES,
+    CuisineType,
     ParkingFee,
     RegionCharacteristic,
     RegionElevation,
@@ -198,8 +199,11 @@ class TouristDestinationValidationMixin:
         weekend = cleaned.get("ticket_price_weekend")
         category_prices = cleaned.get("category_prices") or []
 
-        # Bila "Gratis" dicentang, harga tidak wajib diisi.
-        if not cleaned.get("is_free"):
+        is_restaurant = cleaned.get("place_type") == "restaurant"
+
+        # Bila "Gratis" dicentang, atau ini restaurant (range harga, bukan
+        # tiket masuk), maka harga tiket TIDAK wajib diisi.
+        if not cleaned.get("is_free") and not is_restaurant:
             if ticket_type == "fixed" and weekday is None and weekend is None:
                 self.add_error(
                     "ticket_price_weekday",
@@ -234,6 +238,16 @@ class TouristDestinationValidationMixin:
 
         # "Gratis" disimpan sebagai status, bukan angka 0 paksa.
         if obj.is_free:
+            obj.ticket_type = "unknown"
+            obj.ticket_price_weekday = None
+            obj.ticket_price_weekend = None
+            obj.category_prices = []
+            obj.price_description = ""
+
+        # Restaurant/tempat makan TIDAK punya tiket masuk — bersihkan field
+        # tiket wisata (weekday/weekend/kategori) supaya tidak tersimpan.
+        if obj.place_type == "restaurant":
+            obj.is_free = False
             obj.ticket_type = "unknown"
             obj.ticket_price_weekday = None
             obj.ticket_price_weekend = None
@@ -362,6 +376,16 @@ class TouristDestinationForm(
         # Bersihkan agar dirender sebagai form-check.
         self.fields["closed_days"].widget.attrs["class"] = ""
         self.fields["closed_days"].widget.attrs.pop("placeholder", None)
+
+        # Cita rasa / jenis masakan -> checkbox chips (bukan <select multiple>)
+        # supaya bisa dipilih/dibatalkan secara interaktif. Cita rasa (flavor)
+        # ditampilkan dulu, lalu jenis masakan (cuisine).
+        self.fields["cuisine_types"].widget = BootstrapCheckboxSelectMultiple()
+        self.fields["cuisine_types"].widget.attrs["class"] = ""
+        self.fields["cuisine_types"].widget.attrs.pop("placeholder", None)
+        self.fields["cuisine_types"].queryset = (
+            CuisineType.objects.filter(is_active=True).order_by("-kind", "name")
+        )
 
         # Field JSON hidden untuk data wahana & bundle (diisi dynamic
         # repeater JS). Bukan model field — disinkronkan manual di save().
@@ -727,6 +751,12 @@ class TouristDestinationForm(
     def save(self, commit=True):
         obj = super().save(commit=commit)
         if commit:
+            if obj.place_type == "restaurant":
+                # Restaurant tidak punya wahana/bundle — jangan proses data
+                # relasional yang tidak relevan (dibersihkan dari DB).
+                self._cleaned_wahanas = []
+                self._cleaned_bundles = []
+                self._package_links = {}
             name_to_wahana = self._sync_wahanas(obj)
             name_to_bundle = self._sync_bundles(obj, name_to_wahana)
             self._apply_wahana_package_links(name_to_wahana, name_to_bundle)

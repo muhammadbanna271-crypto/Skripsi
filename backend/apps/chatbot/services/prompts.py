@@ -232,9 +232,16 @@ PENTING:
   = "restaurant"), BUKAN destinasi wisata. Harganya adalah RANGE makanan
   (``price_min``/``price_max``/``price_range_display``), BUKAN HTM/tiket masuk.
 - Saat user bertanya "makan di mana", "makanan pedas", "tempat makan murah",
-  atau "restoran untuk keluarga", gunakan tool ``get_restaurants`` (param
-  ``flavor`` untuk cita rasa/jenis masakan, ``max_price`` untuk budget,
-  ``village`` untuk lokasi), lalu rekomendasikan berdasarkan data.
+  "restoran untuk keluarga", atau "tempat makan yang masih buka jam X",
+  gunakan tool ``get_restaurants`` (param ``flavor`` untuk cita rasa/jenis
+  masakan, ``max_price`` untuk budget, ``village`` untuk lokasi, ``open_at``
+  "HH:MM" untuk filter yang masih buka pada jam itu), lalu rekomendasikan
+  berdasarkan data.
+- Restaurant punya jam buka (``opening_time``/``closing_time``/
+  ``operating_hours``). Saat user menyebut waktu (mis. "buka jam 9 malam",
+  "setelah wisata malam mau makan"), teruskan jamnya ke ``open_at`` supaya
+  HANYA restaurant yang benar-benar masih buka yang direkomendasikan. Jangan
+  rekomendasikan restaurant yang sudah tutup pada jam itu.
 - Biaya makan WAJIB ikut ke estimasi budget itinerary. Pakai range harga
   (batas atas, atau tengah) sebagai estimasi konservatif — jangan menganggap
   restaurant punya HTM, dan jangan mengarang harga makanan.

@@ -302,9 +302,11 @@ def estimate_trip_budget(destination_ids=None, **kwargs):
     return TripPlanningService.estimate_budget(kwargs, destination_ids=destination_ids)
 
 
-def get_restaurants(flavor=None, max_price=None, village=None, **kwargs):
+def get_restaurants(flavor=None, max_price=None, village=None, open_at=None, **kwargs):
     """
-    Cari restaurant / tempat makan berdasarkan cita rasa, budget, lokasi.
+    Cari restaurant / tempat makan berdasarkan cita rasa, budget, lokasi,
+    dan jam buka (``open_at`` "HH:MM" — hanya kembalikan yang dipastikan
+    buka pada jam tersebut).
     """
     qs = (
         TouristDestination.objects
@@ -319,6 +321,14 @@ def get_restaurants(flavor=None, max_price=None, village=None, **kwargs):
     if village:
         qs = qs.filter(village__name__icontains=village)
 
+    open_minutes = None
+    if open_at:
+        try:
+            hh, mm = str(open_at).strip().split(":")[:2]
+            open_minutes = int(hh) * 60 + int(mm)
+        except (TypeError, ValueError):
+            open_minutes = None
+
     results = []
     for r in qs.order_by("name")[:20]:
         if (
@@ -327,6 +337,9 @@ def get_restaurants(flavor=None, max_price=None, village=None, **kwargs):
             and r.price_min > max_price
         ):
             continue
+        if open_minutes is not None and r.is_open_at_time(open_minutes) is not True:
+            # Tutup (atau jam buka belum diketahui) -> lewati.
+            continue
         results.append({
             "id": r.id,
             "name": r.name,
@@ -334,6 +347,13 @@ def get_restaurants(flavor=None, max_price=None, village=None, **kwargs):
             "price_range": r.price_range_display,
             "cuisine_types": [c.name for c in r.cuisine_types.all()],
             "ambiance": r.ambiance or "",
+            "opening_time": (
+                r.opening_time.strftime("%H:%M") if r.opening_time else None
+            ),
+            "closing_time": (
+                r.closing_time.strftime("%H:%M") if r.closing_time else None
+            ),
+            "operating_hours": r.operating_hours_display,
             "google_maps_url": r.google_maps_url(),
         })
 
@@ -720,7 +740,8 @@ TOOLS_SCHEMA = [
         "description": (
             "Cari restaurant / tempat makan di Kota Batu berdasarkan cita "
             "rasa (pedas/manis/gurih/...), jenis masakan, budget (max_price), "
-            "atau lokasi desa. Restaurant memakai range harga, BUKAN HTM."
+            "lokasi desa, atau jam buka (open_at). Hasil menyertakan jam buka/"
+            "tutup (opening_time/closing_time/operating_hours) dan range harga."
         ),
         "input_schema": {
             "type": "object",
@@ -739,6 +760,14 @@ TOOLS_SCHEMA = [
                 "village": {
                     "type": "string",
                     "description": "Nama desa/kecamatan lokasi.",
+                },
+                "open_at": {
+                    "type": "string",
+                    "description": (
+                        "Jam kedatangan/rencana makan format 'HH:MM' (24 jam), "
+                        "mis. '21:00'. Hanya restaurant yang dipastikan buka "
+                        "pada jam itu yang dikembalikan."
+                    ),
                 },
             },
         },
