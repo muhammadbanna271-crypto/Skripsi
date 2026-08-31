@@ -646,6 +646,43 @@ class TouristDestination(BaseModel):
         return "Belum diketahui"
 
     @property
+    def weekday_price_display(self):
+        """Tampilan harga weekday untuk tabel/list (konsisten di seluruh UI).
+
+        Prioritas: Restaurant ("Tidak ada HTM") > Gratis > harga > belum.
+        """
+        if self.place_type == "restaurant":
+            return "Tidak ada HTM"
+        if self.is_free:
+            return "Gratis"
+        if self.ticket_price_weekday_int is not None:
+            return format_idr(self.ticket_price_weekday_int)
+        return "Belum tersedia"
+
+    @property
+    def weekend_price_display(self):
+        """Tampilan harga weekend untuk tabel/list (konsisten di seluruh UI)."""
+        if self.place_type == "restaurant":
+            return "Tidak ada HTM"
+        if self.is_free:
+            return "Gratis"
+        if self.ticket_price_weekend_int is not None:
+            return format_idr(self.ticket_price_weekend_int)
+        return "Belum tersedia"
+
+    @property
+    def group_label(self):
+        """Label grup untuk daftar destinasi (dinamis dari data, bukan hardcode).
+
+        Restaurant dikelompokkan sebagai "Tempat Makan"; destinasi wisata
+        dikelompokkan berdasarkan ``tourism_type`` (uppercase). Tipe baru
+        otomatis menjadi grup baru.
+        """
+        if self.place_type == "restaurant":
+            return "TEMPAT MAKAN"
+        return (self.tourism_type or "Lainnya").strip().upper()
+
+    @property
     def parking_display(self):
         """Ringkasan biaya parkir siap tampil (UI/chatbot/Excel)."""
         if self.is_free_parking:
@@ -743,13 +780,25 @@ class TouristDestination(BaseModel):
 
     def google_maps_url(self):
         """
-        Bangun Google Maps search URL dari query nama destinasi (bukan
-        koordinat), supaya mudah dicari & tetap valid meski koordinat
-        berubah.
+        Bangun Google Maps search URL.
+
+        Prioritas:
+          1. ``google_maps_query`` manual (staff sengaja isi nama+alamat
+             yang lebih spesifik),
+          2. koordinat (``lat,lng``) — supaya link menunjuk LOKASI YANG SAMA
+             dengan marker peta, bukan pencarian nama yang bisa ambigu
+             (mis. "Bubur Ayam Jakarta" punya banyak cabang),
+          3. fallback nama + desa + Kota Batu.
         """
+        if self.google_maps_query:
+            query = self.google_maps_query
+        elif self.latitude is not None and self.longitude is not None:
+            query = f"{self.latitude},{self.longitude}"
+        else:
+            query = self.effective_google_maps_query
         return (
             "https://www.google.com/maps/search/?api=1&query="
-            + urllib.parse.quote(self.effective_google_maps_query)
+            + urllib.parse.quote(query)
         )
 
     # ---------------------------------------------------------

@@ -602,67 +602,75 @@ async function init() {
         },
     });
 
-    // --- Destination layer ---
-    const destinationLayer = L.geoJSON(destinations, {
-        pointToLayer: function (feature, latlng) {
-            return L.circleMarker(latlng, {
-                radius: 11,
-                color: "#ffffff",
-                weight: 2,
-                fillColor: "#e34948",
-                fillOpacity: 0.95,
-            });
-        },
-        onEachFeature: function (feature, layer) {
-            const p = feature.properties;
-            const editUrl = p.id ? DEST_EDIT_URL.replace("/0/", `/${p.id}/`) : "#";
-            const deleteUrl = p.id ? DEST_DELETE_URL.replace("/0/", `/${p.id}/`) : "#";
-            const adminLinks = IS_STAFF
-                ? `<br><a href="${editUrl}" class="text-decoration-none">Edit</a> ·
-                   <a href="${deleteUrl}" class="text-danger text-decoration-none">Hapus</a>`
-                : "";
+    // --- Destination layers (wisata vs tempat makan, bisa difilter) ---
+    function makeDestinationLayer(placeType, fillColor) {
+        return L.geoJSON(destinations, {
+            filter: function (feature) {
+                return feature.properties && feature.properties.place_type === placeType;
+            },
+            pointToLayer: function (feature, latlng) {
+                return L.circleMarker(latlng, {
+                    radius: 11,
+                    color: "#ffffff",
+                    weight: 2,
+                    fillColor: fillColor,
+                    fillOpacity: 0.95,
+                });
+            },
+            onEachFeature: function (feature, layer) {
+                const p = feature.properties;
+                const editUrl = p.id ? DEST_EDIT_URL.replace("/0/", `/${p.id}/`) : "#";
+                const deleteUrl = p.id ? DEST_DELETE_URL.replace("/0/", `/${p.id}/`) : "#";
+                const adminLinks = IS_STAFF
+                    ? `<br><a href="${editUrl}" class="text-decoration-none">Edit</a> ·
+                       <a href="${deleteUrl}" class="text-danger text-decoration-none">Hapus</a>`
+                    : "";
 
-            const priceLine = p.is_free
-                ? "Gratis"
-                : (p.price_display || "belum tersedia");
-            const parkingLine = p.parking_display
-                ? ` · Parkir: ${p.parking_display}`
-                : "";
-            const rideLines = p.ride_prices_display
-                ? `<br><b>Wahana:</b><br>${p.ride_prices_display}`
-                : "";
-            const bundleLines = p.bundle_prices_display
-                ? `<br><b>Bundle:</b><br>${p.bundle_prices_display}`
-                : "";
-            const mapsLink = p.google_maps_url
-                ? `<br><a href="${p.google_maps_url}" target="_blank" rel="noopener">Buka Google Maps</a>`
-                : "";
-            const elevLine = p.elevation_meters != null
-                ? `<b>Ketinggian:</b> ±${Math.round(p.elevation_meters)} mdpl (${p.elevation_source || "DEM"})<br>`
-                : "";
-            const tempLine = p.temperature_c != null
-                ? `<b>Suhu:</b> ±${p.temperature_c} °C (${p.temperature_source || "—"})<br>`
-                : "";
+                const priceLine = p.is_free
+                    ? "Gratis"
+                    : (p.price_display || "belum tersedia");
+                const parkingLine = p.parking_display
+                    ? ` · Parkir: ${p.parking_display}`
+                    : "";
+                const rideLines = p.ride_prices_display
+                    ? `<br><b>Wahana:</b><br>${p.ride_prices_display}`
+                    : "";
+                const bundleLines = p.bundle_prices_display
+                    ? `<br><b>Bundle:</b><br>${p.bundle_prices_display}`
+                    : "";
+                const mapsLink = p.google_maps_url
+                    ? `<br><a href="${p.google_maps_url}" target="_blank" rel="noopener">Buka Google Maps</a>`
+                    : "";
+                const elevLine = p.elevation_meters != null
+                    ? `<b>Ketinggian:</b> ±${Math.round(p.elevation_meters)} mdpl (${p.elevation_source || "DEM"})<br>`
+                    : "";
+                const tempLine = p.temperature_c != null
+                    ? `<b>Suhu:</b> ±${p.temperature_c} °C (${p.temperature_source || "—"})<br>`
+                    : "";
 
-            layer.bindPopup(`
-                <div class="village-popup">
-                    <div class="name">${p.name}</div>
-                    <div class="muted">${p.village_name || ""} · ${p.tourism_type || "wisata"}</div>
-                    <br>
-                    <b>Status:</b> ${p.status_label || "—"}<br>
-                    <b>Harga:</b> ${priceLine}${parkingLine}<br>
-                    <b>Jam:</b> ${p.operating_hours_display || "belum tersedia"}<br>
-                    ${elevLine}
-                    ${tempLine}
-                    <b>Hari tutup:</b> ${p.closed_days_display || "belum tersedia"}
-                    ${rideLines}
-                    ${bundleLines}
-                    ${mapsLink}
-                    ${adminLinks}
-                </div>
-            `);
-        },
-    });
+                layer.bindPopup(`
+                    <div class="village-popup">
+                        <div class="name">${p.name}</div>
+                        <div class="muted">${p.village_name || ""} · ${p.tourism_type || "wisata"}</div>
+                        <br>
+                        <b>Status:</b> ${p.status_label || "—"}<br>
+                        <b>Harga:</b> ${priceLine}${parkingLine}<br>
+                        <b>Jam:</b> ${p.operating_hours_display || "belum tersedia"}<br>
+                        ${elevLine}
+                        ${tempLine}
+                        <b>Hari tutup:</b> ${p.closed_days_display || "belum tersedia"}
+                        ${rideLines}
+                        ${bundleLines}
+                        ${mapsLink}
+                        ${adminLinks}
+                    </div>
+                `);
+            },
+        });
+    }
+
+    const destinationLayer = makeDestinationLayer("attraction", "#e34948");
+    const restaurantLayer = makeDestinationLayer("restaurant", "#e8731a");
 
     // --- Destination elevation & temperature (point coloring) ---
     const destFeatures = destinations.features || [];
@@ -731,9 +739,10 @@ async function init() {
 
     // --- Layer control ---
     const overlays = {
+        "Destinasi Wisata": destinationLayer,
+        "Tempat Makan": restaurantLayer,
         "Ketinggian Destinasi": destinationElevationLayer,
         "Persebaran Suhu": destinationTemperatureLayer,
-        "Destinasi Wisata": destinationLayer,
     };
     if (IS_STAFF) {
         overlays["Batas Desa/Kelurahan"] = boundaryLayer;
@@ -755,6 +764,7 @@ async function init() {
         clusterLayer.addTo(map);
     }
     destinationLayer.addTo(map);
+    restaurantLayer.addTo(map);
 
     if (IS_STAFF) {
         renderDataBanner(villages, villagePoints, destinations);

@@ -258,11 +258,14 @@ class DestinationFeatureTest(TestCase):
 
     # ---------------- GOOGLE MAPS ----------------
 
-    def test_google_maps_url_uses_name_query(self):
+    def test_google_maps_url_uses_coordinates_when_no_manual_query(self):
+        # Tanpa query manual, link memakai KOORDINAT supaya menunjuk lokasi
+        # yang sama dengan marker (bukan pencarian nama yang bisa ambigu).
         dest = self._destination("Alun-Alun", latitude=-7.8695, longitude=112.5236)
         url = dest.google_maps_url()
         self.assertTrue(url.startswith("https://www.google.com/maps/search/?api=1&query="))
-        self.assertIn("Alun-Alun", url)
+        self.assertIn("-7.8695", url)
+        self.assertNotIn("Alun-Alun", url)
 
     def test_google_maps_url_fallback_to_name(self):
         dest = self._destination("Alun-Alun Kota Batu", latitude=None, longitude=None)

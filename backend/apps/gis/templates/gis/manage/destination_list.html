@@ -10,7 +10,7 @@ Destinasi Wisata
 {% endblock %}
 
 {% block page_subtitle %}
-Kelola data destinasi wisata Kota Batu.
+Kelola data destinasi wisata & tempat makan Kota Batu.
 {% endblock %}
 
 {% block page_action %}
@@ -21,90 +21,210 @@ Kelola data destinasi wisata Kota Batu.
 {% endblock %}
 
 {% block search %}
-<form method="get">
-    <div class="row g-3">
-        <div class="col-md-5">
-            <input type="search" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Cari nama, desa, atau tipe...">
-        </div>
-        <div class="col-auto">
-            <button class="btn btn-success"><i class="bi bi-search me-2"></i>Cari</button>
-        </div>
-        {% if request.GET.q %}
-        <div class="col-auto">
-            <a href="{% url 'gis:manage-destination-list' %}" class="btn btn-outline-secondary">Reset</a>
-        </div>
-        {% endif %}
-    </div>
-</form>
+<div class="d-flex flex-wrap gap-2 align-items-center">
+    <input
+        type="search"
+        id="dest-search"
+        class="form-control"
+        style="max-width: 280px;"
+        placeholder="Cari destinasi...">
+    <select id="type-filter" class="form-select" style="max-width: 220px;">
+        <option value="">Semua Tipe</option>
+        <option value="__wisata">Wisata</option>
+        <option value="__tempat-makan">Tempat Makan</option>
+    </select>
+    <button id="expand-all" class="btn btn-outline-secondary btn-sm">Expand semua</button>
+    <button id="collapse-all" class="btn btn-outline-secondary btn-sm">Collapse semua</button>
+</div>
 {% endblock %}
 
 {% block crud_content %}
-<div class="table-responsive">
-    <table class="table align-middle">
-        <thead>
-            <tr>
-                <th>Nama</th>
-                <th>Desa/Kelurahan</th>
-                <th>Tipe</th>
-                <th>Tipe Harga</th>
-                <th>Hari Tutup</th>
-                <th class="text-end">Harga</th>
-                <th>Sumber Harga</th>
-                <th>Status</th>
-                <th class="text-center">Aksi</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for d in destinations %}
-            <tr>
-                <td class="fw-semibold">{{ d.name }}</td>
-                <td>{{ d.village.name|default:"—" }}</td>
-                <td>{{ d.tourism_type|default:"—" }}</td>
-                <td>{{ d.price_type_display }}</td>
-                <td>{{ d.closed_days_display|default:"—" }}</td>
-                <td class="text-end">{{ d.price_display }}</td>
-                <td>{{ d.price_source|default:"—" }}</td>
-                <td>
-                    {% if d.is_active %}
-                    <span class="badge bg-success">Aktif</span>
-                    {% else %}
-                    <span class="badge bg-danger">Nonaktif</span>
-                    {% endif %}
-                </td>
-                <td class="text-center text-nowrap">
-                    <a href="{% url 'gis:manage-destination-update' d.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-outline-warning btn-sm"><i class="bi bi-pencil"></i></a>
-                    <form method="post" action="{% url 'gis:manage-destination-update-price' d.pk %}" class="d-inline">
-                        {% csrf_token %}
-                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                        <button type="submit" class="btn btn-outline-primary btn-sm" title="Update harga dari sumber eksternal">
-                            <i class="bi bi-arrow-repeat"></i>
-                        </button>
-                    </form>
-                    <a href="{% url 'gis:manage-destination-delete' d.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i></a>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="9" class="text-center py-5 text-muted">Belum ada destinasi wisata.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+
+{% regroup destinations by group_label as grouped %}
+
+<div id="groups">
+
+    {% for g in grouped %}
+
+    <div
+        class="group border rounded-3 mb-3"
+        data-group="{{ g.grouper }}"
+        data-place-type="{% if g.grouper == 'TEMPAT MAKAN' %}restaurant{% else %}attraction{% endif %}">
+
+        <button
+            type="button"
+            class="group-head d-flex w-100 justify-content-between align-items-center border-0 bg-light px-3 py-2"
+            style="cursor:pointer;">
+            <span class="fw-semibold">
+                <i class="bi bi-chevron-right me-1 group-caret"></i>
+                {{ g.grouper }}
+                <span class="badge bg-secondary ms-1">{{ g.list|length }}</span>
+            </span>
+        </button>
+
+        <div class="group-body" style="display:none;">
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nama</th>
+                            <th>Kecamatan</th>
+                            <th>Tipe</th>
+                            <th>Tipe Harga</th>
+                            <th class="text-end">Harga Weekday</th>
+                            <th class="text-end">Harga Weekend</th>
+                            <th class="text-end">Kisaran Harga</th>
+                            <th>Cita Rasa</th>
+                            <th>Jam Operasional</th>
+                            <th>Hari Tutup</th>
+                            <th>Maps</th>
+                            <th class="text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for d in g.list %}
+                        <tr class="dest-row"
+                            data-search="{{ d.name }} {{ d.village.name|default:'' }} {{ d.effective_district.name|default:'' }} {{ d.tourism_type }} {{ g.grouper }}">
+                            <td class="fw-semibold text-nowrap">{{ d.name }}</td>
+                            <td class="text-nowrap">{{ d.effective_district.name|default:"—" }}</td>
+                            <td>{% if d.place_type == "restaurant" %}Tempat Makan{% else %}{{ d.tourism_type|default:"—" }}{% endif %}</td>
+                            <td>{{ d.price_type_display }}</td>
+                            <td class="text-end text-nowrap">{{ d.weekday_price_display }}</td>
+                            <td class="text-end text-nowrap">{{ d.weekend_price_display }}</td>
+                            <td class="text-end text-nowrap">{% if d.place_type == "restaurant" %}{{ d.price_range_display|default:"—" }}{% else %}—{% endif %}</td>
+                            <td>
+                                {% if d.place_type == "restaurant" %}
+                                    {% for c in d.cuisine_types.all %}{{ c.name }}{% if not forloop.last %} · {% endif %}{% empty %}—{% endfor %}
+                                {% else %}—{% endif %}
+                            </td>
+                            <td class="text-nowrap">{{ d.operating_hours_display|default:"—" }}</td>
+                            <td class="text-nowrap">{{ d.closed_days_display|default:"—" }}</td>
+                            <td>
+                                <a href="{{ d.google_maps_url }}" target="_blank" rel="noopener">Buka</a>
+                            </td>
+                            <td class="text-center text-nowrap">
+                                <a href="{% url 'gis:manage-destination-update' d.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-outline-warning btn-sm"><i class="bi bi-pencil"></i></a>
+                                <form method="post" action="{% url 'gis:manage-destination-update-price' d.pk %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                    <button type="submit" class="btn btn-outline-primary btn-sm" title="Update harga dari sumber eksternal">
+                                        <i class="bi bi-arrow-repeat"></i>
+                                    </button>
+                                </form>
+                                <a href="{% url 'gis:manage-destination-delete' d.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i></a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    {% empty %}
+    <p class="text-muted py-4 text-center">Belum ada destinasi wisata.</p>
+    {% endfor %}
+
 </div>
 
-{% if is_paginated %}
-<nav class="mt-4">
-    <ul class="pagination justify-content-end">
-        {% if page_obj.has_previous %}
-        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
-        {% endif %}
-        {% for i in paginator.page_range %}
-        <li class="page-item {% if page_obj.number == i %}active{% endif %}"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
-        {% endfor %}
-        {% if page_obj.has_next %}
-        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
-        {% endif %}
-    </ul>
-</nav>
-{% endif %}
+<p id="no-result" class="text-muted py-4 text-center" style="display:none;">
+    Tidak ada destinasi yang sesuai.
+</p>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    var search = document.getElementById("dest-search");
+    var filter = document.getElementById("type-filter");
+    var groups = Array.prototype.slice.call(document.querySelectorAll(".group"));
+    var noResult = document.getElementById("no-result");
+
+    // Isi dropdown filter dinamis dari grup (selain "Wisata"/"Tempat Makan").
+    groups.forEach(function (g) {
+        var label = g.getAttribute("data-group");
+        if (label === "Tempat Makan") return;
+        var opt = document.createElement("option");
+        opt.value = label;
+        opt.textContent = label;
+        filter.appendChild(opt);
+    });
+
+    function setGroup(g, open) {
+        var body = g.querySelector(".group-body");
+        var caret = g.querySelector(".group-caret");
+        body.style.display = open ? "" : "none";
+        caret.className = open ? "bi bi-chevron-down me-1 group-caret" : "bi bi-chevron-right me-1 group-caret";
+    }
+
+    function applyFilter() {
+        var f = filter.value;
+        var q = (search.value || "").trim().toLowerCase();
+        var anyVisible = false;
+
+        groups.forEach(function (g) {
+            var gLabel = g.getAttribute("data-group");
+            var gType = g.getAttribute("data-place-type");
+
+            // filter tipe
+            if (f === "__wisata" && gType === "restaurant") { g.style.display = "none"; return; }
+            if (f === "__tempat-makan" && gType === "attraction") { g.style.display = "none"; return; }
+            if (f && f !== "__wisata" && f !== "__tempat-makan" && gLabel !== f) { g.style.display = "none"; return; }
+
+            // search
+            var rows = g.querySelectorAll(".dest-row");
+            var visibleRows = 0;
+            rows.forEach(function (r) {
+                var hay = (r.getAttribute("data-search") || "").toLowerCase();
+                var hit = !q || hay.indexOf(q) !== -1;
+                r.style.display = hit ? "" : "none";
+                if (hit) visibleRows++;
+            });
+
+            if (visibleRows === 0) {
+                g.style.display = "none";
+            } else {
+                g.style.display = "";
+                setGroup(g, q ? true : (g.getAttribute("data-open") === "1"));
+                anyVisible = true;
+            }
+        });
+
+        noResult.style.display = anyVisible ? "none" : "";
+    }
+
+    // Toggle group saat klik header.
+    groups.forEach(function (g) {
+        var head = g.querySelector(".group-head");
+        head.addEventListener("click", function () {
+            var body = g.querySelector(".group-body");
+            var isOpen = body.style.display !== "none";
+            setGroup(g, !isOpen);
+            g.setAttribute("data-open", isOpen ? "0" : "1");
+        });
+    });
+
+    document.getElementById("expand-all").addEventListener("click", function () {
+        groups.forEach(function (g) { setGroup(g, true); g.setAttribute("data-open", "1"); });
+    });
+    document.getElementById("collapse-all").addEventListener("click", function () {
+        groups.forEach(function (g) { setGroup(g, false); g.setAttribute("data-open", "0"); });
+    });
+
+    search.addEventListener("input", applyFilter);
+    filter.addEventListener("change", applyFilter);
+
+    // Default: buka group pertama + grup "Tempat Makan", sisanya collapse.
+    var firstAttraction = groups.find(function (g) { return g.getAttribute("data-place-type") === "attraction"; });
+    groups.forEach(function (g) {
+        var open = (g === firstAttraction) || g.getAttribute("data-place-type") === "restaurant";
+        setGroup(g, open);
+        g.setAttribute("data-open", open ? "1" : "0");
+    });
+
+    applyFilter();
+})();
+</script>
 {% endblock %}

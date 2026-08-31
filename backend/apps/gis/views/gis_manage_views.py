@@ -229,7 +229,11 @@ class TouristDestinationListView(StaffRequiredListView):
     model = TouristDestination
     template_name = "gis/manage/destination_list.html"
     context_object_name = "destinations"
-    ordering = ["name"]
+    # Urutkan per grup (attraction dulu, lalu restaurant) supaya ``regroup``
+    # di template menghasilkan grup yang berurutan.
+    ordering = ["place_type", "tourism_type", "name"]
+    # Grouping + collapse + search dilakukan di template (JS); jangan paginasi.
+    paginate_by = None
     search_fields = [
         "name",
         "village__name",
@@ -241,7 +245,7 @@ class TouristDestinationListView(StaffRequiredListView):
             super()
             .get_queryset()
             .select_related("village", "district", "village__district")
-            .prefetch_related("categories")
+            .prefetch_related("categories", "cuisine_types")
         )
 
 
