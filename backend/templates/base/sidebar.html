@@ -14,6 +14,7 @@
 {% url 'gis:map' as gis_map_url %}
 {% url 'gis:destinations' as gis_destinations_url %}
 {% url 'gis:itinerary' as gis_itinerary_url %}
+{% url 'gis:manage-destination-list' as gis_manage_destinations_url %}
 {% url 'chatbot:chat-page' as chatbot_url %}
 {% load static %}
 <div class="sidebar">
@@ -62,7 +63,7 @@
 
                 <a
                     href="{{ gis_map_url }}"
-                    class="nav-link {% if gis_map_url in request.path %}active{% endif %}">
+                    class="nav-link {% if request.path == gis_map_url %}active{% endif %}">
 
                     <i class="bi bi-map"></i>
 
@@ -75,8 +76,8 @@
             <li>
 
                 <a
-                    href="{{ gis_destinations_url }}"
-                    class="nav-link {% if gis_destinations_url in request.path %}active{% endif %}">
+                    href="{{ gis_manage_destinations_url }}"
+                    class="nav-link {% if gis_manage_destinations_url in request.path %}active{% endif %}">
 
                     <i class="bi bi-signpost-2"></i>
 

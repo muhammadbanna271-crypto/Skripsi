@@ -650,6 +650,7 @@ class TripPlanningService:
         day_end = settings.GIS_ITINERARY_DAY_END_MIN
         lunch_start = settings.GIS_ITINERARY_LUNCH_START_MIN
         lunch_end = settings.GIS_ITINERARY_LUNCH_END_MIN
+        lunch_duration = lunch_end - lunch_start
 
         days = []
         unscheduled = []
@@ -733,29 +734,27 @@ class TripPlanningService:
             candidates.sort(key=lambda item: (item[1], dist(item[0])))
             return candidates[0][0]
 
-        def lunch_item(restaurant):
+        def lunch_item(restaurant, start_min):
+            end_min = start_min + lunch_duration
+            time_label = (
+                f"{cls._format_time(start_min)} – {cls._format_time(end_min)}"
+            )
             if restaurant is None:
                 return {
                     "type": "lunch",
-                    "time": (
-                        f"{cls._format_time(lunch_start)} – "
-                        f"{cls._format_time(lunch_end)}"
-                    ),
+                    "time": time_label,
                     "name": "Makan siang / istirahat",
-                    "duration_minutes": lunch_end - lunch_start,
+                    "duration_minutes": lunch_duration,
                     "restaurant_id": None,
                 }
             return {
                 "type": "lunch",
-                "time": (
-                    f"{cls._format_time(lunch_start)} – "
-                    f"{cls._format_time(lunch_end)}"
-                ),
+                "time": time_label,
                 "name": restaurant.name,
                 "restaurant_id": restaurant.id,
                 "price_range": restaurant.price_range_display,
                 "google_maps_url": restaurant.google_maps_url(),
-                "duration_minutes": lunch_end - lunch_start,
+                "duration_minutes": lunch_duration,
             }
 
         for dest in attractions:
@@ -797,10 +796,12 @@ class TripPlanningService:
                 unscheduled.append({"name": dest.name, "note": closed_note})
                 continue
 
-            # Sisipkan makan siang (restaurant nyata) bila melewati jam makan.
-            if not lunch_added and clock >= lunch_start:
+            # Sisipkan makan siang bila sudah tiba waktu makan (sebelum
+            # berangkat ke destinasi berikutnya), memakai waktu AKTUAL supaya
+            # tidak "nabrak" mundur. Lewati bila sudah lewat jendela makan.
+            if not lunch_added and lunch_start <= clock < lunch_end:
                 restaurant = pick_restaurant()
-                current_day.append(lunch_item(restaurant))
+                current_day.append(lunch_item(restaurant, clock))
                 if restaurant is not None:
                     total_cost += cls._meal_cost(restaurant) * travelers
                     if restaurant.latitude is not None and restaurant.longitude is not None:
@@ -808,7 +809,10 @@ class TripPlanningService:
                             "lat": float(restaurant.latitude),
                             "lon": float(restaurant.longitude),
                         }
-                clock = lunch_end
+                clock += lunch_duration
+                lunch_added = True
+            elif not lunch_added and clock >= lunch_end:
+                # Sudah melewati jendela makan siang — lewati agar tidak nabrak.
                 lunch_added = True
 
             # Waktu tempuh dari lokasi sebelumnya.

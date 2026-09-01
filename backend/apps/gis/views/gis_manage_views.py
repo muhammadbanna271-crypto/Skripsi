@@ -244,6 +244,7 @@ class TouristDestinationListView(StaffRequiredListView):
         return (
             super()
             .get_queryset()
+            .order_by("place_type", "tourism_type", "name")
             .select_related("village", "district", "village__district")
             .prefetch_related("categories", "cuisine_types")
         )
