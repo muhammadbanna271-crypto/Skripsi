@@ -6,6 +6,7 @@ from apps.gis.views.gis_views import (
     destination_geojson,
     elevation_zones_geojson,
     characteristic_zones_geojson,
+    live_temperature,
     legend,
 )
 from apps.gis.views.gis_manage_views import (
@@ -41,6 +42,7 @@ __all__ = [
     "destination_geojson",
     "elevation_zones_geojson",
     "characteristic_zones_geojson",
+    "live_temperature",
     "legend",
     "RegionCharacteristicListView",
     "RegionCharacteristicCreateView",

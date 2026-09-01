@@ -10,8 +10,12 @@ kosong + status, BUKAN polygon/koordinat palsu.
 
 import json
 import re
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
+import requests
 from django.conf import settings
 from django.core.cache import cache
 from django.db.models import Count
@@ -27,6 +31,22 @@ from apps.recommendation.models import RecommendationResult
 
 
 DEFAULT_CLUSTER_COLOR = "#0d6efd"
+
+_JAKARTA = ZoneInfo("Asia/Jakarta")
+
+
+def _open_meteo_hourly(lat, lng):
+    """Ambil data suhu per jam dari Open-Meteo (forecast, tz Asia/Jakarta)."""
+    url = (
+        "https://api.open-meteo.com/v1/forecast"
+        f"?latitude={lat}&longitude={lng}"
+        "&hourly=temperature_2m"
+        "&timezone=Asia%2FJakarta"
+        "&past_days=1&forecast_days=2"
+    )
+    resp = requests.get(url, timeout=20)
+    resp.raise_for_status()
+    return resp.json().get("hourly", {})
 
 
 class GeoJSONService:
@@ -105,6 +125,118 @@ class GeoJSONService:
             settings.GIS_CHARACTERISTIC_GEOJSON_PATH
         )
         return [f.get("properties", {}) for f in features]
+
+    # =========================================================
+    # SUHU REAL-TIME (Open-Meteo, cache 15 menit)
+    # =========================================================
+
+    TEMP_CACHE_KEY = "gis_live_temperature_by_village"
+    TEMP_CACHE_TIMEOUT = 900  # detik
+
+    @staticmethod
+    def _flatten_coords(geom):
+        coords = []
+
+        def walk(g):
+            if isinstance(g, dict):
+                c = g.get("coordinates")
+                if c:
+                    walk(c)
+            elif isinstance(g, (list, tuple)):
+                if g and isinstance(g[0], (int, float)) and len(g) >= 2:
+                    coords.append((float(g[0]), float(g[1])))
+                else:
+                    for x in g:
+                        walk(x)
+
+        walk(geom)
+        return coords
+
+    @classmethod
+    def _village_centroids(cls):
+        """Centroid (rata-rata koordinat) tiap desa -> {name_lower: (lat, lng)}."""
+        features, _ = cls.load_features()
+        out = {}
+        for f in features:
+            p = f.get("properties", {})
+            name = p.get("village_name") or p.get("desa_kelurahan")
+            if not name:
+                continue
+            name = name.strip()
+            for prefix in ("Kelurahan ", "Desa "):
+                if name.lower().startswith(prefix.lower()):
+                    name = name[len(prefix):].strip()
+                    break
+            coords = cls._flatten_coords(f.get("geometry"))
+            if not coords:
+                continue
+            lng = sum(c[0] for c in coords) / len(coords)
+            lat = sum(c[1] for c in coords) / len(coords)
+            out[name.lower()] = (lat, lng)
+        return out
+
+    @classmethod
+    def live_temperature_by_village(cls):
+        """Suhu + forecast real-time per desa (di-cache 15 menit)."""
+        cached = cache.get(cls.TEMP_CACHE_KEY)
+        if cached is not None:
+            return cached
+
+        centroids = cls._village_centroids()
+        now = datetime.now(_JAKARTA)
+        today = now.date()
+
+        def _fetch_one(name):
+            lat, lng = centroids[name]
+            try:
+                hourly = _open_meteo_hourly(lat, lng)
+                times = hourly.get("time", [])
+                temps = hourly.get("temperature_2m", [])
+
+                today_temps = {}
+                forecast = []
+                for t, v in zip(times, temps):
+                    dt = datetime.fromisoformat(t).replace(tzinfo=_JAKARTA)
+                    if dt.date() == today:
+                        today_temps[dt.hour] = v
+                    if dt >= now:
+                        forecast.append({
+                            "jam": dt.strftime("%H:%M"),
+                            "suhu": round(float(v), 2),
+                        })
+
+                return name, {
+                    "suhu_current": (
+                        round(float(today_temps[now.hour]), 2)
+                        if now.hour in today_temps else None
+                    ),
+                    "suhu_siang_1200": (
+                        round(float(today_temps[12]), 2)
+                        if 12 in today_temps else None
+                    ),
+                    "suhu_malam_2400": (
+                        round(float(today_temps[0]), 2)
+                        if 0 in today_temps else None
+                    ),
+                    "forecast_24h": forecast[:24],
+                    "last_updated": datetime.now(timezone.utc).isoformat(),
+                }
+            except Exception:
+                return name, {
+                    "suhu_current": None,
+                    "suhu_siang_1200": None,
+                    "suhu_malam_2400": None,
+                    "forecast_24h": [],
+                    "last_updated": None,
+                }
+
+        out = {}
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            for name, data in executor.map(_fetch_one, centroids.keys()):
+                out[name] = data
+
+        cache.set(cls.TEMP_CACHE_KEY, out, cls.TEMP_CACHE_TIMEOUT)
+        return out
 
     # =========================================================
     # LOOKUP VILLAGE (sekali query, tanpa N+1)

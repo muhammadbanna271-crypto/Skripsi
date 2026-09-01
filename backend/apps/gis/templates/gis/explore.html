@@ -345,7 +345,7 @@
 
         .fact-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-columns: 1fr 1fr;
             gap: 8px;
         }
         .fact {
@@ -685,6 +685,7 @@
                     <div class="fact"><span class="num" id="fact-dest">—</span><span class="label">Destinasi</span></div>
                     <div class="fact"><span class="num" id="fact-village">—</span><span class="label">Desa</span></div>
                     <div class="fact"><span class="num" id="fact-cat">—</span><span class="label">Kategori</span></div>
+                    <div class="fact"><span class="num" id="fact-temp">—</span><span class="label">Suhu °C</span></div>
                 </div>
             </div>
             <div class="panel chat-card">
@@ -800,6 +801,7 @@
     // ---- State ----
     var state = { features: [], activeCategory: "" };
     var map, markerLayer;
+    var liveTemp = {};  // {village_name_lower: {suhu_current, ...}}
 
     function deriveCategories(features) {
         var counts = {};
@@ -858,6 +860,16 @@
         document.getElementById("fact-dest").textContent = features.length;
         document.getElementById("fact-village").textContent = Object.keys(villages).length;
         document.getElementById("fact-cat").textContent = Object.keys(cats).length;
+
+        // Suhu live: rentang (terdingin–terpanas) antar desa.
+        var temps = Object.keys(liveTemp).map(function (k) {
+            return liveTemp[k].suhu_current;
+        }).filter(function (v) { return v != null; });
+        if (temps.length) {
+            var lo = Math.min.apply(null, temps);
+            var hi = Math.max.apply(null, temps);
+            document.getElementById("fact-temp").textContent = lo + "–" + hi;
+        }
     }
 
     // ---- Sidebar + filter + destinations ----
@@ -904,6 +916,8 @@
             var p = f.properties || {};
             var cat = firstCategory(p);
             var village = p.village_name || "Kota Batu";
+            var temp = liveTemp[(village || "").toLowerCase()];
+            var tempText = temp && temp.suhu_current != null ? ' · ' + escapeHtml(temp.suhu_current) + '°C' : '';
 
             var card = document.createElement("a");
             card.className = "dest";
@@ -914,7 +928,7 @@
                 '<div class="thumb"><i class="bi ' + catIcon(cat) + '"></i><span class="thumb-label">' + escapeHtml(catLabel(cat)) + '</span></div>' +
                 '<div class="body">' +
                     '<h3>' + escapeHtml(p.name) + '</h3>' +
-                    '<div class="meta">' + escapeHtml(catLabel(cat)) + ' · ' + escapeHtml(village) + '</div>' +
+                    '<div class="meta">' + escapeHtml(catLabel(cat)) + ' · ' + escapeHtml(village) + tempText + '</div>' +
                     '<div class="price">' + escapeHtml(p.price_display || "Belum tersedia") + '</div>' +
                 '</div>';
             grid.appendChild(card);
@@ -958,6 +972,16 @@
             document.getElementById("dest-grid").innerHTML =
                 '<div class="empty">Gagal memuat data destinasi.</div>';
         });
+
+    // Suhu real-time (background; re-render fakta + kartu saat siap).
+    fetch("{% url 'gis:api-live-temperature' %}")
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            liveTemp = data || {};
+            renderFacts(state.features);
+            renderDestinations();
+        })
+        .catch(function () {});
 })();
 </script>
 </body>

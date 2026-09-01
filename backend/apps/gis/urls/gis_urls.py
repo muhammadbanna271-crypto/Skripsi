@@ -8,6 +8,7 @@ from apps.gis.views import (
     destination_geojson,
     elevation_zones_geojson,
     characteristic_zones_geojson,
+    live_temperature,
     legend,
     itinerary_page,
     itinerary_excel,
@@ -79,6 +80,11 @@ urlpatterns = [
         "api/characteristic-zones/geojson/",
         characteristic_zones_geojson,
         name="api-characteristic-zones-geojson",
+    ),
+    path(
+        "api/live-temperature/",
+        live_temperature,
+        name="api-live-temperature",
     ),
     path(
         "api/legend/",

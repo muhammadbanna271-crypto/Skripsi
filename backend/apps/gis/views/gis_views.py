@@ -98,6 +98,11 @@ def characteristic_zones_geojson(request):
     return JsonResponse({"type": "FeatureCollection", "features": features})
 
 
+def live_temperature(request):
+    """Suhu + forecast real-time per desa (Open-Meteo, cache 15 menit)."""
+    return JsonResponse(GeoJSONService.live_temperature_by_village())
+
+
 @staff_required
 def legend(request):
     return JsonResponse(GeoJSONService.legend())

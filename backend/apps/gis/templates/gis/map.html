@@ -391,6 +391,8 @@ let clusterColorMap = {};
 let elevationClasses = [];
 let characteristicOptions = [];
 let categoricalPalette = [];
+let liveTemp = {};  // {village_name_lower: {suhu_current, forecast_24h, ...}}
+let tempLayer = null;  // choropleth suhu desa (dibuat di init)
 let clusterLayerGroup = null;
 let elevationLayerGroup = null;
 let characteristicLayerGroup = null;
@@ -474,11 +476,17 @@ function villagePopupHTML(props) {
         ? VILLAGE_DETAIL_URL.replace("/0/", `/${props.village_id}/`)
         : "#";
 
+    const temp = liveTemp[(props.village_name || "").toLowerCase()];
+    const tempLine = temp && temp.suhu_current != null
+        ? `Sekarang ${temp.suhu_current}°C · siang ${temp.suhu_siang_1200 ?? "-"}°C · malam ${temp.suhu_malam_2400 ?? "-"}°C`
+        : "belum tersedia";
+
     return `
         <div class="village-popup">
             <div class="name">${props.village_name || ""}</div>
             <div class="muted">Kecamatan ${props.district_name || "-"}</div>
             <br>
+            <b>Suhu:</b> ${tempLine}<br>
             <b>Cluster:</b> ${cluster}<br>
             <b>Skor:</b> ${score}<br>
             <b>Elevasi:</b> ${elevText}<br>
@@ -542,6 +550,19 @@ async function init() {
         loadJson("{% url 'gis:api-characteristic-zones-geojson' %}"),
     ]);
 
+    // Suhu + forecast real-time per desa (background; dipakai di popup + choropleth).
+    loadJson("{% url 'gis:api-live-temperature' %}")
+        .then(function (data) {
+            liveTemp = data || {};
+            if (tempLayer) {
+                tempLayer.setStyle(function (feature) {
+                    var t = (liveTemp[(feature.properties.village_name || "").toLowerCase()] || {}).suhu_current;
+                    return { color: "#ffffff", weight: 1, fillColor: tempColor(t), fillOpacity: 0.6 };
+                });
+            }
+        })
+        .catch(function () {});
+
     if (IS_STAFF) {
         // Data riset (clustering/skor desa) hanya untuk staff.
         [legend, villages, villagePoints] = await Promise.all([
@@ -597,6 +618,24 @@ async function init() {
     // --- Characteristic layer (kosong dulu, diisi bila ada data) ---
     const characteristicLayer = L.layerGroup();
     characteristicLayerGroup = characteristicLayer;
+
+    // --- Suhu live (choropleth desa) ---
+    function tempColor(t) {
+        if (t == null) return "#d1d5db";
+        var u = Math.max(0, Math.min(1, (t - 10) / 20));  // 10..30 °C -> 0..1
+        var r = Math.round(255 * u);
+        var b = Math.round(255 * (1 - u));
+        return "rgb(" + r + ",90," + b + ")";
+    }
+    tempLayer = L.geoJSON(villages, {
+        style: function (feature) {
+            var t = (liveTemp[(feature.properties.village_name || "").toLowerCase()] || {}).suhu_current;
+            return { color: "#ffffff", weight: 1, fillColor: tempColor(t), fillOpacity: 0.6 };
+        },
+        onEachFeature: function (feature, layer) {
+            bindPopupAndHover(layer, feature.properties);
+        },
+    });
 
     // --- Village points (titik pusat desa, fallback bila tanpa polygon) ---
     const villagePointsLayer = L.geoJSON(villagePoints, {
@@ -826,6 +865,7 @@ async function init() {
         overlays["Batas Desa/Kelurahan"] = boundaryLayer;
         overlays["Hasil Clustering"] = clusterLayer;
         overlays["Titik Desa"] = villagePointsLayer;
+        overlays["Suhu (Live)"] = tempLayer;
     }
 
     L.control.layers(
