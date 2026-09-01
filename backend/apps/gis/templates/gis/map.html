@@ -378,6 +378,13 @@ const osm = L.tileLayer(
     }
 ).addTo(map);
 
+// Hillshade / relief dari DEMNAS (base layer alternatif).
+const hillshade = L.imageOverlay(
+    "{% static 'geo/hillshade_kota_batu.png' %}",
+    [[-7.9445, 112.46963], [-7.72758, 112.60082]],
+    { opacity: 0.9 }
+);
+
 // ============================== STATE ==============================
 
 let clusterColorMap = {};
@@ -825,7 +832,7 @@ async function init() {
     }
 
     L.control.layers(
-        { "OpenStreetMap": osm },
+        { "OpenStreetMap": osm, "Relief (Hillshade)": hillshade },
         overlays,
         { collapsed: false }
     ).addTo(map);
