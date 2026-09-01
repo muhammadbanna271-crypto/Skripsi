@@ -234,7 +234,10 @@
         .village-popup .name { font-weight: 700; font-size: 0.95rem; }
         .village-popup .muted { color: #898781; }
 
+        .temp-marker { background: none; border: none; }
         .temp-label {
+            display: inline-block;
+            transform: translate(-50%, -50%);
             background: rgba(255, 255, 255, 0.92);
             color: #1f2937;
             border: 1px solid rgba(0, 0, 0, 0.12);
@@ -406,6 +409,7 @@ let characteristicOptions = [];
 let categoricalPalette = [];
 let liveTemp = {};  // {village_name_lower: {suhu_current, forecast_24h, ...}}
 let tempLayer = null;  // choropleth suhu desa (dibuat di init)
+let tempLabelLayer = null;  // label angka suhu (divIcon markers)
 let clusterLayerGroup = null;
 let elevationLayerGroup = null;
 let characteristicLayerGroup = null;
@@ -572,19 +576,25 @@ async function init() {
                     var t = (liveTemp[(feature.properties.village_name || "").toLowerCase()] || {}).suhu_current;
                     return { color: "#ffffff", weight: 1, fillColor: tempColor(t), fillOpacity: 0.6 };
                 });
-                // Label angka suhu permanen di tiap desa.
+                // Label angka suhu permanen (divIcon marker di centroid desa).
+                if (!tempLabelLayer) {
+                    tempLabelLayer = L.layerGroup().addTo(map);
+                }
+                tempLabelLayer.clearLayers();
                 tempLayer.eachLayer(function (layer) {
                     var props = layer.feature && layer.feature.properties;
                     var t = props
                         ? (liveTemp[(props.village_name || "").toLowerCase()] || {}).suhu_current
                         : null;
                     if (t != null) {
-                        layer.bindTooltip(String(t) + "°C", {
-                            permanent: true,
-                            direction: "center",
-                            className: "temp-label",
-                            offset: [0, 0],
+                        var center = layer.getBounds().getCenter();
+                        var icon = L.divIcon({
+                            className: "temp-marker",
+                            html: '<span class="temp-label">' + t + '°C</span>',
+                            iconSize: [0, 0],
+                            iconAnchor: [0, 0],
                         });
+                        L.marker(center, { icon: icon, interactive: false }).addTo(tempLabelLayer);
                     }
                 });
             }
