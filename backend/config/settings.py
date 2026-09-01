@@ -453,6 +453,12 @@ GIS_CHARACTERISTIC_GEOJSON_PATH = os.getenv(
     "static/geo/karakteristik_wilayah_kota_batu.geojson",
 )
 
+# GeoJSON suhu real-time per desa (hasil injeksi Open-Meteo).
+GIS_TEMPERATURE_GEOJSON_PATH = os.getenv(
+    "GIS_TEMPERATURE_GEOJSON_PATH",
+    "static/geo/kota_batu_suhu_realtime_hourly.geojson",
+)
+
 # Palet warna cluster (categorical, urutan tetap & tervalidasi CVD-safe).
 # Cluster akan diwarnai dari palet ini berdasarkan urutan code; kalau admin
 # menetapkan warna custom di model Cluster (selain default), warna itu

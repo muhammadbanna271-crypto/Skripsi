@@ -73,6 +73,40 @@ class GeoJSONService:
         return features, None
 
     # =========================================================
+    # DATA TAMBAHAN (suhu, zona ketinggian, karakteristik wilayah)
+    # =========================================================
+
+    @classmethod
+    def temperature_by_village(cls):
+        """Suhu real-time per desa -> {village_name_lower: properties}."""
+        features, _ = cls.load_features_from(
+            settings.GIS_TEMPERATURE_GEOJSON_PATH
+        )
+        out = {}
+        for f in features:
+            p = f.get("properties", {})
+            name = p.get("village_name")
+            if name:
+                out[name.lower()] = p
+        return out
+
+    @classmethod
+    def elevation_zones(cls):
+        """List zona ketinggian (region-level, dari DEMNAS)."""
+        features, _ = cls.load_features_from(
+            settings.GIS_ELEVATION_GEOJSON_PATH
+        )
+        return [f.get("properties", {}) for f in features]
+
+    @classmethod
+    def region_characteristics(cls):
+        """List karakteristik wilayah per kecamatan."""
+        features, _ = cls.load_features_from(
+            settings.GIS_CHARACTERISTIC_GEOJSON_PATH
+        )
+        return [f.get("properties", {}) for f in features]
+
+    # =========================================================
     # LOOKUP VILLAGE (sekali query, tanpa N+1)
     # =========================================================
 

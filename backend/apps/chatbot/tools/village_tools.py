@@ -30,13 +30,19 @@ from apps.recommendation.services.recommendation_service import (
 
 def list_villages(**kwargs):
 
-    names = list(
-        Village.objects.values_list("name", flat=True).order_by("name")
+    villages = list(
+        Village.objects
+        .select_related("district")
+        .order_by("name")
+        .values("name", "district__name")
     )
 
     return {
-        "total": len(names),
-        "villages": names,
+        "total": len(villages),
+        "villages": [
+            {"name": v["name"], "kecamatan": v["district__name"] or ""}
+            for v in villages
+        ],
     }
 
 
@@ -360,6 +366,78 @@ def get_restaurants(flavor=None, max_price=None, village=None, open_at=None, **k
     return {"count": len(results), "results": results}
 
 
+def _norm_village_name(name):
+    """Normalisasi nama desa untuk pencocokan (strip prefix, lowercase, alfanumerik)."""
+    s = (name or "").strip()
+    for prefix in ("Kelurahan ", "Desa "):
+        if s.lower().startswith(prefix.lower()):
+            s = s[len(prefix):].strip()
+            break
+    return GeoJSONService._normalize_name(s)
+
+
+def get_village_temperature(village_name=None, **kwargs):
+    """
+    Suhu real-time per desa (dari Open-Meteo). Tanpa nama -> semua desa
+    (urut dari terpanas).
+    """
+    temps = GeoJSONService.temperature_by_village()
+    if not temps:
+        return {"found": False, "message": "Data suhu belum tersedia."}
+
+    if village_name:
+        key = _norm_village_name(village_name)
+        for name, p in temps.items():
+            if _norm_village_name(name) == key:
+                return {
+                    "found": True,
+                    "village": p.get("village_name"),
+                    "suhu_current": p.get("suhu_current"),
+                    "suhu_siang_1200": p.get("suhu_siang_1200"),
+                    "suhu_malam_2400": p.get("suhu_malam_2400"),
+                    "hourly_temp_today": p.get("hourly_temp_today"),
+                    "last_updated": p.get("last_updated"),
+                }
+        return {"found": False, "message": f"Desa \"{village_name}\" tidak ditemukan."}
+
+    results = sorted(
+        temps.items(),
+        key=lambda kv: (
+            kv[1].get("suhu_current") is None,
+            -(kv[1].get("suhu_current") or 0),
+        ),
+    )
+    return {
+        "count": len(results),
+        "results": [
+            {
+                "village": p.get("village_name"),
+                "suhu_current": p.get("suhu_current"),
+                "suhu_siang_1200": p.get("suhu_siang_1200"),
+                "suhu_malam_2400": p.get("suhu_malam_2400"),
+            }
+            for _, p in results
+        ],
+    }
+
+
+def get_elevation_zones(**kwargs):
+    """Zona ketinggian Kota Batu (klasifikasi DEMNAS)."""
+    zones = GeoJSONService.elevation_zones()
+    return {"count": len(zones), "zones": zones}
+
+
+def get_region_characteristics(kecamatan=None, **kwargs):
+    """Karakteristik wilayah per kecamatan (iklim, curah hujan, tanah, lahan, bencana)."""
+    chars = GeoJSONService.region_characteristics()
+    if kecamatan:
+        chars = [
+            c for c in chars
+            if (c.get("kecamatan") or "").strip().lower() == kecamatan.strip().lower()
+        ]
+    return {"count": len(chars), "results": chars}
+
+
 TOOL_REGISTRY = {
 
     "list_villages": list_villages,
@@ -387,6 +465,12 @@ TOOL_REGISTRY = {
     "estimate_trip_budget": estimate_trip_budget,
 
     "get_restaurants": get_restaurants,
+
+    "get_village_temperature": get_village_temperature,
+
+    "get_elevation_zones": get_elevation_zones,
+
+    "get_region_characteristics": get_region_characteristics,
 
 }
 
@@ -773,6 +857,54 @@ TOOLS_SCHEMA = [
         },
     },
 
+    {
+        "name": "get_village_temperature",
+        "description": (
+            "Ambil suhu udara real-time per desa Kota Batu: suhu saat ini, "
+            "suhu jam 12:00 siang, suhu jam 00:00 malam, dan suhu 24 jam "
+            "hari ini. Sumber: Open-Meteo."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "village_name": {
+                    "type": "string",
+                    "description": "Nama desa (opsional). Kosong = semua desa.",
+                },
+            },
+        },
+    },
+
+    {
+        "name": "get_elevation_zones",
+        "description": (
+            "Ambil zona ketinggian Kota Batu (Rendah/Sedang/Tinggi/Sangat "
+            "Tinggi) beserta rentang mdpl dan kecamatan/desa dominan."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {},
+        },
+    },
+
+    {
+        "name": "get_region_characteristics",
+        "description": (
+            "Ambil karakteristik wilayah per kecamatan Kota Batu: iklim/suhu, "
+            "curah hujan, jenis tanah, penggunaan lahan, kemiringan lereng, "
+            "dan kerentanan bencana."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "kecamatan": {
+                    "type": "string",
+                    "description": "Nama kecamatan (opsional), mis. 'Bumiaji', 'Batu', 'Junrejo'.",
+                },
+            },
+        },
+    },
+
 ]
 
 
@@ -785,6 +917,9 @@ TOURISM_TOOL_NAMES = {
     "get_restaurants",
     "build_itinerary",
     "estimate_trip_budget",
+    "get_village_temperature",
+    "get_elevation_zones",
+    "get_region_characteristics",
 }
 
 

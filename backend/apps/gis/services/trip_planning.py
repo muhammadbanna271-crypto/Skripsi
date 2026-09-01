@@ -20,6 +20,7 @@ from django.conf import settings
 
 from apps.gis.models import TouristDestination
 from apps.gis.services.distance import haversine_km, havsum
+from apps.gis.services.geo_service import GeoJSONService
 
 timing_logger = logging.getLogger("timing")
 
@@ -62,6 +63,25 @@ class TripPlanningService:
     # =========================================================
     # HELPERS
     # =========================================================
+
+    _temperature_cache = None
+
+    @classmethod
+    def _temperature_for_village(cls, village_name):
+        """Suhu real-time desa (cache). Return dict atau None."""
+        if not village_name:
+            return None
+        if cls._temperature_cache is None:
+            cls._temperature_cache = GeoJSONService.temperature_by_village()
+        p = cls._temperature_cache.get(village_name.strip().lower())
+        if p is None:
+            return None
+        return {
+            "suhu_current": p.get("suhu_current"),
+            "suhu_siang_1200": p.get("suhu_siang_1200"),
+            "suhu_malam_2400": p.get("suhu_malam_2400"),
+            "last_updated": p.get("last_updated"),
+        }
 
     @staticmethod
     def _weights():
@@ -445,6 +465,9 @@ class TripPlanningService:
                 dest.price_updated_at.isoformat()
                 if dest.price_updated_at
                 else None
+            ),
+            "suhu": cls._temperature_for_village(
+                dest.village.name if dest.village else None
             ),
         }
 
@@ -1186,7 +1209,8 @@ class TripPlanningService:
                 "google_maps_query": dest.effective_google_maps_query,
             }
             known_breakdown.append(entry)
-            known_total += (ticket or 0) + (parking or 0)
+            # Tiket adalah harga PER ORANG; parkir sudah total per kendaraan.
+            known_total += (ticket or 0) * travelers + (parking or 0)
 
         # Estimasi transportasi (garis lurus), kalau koordinat tersedia.
         # Mendukung multi-kendaraan (vehicles) atau satu moda (transportation).

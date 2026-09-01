@@ -821,14 +821,11 @@ async function init() {
         "Zona Ketinggian": elevationZonesLayer,
         "Karakteristik Zona": characteristicZonesLayer,
         "Ketinggian Destinasi": destinationElevationLayer,
-        "Persebaran Suhu": destinationTemperatureLayer,
     };
     if (IS_STAFF) {
         overlays["Batas Desa/Kelurahan"] = boundaryLayer;
         overlays["Hasil Clustering"] = clusterLayer;
         overlays["Titik Desa"] = villagePointsLayer;
-        overlays["Elevasi Wilayah"] = elevationLayer;
-        overlays["Karakteristik Wilayah"] = characteristicLayer;
     }
 
     L.control.layers(
