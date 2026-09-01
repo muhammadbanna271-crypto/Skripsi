@@ -528,14 +528,19 @@ async function init() {
     let elevationZones = { type: "FeatureCollection", features: [] };
     let characteristicZones = { type: "FeatureCollection", features: [] };
 
+    // Zona ketinggian & karakteristik wilayah = info publik (bukan data
+    // riset), jadi selalu dimuat untuk semua visitor.
+    [elevationZones, characteristicZones] = await Promise.all([
+        loadJson("{% url 'gis:api-elevation-zones-geojson' %}"),
+        loadJson("{% url 'gis:api-characteristic-zones-geojson' %}"),
+    ]);
+
     if (IS_STAFF) {
         // Data riset (clustering/skor desa) hanya untuk staff.
-        [legend, villages, villagePoints, elevationZones, characteristicZones] = await Promise.all([
+        [legend, villages, villagePoints] = await Promise.all([
             loadJson("{% url 'gis:api-legend' %}"),
             loadJson("{% url 'gis:api-villages-geojson' %}"),
             loadJson("{% url 'gis:api-villages-points-geojson' %}"),
-            loadJson("{% url 'gis:api-elevation-zones-geojson' %}"),
-            loadJson("{% url 'gis:api-characteristic-zones-geojson' %}"),
         ]);
     }
 
@@ -806,6 +811,8 @@ async function init() {
     const overlays = {
         "Destinasi Wisata": destinationLayer,
         "Tempat Makan": restaurantLayer,
+        "Zona Ketinggian": elevationZonesLayer,
+        "Karakteristik Zona": characteristicZonesLayer,
         "Ketinggian Destinasi": destinationElevationLayer,
         "Persebaran Suhu": destinationTemperatureLayer,
     };
@@ -814,8 +821,6 @@ async function init() {
         overlays["Hasil Clustering"] = clusterLayer;
         overlays["Titik Desa"] = villagePointsLayer;
         overlays["Elevasi Wilayah"] = elevationLayer;
-        overlays["Zona Ketinggian"] = elevationZonesLayer;
-        overlays["Karakteristik Zona"] = characteristicZonesLayer;
         overlays["Karakteristik Wilayah"] = characteristicLayer;
     }
 
@@ -832,6 +837,7 @@ async function init() {
     }
     destinationLayer.addTo(map);
     restaurantLayer.addTo(map);
+    elevationZonesLayer.addTo(map);
 
     if (IS_STAFF) {
         renderDataBanner(villages, villagePoints, destinations);
