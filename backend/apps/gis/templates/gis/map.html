@@ -233,6 +233,18 @@
         .village-popup { line-height: 1.5; font-size: 0.85rem; }
         .village-popup .name { font-weight: 700; font-size: 0.95rem; }
         .village-popup .muted { color: #898781; }
+
+        .temp-label {
+            background: rgba(255, 255, 255, 0.92);
+            color: #1f2937;
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            border-radius: 999px;
+            padding: 1px 7px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+            white-space: nowrap;
+        }
     </style>
 </head>
 <body>
@@ -559,6 +571,20 @@ async function init() {
                     var t = (liveTemp[(feature.properties.village_name || "").toLowerCase()] || {}).suhu_current;
                     return { color: "#ffffff", weight: 1, fillColor: tempColor(t), fillOpacity: 0.6 };
                 });
+                // Label angka suhu permanen di tiap desa.
+                tempLayer.eachLayer(function (layer) {
+                    var props = layer.feature && layer.feature.properties;
+                    var t = props
+                        ? (liveTemp[(props.village_name || "").toLowerCase()] || {}).suhu_current
+                        : null;
+                    if (t != null) {
+                        layer.bindTooltip(String(t) + "°C", {
+                            permanent: true,
+                            direction: "center",
+                            className: "temp-label",
+                        });
+                    }
+                });
             }
         })
         .catch(function () {});
@@ -878,6 +904,7 @@ async function init() {
     if (IS_STAFF) {
         villagePointsLayer.addTo(map);
         clusterLayer.addTo(map);
+        tempLayer.addTo(map);  // suhu (choropleth + label angka) tampil default
     }
     destinationLayer.addTo(map);
     restaurantLayer.addTo(map);
