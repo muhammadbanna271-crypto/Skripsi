@@ -68,23 +68,9 @@ Destinasi Wisata
                                 —
                             {% endfor %}
                         </td>
-                        <td>
-                            {% if dest.is_free %}Gratis{% else %}{{ dest.get_ticket_type_display }}{% endif %}
-                        </td>
-                        <td class="text-end">
-                            {% if dest.ticket_price_weekday %}
-                                {{ dest.ticket_price_weekday|idr }}
-                            {% else %}
-                                <span class="text-muted">belum tersedia</span>
-                            {% endif %}
-                        </td>
-                        <td class="text-end">
-                            {% if dest.ticket_price_weekend %}
-                                {{ dest.ticket_price_weekend|idr }}
-                            {% else %}
-                                <span class="text-muted">belum tersedia</span>
-                            {% endif %}
-                        </td>
+                        <td>{{ dest.price_type_display }}</td>
+                        <td class="text-end">{{ dest.weekday_price_display }}</td>
+                        <td class="text-end">{{ dest.weekend_price_display }}</td>
                         <td>{{ dest.operating_hours_display }}</td>
                         <td>{{ dest.closed_days_display }}</td>
                         <td>

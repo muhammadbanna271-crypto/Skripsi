@@ -716,6 +716,8 @@ class TripPlanningService:
 
                 if status is None:
                     rank = 1  # jam buka belum diketahui
+                elif r.closing_time is None:
+                    rank = 0  # buka 24 jam (tidak ada jam tutup)
                 else:
                     closing = (
                         r.closing_time.hour * 60 + r.closing_time.minute

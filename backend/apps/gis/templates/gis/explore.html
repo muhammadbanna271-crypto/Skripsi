@@ -115,6 +115,41 @@
         }
         .nav-auth:hover { border-color: var(--accent); color: var(--accent-dark); }
 
+        .account { position: relative; }
+        .account-menu {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            min-width: 180px;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(20, 40, 30, 0.12);
+            padding: 6px;
+            display: none;
+            z-index: 40;
+        }
+        .account.open .account-menu { display: block; }
+        .account-menu a,
+        .account-menu button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            padding: 9px 12px;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            font-size: 0.88rem;
+            color: var(--ink);
+            text-align: left;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .account-menu a:hover,
+        .account-menu button:hover { background: var(--thumb-bg); }
+        .account-menu button { color: #b3261e; }
+
         .nav-toggle {
             display: none;
             align-items: center;
@@ -590,7 +625,18 @@
 
         <div class="nav-actions">
             {% if user.is_authenticated %}
-            <a class="nav-auth" href="{% url 'dashboard:dashboard' %}">{{ user.username }}</a>
+            <div class="account" id="account">
+                <button class="nav-auth" id="account-toggle" type="button" aria-expanded="false">
+                    <i class="bi bi-person-circle"></i> {{ user.username }}
+                </button>
+                <div class="account-menu">
+                    <a href="{% url 'dashboard:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a>
+                    <form method="post" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button type="submit"><i class="bi bi-box-arrow-right"></i> Keluar</button>
+                    </form>
+                </div>
+            </div>
             {% else %}
             <a class="nav-auth" href="{% url 'login' %}">Masuk</a>
             {% endif %}
@@ -691,6 +737,21 @@
         toggle.setAttribute("aria-expanded", open);
         toggle.innerHTML = open ? '<i class="bi bi-x-lg"></i>' : '<i class="bi bi-list"></i>';
     });
+
+    // ---- Account dropdown (logout) ----
+    var account = document.getElementById("account");
+    var accountToggle = document.getElementById("account-toggle");
+    if (account && accountToggle) {
+        accountToggle.addEventListener("click", function (e) {
+            e.stopPropagation();
+            var open = account.classList.toggle("open");
+            accountToggle.setAttribute("aria-expanded", open);
+        });
+        document.addEventListener("click", function () {
+            account.classList.remove("open");
+            accountToggle.setAttribute("aria-expanded", "false");
+        });
+    }
 
     // ---- Search -> chatbot ----
     function submitChat(e) {
