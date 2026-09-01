@@ -1,0 +1,100 @@
+{
+  "type": "FeatureCollection",
+  "name": "Sebaran_Ketinggian_Kota_Batu",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "zona_ketinggian": "Dataran Rendah - Sedang",
+        "rentang_mdpl": "600 - 800 mdpl",
+        "elevasi_min_m": 600,
+        "elevasi_max_m": 800,
+        "wilayah_dominan": "Kecamatan Junrejo (Dadaprejo, Pendem, Mojorejo, Beji)"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [112.535, -7.88],
+            [112.585, -7.88],
+            [112.575, -7.925],
+            [112.525, -7.925],
+            [112.535, -7.88]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "zona_ketinggian": "Dataran Sedang - Tinggi",
+        "rentang_mdpl": "800 - 1.100 mdpl",
+        "elevasi_min_m": 800,
+        "elevasi_max_m": 1100,
+        "wilayah_dominan": "Kecamatan Batu (Sisir, Ngaglik, Temas, Pesanggrahan, Oro-Oro Ombo, Sidomulyo)"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [112.485, -7.845],
+            [112.555, -7.845],
+            [112.55, -7.895],
+            [112.475, -7.895],
+            [112.485, -7.845]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "zona_ketinggian": "Dataran Tinggi Utama",
+        "rentang_mdpl": "1.100 - 1.700 mdpl",
+        "elevasi_min_m": 1100,
+        "elevasi_max_m": 1700,
+        "wilayah_dominan": "Kecamatan Bumiaji (Punten, Bumiaji, Bulukerto, Pandanrejo, Giripurno, Tulungrejo, Sumbergondo)"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [112.49, -7.78],
+            [112.59, -7.78],
+            [112.56, -7.845],
+            [112.48, -7.845],
+            [112.49, -7.78]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "zona_ketinggian": "Kawasan Pegunungan / Puncak",
+        "rentang_mdpl": "1.700 - 3.000+ mdpl",
+        "elevasi_min_m": 1700,
+        "elevasi_max_m": 3000,
+        "wilayah_dominan": "Desa Sumber Brantas, kawasan lereng Gunung Arjuno-Welirang & Gunung Panderman/Banyak"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [112.48, -7.72],
+            [112.57, -7.72],
+            [112.57, -7.78],
+            [112.48, -7.78],
+            [112.48, -7.72]
+          ]
+        ]
+      }
+    }
+  ]
+}

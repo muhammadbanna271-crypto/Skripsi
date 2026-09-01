@@ -83,7 +83,7 @@ Kelola data destinasi wisata & tempat makan Kota Batu.
                     </thead>
                     <tbody>
                         {% for d in g.list %}
-                        <tr class="dest-row"
+                        <tr class="dest-row" draggable="true" data-id="{{ d.pk }}"
                             data-search="{{ d.name }} {{ d.village.name|default:'' }} {{ d.effective_district.name|default:'' }} {{ d.tourism_type }} {{ g.grouper }}">
                             <td class="fw-semibold text-nowrap">{{ d.name }}</td>
                             <td class="text-nowrap">{{ d.effective_district.name|default:"—" }}</td>
@@ -225,6 +225,64 @@ Kelola data destinasi wisata & tempat makan Kota Batu.
     });
 
     applyFilter();
+})();
+</script>
+<style>
+    .dest-row.dragging { opacity: 0.4; }
+    .group.drag-over { outline: 2px dashed #1f7a44; outline-offset: -2px; background: #f0f7f0; }
+    .group { transition: background 0.1s ease; }
+</style>
+<script>
+(function () {
+    // Drag-and-drop: pindahkan destinasi ke grup/kategori lain.
+    var csrfEl = document.querySelector('[name=csrfmiddlewaretoken]');
+    var csrf = csrfEl ? csrfEl.value : "";
+    var moveUrl = "{% url 'gis:manage-destination-move' 0 %}";
+
+    document.querySelectorAll('.dest-row').forEach(function (row) {
+        row.addEventListener('dragstart', function (e) {
+            e.dataTransfer.setData('text/plain', row.getAttribute('data-id'));
+            e.dataTransfer.effectAllowed = 'move';
+            row.classList.add('dragging');
+        });
+        row.addEventListener('dragend', function () {
+            row.classList.remove('dragging');
+        });
+    });
+
+    document.querySelectorAll('.group').forEach(function (group) {
+        group.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            group.classList.add('drag-over');
+        });
+        group.addEventListener('dragleave', function () {
+            group.classList.remove('drag-over');
+        });
+        group.addEventListener('drop', function (e) {
+            e.preventDefault();
+            group.classList.remove('drag-over');
+            var destId = e.dataTransfer.getData('text/plain');
+            var targetGroup = group.getAttribute('data-group');
+            if (!destId || !targetGroup) return;
+
+            var body = new FormData();
+            body.append('group', targetGroup);
+            fetch(moveUrl.replace('/0/', '/' + destId + '/'), {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrf },
+                body: body,
+            }).then(function (r) { return r.json(); })
+              .then(function (data) {
+                  if (data && data.ok) {
+                      window.location.reload();
+                  } else {
+                      alert('Gagal memindahkan destinasi: ' + ((data && data.error) || 'tidak diketahui'));
+                  }
+              })
+              .catch(function () { alert('Gagal memindahkan destinasi.'); });
+        });
+    });
 })();
 </script>
 {% endblock %}

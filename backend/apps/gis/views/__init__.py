@@ -4,6 +4,8 @@ from apps.gis.views.gis_views import (
     village_geojson,
     village_points_geojson,
     destination_geojson,
+    elevation_zones_geojson,
+    characteristic_zones_geojson,
     legend,
 )
 from apps.gis.views.gis_manage_views import (
@@ -24,6 +26,7 @@ from apps.gis.views.gis_manage_views import (
     TouristDestinationUpdateView,
     TouristDestinationDeleteView,
     update_destination_price,
+    update_destination_type,
 )
 from apps.gis.views.itinerary_views import (
     itinerary_page,
@@ -36,6 +39,8 @@ __all__ = [
     "village_geojson",
     "village_points_geojson",
     "destination_geojson",
+    "elevation_zones_geojson",
+    "characteristic_zones_geojson",
     "legend",
     "RegionCharacteristicListView",
     "RegionCharacteristicCreateView",
@@ -54,6 +59,7 @@ __all__ = [
     "TouristDestinationUpdateView",
     "TouristDestinationDeleteView",
     "update_destination_price",
+    "update_destination_type",
     "itinerary_page",
     "itinerary_excel",
 ]

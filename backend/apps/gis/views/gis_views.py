@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import render
 
@@ -79,6 +80,22 @@ def village_points_geojson(request):
 
 def destination_geojson(request):
     return JsonResponse(GeoJSONService.destination_geojson())
+
+
+def elevation_zones_geojson(request):
+    """Layer zona ketinggian (region-level) untuk peta."""
+    features, _ = GeoJSONService.load_features_from(
+        settings.GIS_ELEVATION_GEOJSON_PATH
+    )
+    return JsonResponse({"type": "FeatureCollection", "features": features})
+
+
+def characteristic_zones_geojson(request):
+    """Layer karakteristik wilayah (region-level, per kecamatan) untuk peta."""
+    features, _ = GeoJSONService.load_features_from(
+        settings.GIS_CHARACTERISTIC_GEOJSON_PATH
+    )
+    return JsonResponse({"type": "FeatureCollection", "features": features})
 
 
 @staff_required

@@ -525,13 +525,17 @@ async function init() {
     let legend = { clusters: [], elevation_classes: [], characteristics: [], palette: [] };
     let villages = { type: "FeatureCollection", features: [] };
     let villagePoints = { type: "FeatureCollection", features: [] };
+    let elevationZones = { type: "FeatureCollection", features: [] };
+    let characteristicZones = { type: "FeatureCollection", features: [] };
 
     if (IS_STAFF) {
         // Data riset (clustering/skor desa) hanya untuk staff.
-        [legend, villages, villagePoints] = await Promise.all([
+        [legend, villages, villagePoints, elevationZones, characteristicZones] = await Promise.all([
             loadJson("{% url 'gis:api-legend' %}"),
             loadJson("{% url 'gis:api-villages-geojson' %}"),
             loadJson("{% url 'gis:api-villages-points-geojson' %}"),
+            loadJson("{% url 'gis:api-elevation-zones-geojson' %}"),
+            loadJson("{% url 'gis:api-characteristic-zones-geojson' %}"),
         ]);
     }
 
@@ -737,6 +741,67 @@ async function init() {
         },
     });
 
+    // --- Zona Ketinggian (region-level, Sebaran Ketinggian) ---
+    const elevZoneFeatures = elevationZones.features || [];
+    let elevZoneMin = Infinity, elevZoneMax = -Infinity;
+    elevZoneFeatures.forEach(function (f) {
+        const mn = f.properties.elevasi_min_m;
+        const mx = f.properties.elevasi_max_m;
+        if (mn != null && !isNaN(mn)) elevZoneMin = Math.min(elevZoneMin, mn);
+        if (mx != null && !isNaN(mx)) elevZoneMax = Math.max(elevZoneMax, mx);
+    });
+    const elevationZonesLayer = L.geoJSON(elevationZones, {
+        style: function (feature) {
+            return {
+                color: "#ffffff",
+                weight: 1,
+                fillColor: rampColor(
+                    feature.properties.elevasi_min_m,
+                    elevZoneMin, elevZoneMax, ELEV_STOPS
+                ),
+                fillOpacity: 0.55,
+            };
+        },
+        onEachFeature: function (feature, layer) {
+            const p = feature.properties;
+            layer.bindPopup(`<div class="village-popup">
+                <div class="name">${p.zona_ketinggian || ""}</div>
+                <div class="muted">${p.rentang_mdpl || ""}</div>
+                <br><b>Wilayah dominan:</b> ${p.wilayah_dominan || "—"}
+            </div>`);
+        },
+    });
+
+    // --- Karakteristik Wilayah (region-level, per kecamatan) ---
+    const kecamatanColors = {
+        "Bumiaji": "#dbeafe",
+        "Batu": "#dcfce7",
+        "Junrejo": "#fef9c3",
+    };
+    const characteristicZonesLayer = L.geoJSON(characteristicZones, {
+        style: function (feature) {
+            return {
+                color: "#94a3b8",
+                weight: 1,
+                fillColor: kecamatanColors[feature.properties.kecamatan] || "#e5e7eb",
+                fillOpacity: 0.4,
+            };
+        },
+        onEachFeature: function (feature, layer) {
+            const p = feature.properties;
+            layer.bindPopup(`<div class="village-popup">
+                <div class="name">${p.zona_wilayah || ""}</div>
+                <div class="muted">Kecamatan ${p.kecamatan || ""}</div>
+                <br><b>Iklim/Suhu:</b> ${p.iklim_suhu || "—"}<br>
+                <b>Curah hujan:</b> ${p.curah_hujan || "—"}<br>
+                <b>Jenis tanah:</b> ${p.jenis_tanah || "—"}<br>
+                <b>Penggunaan lahan:</b> ${p.penggunaan_lahan || "—"}<br>
+                <b>Kemiringan lereng:</b> ${p.kemiringan_lereng || "—"}<br>
+                <b>Kerentanan bencana:</b> ${p.kerentanan_bencana || "—"}
+            </div>`);
+        },
+    });
+
     // --- Layer control ---
     const overlays = {
         "Destinasi Wisata": destinationLayer,
@@ -749,6 +814,8 @@ async function init() {
         overlays["Hasil Clustering"] = clusterLayer;
         overlays["Titik Desa"] = villagePointsLayer;
         overlays["Elevasi Wilayah"] = elevationLayer;
+        overlays["Zona Ketinggian"] = elevationZonesLayer;
+        overlays["Karakteristik Zona"] = characteristicZonesLayer;
         overlays["Karakteristik Wilayah"] = characteristicLayer;
     }
 

@@ -9,6 +9,7 @@ disembunyikan otomatis lewat context ``can_edit``).
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views.decorators.http import require_POST
@@ -330,3 +331,52 @@ def update_destination_price(request, pk):
         )
 
     return redirect(request.POST.get("next") or "gis:manage-destination-list")
+
+
+@login_required
+@require_POST
+def update_destination_type(request, pk):
+    """
+    Pindahkan destinasi ke grup/kategori lain (drag-and-drop di daftar).
+
+    Grup "TEMPAT MAKAN" -> restaurant (tiket dibersihkan); selain itu ->
+    attraction dengan ``tourism_type`` = nama grup (lowercase).
+    """
+    if not (request.user.is_staff or request.user.is_superuser):
+        return JsonResponse(
+            {"ok": False, "error": "Tidak punya izin."},
+            status=403,
+        )
+
+    destination = get_object_or_404(TouristDestination, pk=pk)
+    group = (request.POST.get("group") or "").strip()
+
+    if not group:
+        return JsonResponse(
+            {"ok": False, "error": "Grup kosong."},
+            status=400,
+        )
+
+    if group.upper() == "TEMPAT MAKAN":
+        destination.place_type = "restaurant"
+        destination.tourism_type = ""
+        # Restaurant tidak punya tiket masuk — bersihkan field wisata.
+        destination.is_free = False
+        destination.ticket_type = "unknown"
+        destination.ticket_price_weekday = None
+        destination.ticket_price_weekend = None
+        destination.category_prices = []
+        destination.price_description = ""
+    else:
+        destination.place_type = "attraction"
+        destination.tourism_type = (
+            "" if group.upper() == "LAINNYA" else group.lower()
+        )
+
+    destination.save()
+
+    return JsonResponse({
+        "ok": True,
+        "place_type": destination.place_type,
+        "tourism_type": destination.tourism_type,
+    })

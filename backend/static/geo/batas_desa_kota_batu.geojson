@@ -1,5 +1,564 @@
 {
   "type": "FeatureCollection",
-  "name": "batas_desa_kota_batu",
-  "features": []
+  "name": "Desa_Kelurahan_Kota_Batu",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "provinsi": "JAWA TIMUR",
+        "kabkot": "KOTA BATU",
+        "kecamatan": "Batu",
+        "desa_kelurahan": "Kelurahan Ngaglik",
+        "status": "Kelurahan",
+        "kode_desa": "35.79.01.1001"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [112.515, -7.87],
+            [112.53, -7.87],
+            [112.53, -7.882],
+            [112.515, -7.882],
+            [112.515, -7.87]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "provinsi": "JAWA TIMUR",
+        "kabkot": "KOTA BATU",
+        "kecamatan": "Batu",
+        "desa_kelurahan": "Kelurahan Sisir",
+        "status": "Kelurahan",
+        "kode_desa": "35.79.01.1002"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [112.525, -7.875],
+            [112.54, -7.875],
+            [112.54, -7.89],
+            [112.525, -7.89],
+            [112.525, -7.875]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "provinsi": "JAWA TIMUR",
+        "kabkot": "KOTA BATU",
+        "kecamatan": "Batu",
+        "desa_kelurahan": "Kelurahan Songgokerto",
+        "status": "Kelurahan",
+        "kode_desa": "35.79.01.1003"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [112.48, -7.855],
+            [112.51, -7.855],
+            [112.51, -7.875],
+            [112.48, -7.875],
+            [112.48, -7.855]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "provinsi": "JAWA TIMUR",
+        "kabkot": "KOTA BATU",
+        "kecamatan": "Batu",
+        "desa_kelurahan": "Kelurahan Temas",
+        "status": "Kelurahan",
+        "kode_desa": "35.79.01.1004"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [112.53, -7.88],
+            [112.55, -7.88],
+            [112.55, -7.898],
+            [112.53, -7.898],
+            [112.53, -7.88]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "provinsi": "JAWA TIMUR",
+        "kabkot": "KOTA BATU",
+        "kecamatan": "Batu",
+        "desa_kelurahan": "Desa Oro-Oro Ombo",
+        "status": "Desa",
+        "kode_desa": "35.79.01.2005"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [112.505, -7.885],
+            [112.53, -7.885],
+            [112.53, -7.91],
+            [112.505, -7.91],
+            [112.505, -7.885]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "provinsi": "JAWA TIMUR",
+        "kabkot": "KOTA BATU",
+        "kecamatan": "Batu",
+        "desa_kelurahan": "Desa Pesanggrahan",
+        "status": "Desa",
+        "kode_desa": "35.79.01.2006"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [112.495, -7.87],
+            [112.52, -7.87],
+            [112.52, -7.888],
+            [112.495, -7.888],
+            [112.495, -7.87]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "provinsi": "JAWA TIMUR",
+        "kabkot": "KOTA BATU",
+        "kecamatan": "Batu",
+        "desa_kelurahan": "Desa Sidomulyo",
+        "status": "Desa",
+        "kode_desa": "35.79.01.2007"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [112.5, -7.845],
+            [112.525, -7.845],
+            [112.525, -7.865],
+            [112.5, -7.865],
+            [112.5, -7.845]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "provinsi": "JAWA TIMUR",
+        "kabkot": "KOTA BATU",
+        "kecamatan": "Batu",
+        "desa_kelurahan": "Desa Sumberejo",
+        "status": "Desa",
+        "kode_desa": "35.79.01.2008"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [112.485, -7.86],
+            [112.505, -7.86],
+            [112.505, -7.875],
+            [112.485, -7.875],
+            [112.485, -7.86]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "provinsi": "JAWA TIMUR",
+        "kabkot": "KOTA BATU",
+        "kecamatan": "Junrejo",
+        "desa_kelurahan": "Kelurahan Dadaprejo",
+        "status": "Kelurahan",
+        "kode_desa": "35.79.02.1001"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [112.555, -7.895],
+            [112.575, -7.895],
+            [112.575, -7.915],
+            [112.555, -7.915],
+            [112.555, -7.895]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "provinsi": "JAWA TIMUR",
+        "kabkot": "KOTA BATU",
+        "kecamatan": "Junrejo",
+        "desa_kelurahan": "Desa Beji",
+        "status": "Desa",
+        "kode_desa": "35.79.02.2002"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [112.535, -7.885],
+            [112.555, -7.885],
+            [112.555, -7.9],
+            [112.535, -7.9],
+            [112.535, -7.885]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "provinsi": "JAWA TIMUR",
+        "kabkot": "KOTA BATU",
+        "kecamatan": "Junrejo",
+        "desa_kelurahan": "Desa Junrejo",
+        "status": "Desa",
+        "kode_desa": "35.79.02.2003"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [112.54, -7.895],
+            [112.565, -7.895],
+            [112.565, -7.918],
+            [112.54, -7.918],
+            [112.54, -7.895]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "provinsi": "JAWA TIMUR",
+        "kabkot": "KOTA BATU",
+        "kecamatan": "Junrejo",
+        "desa_kelurahan": "Desa Mojorejo",
+        "status": "Desa",
+        "kode_desa": "35.79.02.2004"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [112.55, -7.875],
+            [112.57, -7.875],
+            [112.57, -7.892],
+            [112.55, -7.892],
+            [112.55, -7.875]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "provinsi": "JAWA TIMUR",
+        "kabkot": "KOTA BATU",
+        "kecamatan": "Junrejo",
+        "desa_kelurahan": "Desa Pendem",
+        "status": "Desa",
+        "kode_desa": "35.79.02.2005"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [112.56, -7.88],
+            [112.585, -7.88],
+            [112.585, -7.905],
+            [112.56, -7.905],
+            [112.56, -7.88]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "provinsi": "JAWA TIMUR",
+        "kabkot": "KOTA BATU",
+        "kecamatan": "Junrejo",
+        "desa_kelurahan": "Desa Tlekung",
+        "status": "Desa",
+        "kode_desa": "35.79.02.2006"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [112.525, -7.9],
+            [112.55, -7.9],
+            [112.55, -7.925],
+            [112.525, -7.925],
+            [112.525, -7.9]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "provinsi": "JAWA TIMUR",
+        "kabkot": "KOTA BATU",
+        "kecamatan": "Junrejo",
+        "desa_kelurahan": "Desa Torongrejo",
+        "status": "Desa",
+        "kode_desa": "35.79.02.2007"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [112.535, -7.865],
+            [112.555, -7.865],
+            [112.555, -7.882],
+            [112.535, -7.882],
+            [112.535, -7.865]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "provinsi": "JAWA TIMUR",
+        "kabkot": "KOTA BATU",
+        "kecamatan": "Bumiaji",
+        "desa_kelurahan": "Desa Bulukerto",
+        "status": "Desa",
+        "kode_desa": "35.79.03.2001"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [112.53, -7.825],
+            [112.555, -7.825],
+            [112.555, -7.845],
+            [112.53, -7.845],
+            [112.53, -7.825]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "provinsi": "JAWA TIMUR",
+        "kabkot": "KOTA BATU",
+        "kecamatan": "Bumiaji",
+        "desa_kelurahan": "Desa Bumiaji",
+        "status": "Desa",
+        "kode_desa": "35.79.03.2002"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [112.535, -7.835],
+            [112.56, -7.835],
+            [112.56, -7.855],
+            [112.535, -7.855],
+            [112.535, -7.835]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "provinsi": "JAWA TIMUR",
+        "kabkot": "KOTA BATU",
+        "kecamatan": "Bumiaji",
+        "desa_kelurahan": "Desa Giripurno",
+        "status": "Desa",
+        "kode_desa": "35.79.03.2003"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [112.555, -7.82],
+            [112.59, -7.82],
+            [112.59, -7.86],
+            [112.555, -7.86],
+            [112.555, -7.82]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "provinsi": "JAWA TIMUR",
+        "kabkot": "KOTA BATU",
+        "kecamatan": "Bumiaji",
+        "desa_kelurahan": "Desa Gunungsari",
+        "status": "Desa",
+        "kode_desa": "35.79.03.2004"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [112.5, -7.81],
+            [112.53, -7.81],
+            [112.53, -7.835],
+            [112.5, -7.835],
+            [112.5, -7.81]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "provinsi": "JAWA TIMUR",
+        "kabkot": "KOTA BATU",
+        "kecamatan": "Bumiaji",
+        "desa_kelurahan": "Desa Pandanrejo",
+        "status": "Desa",
+        "kode_desa": "35.79.03.2005"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [112.525, -7.845],
+            [112.55, -7.845],
+            [112.55, -7.865],
+            [112.525, -7.865],
+            [112.525, -7.845]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "provinsi": "JAWA TIMUR",
+        "kabkot": "KOTA BATU",
+        "kecamatan": "Bumiaji",
+        "desa_kelurahan": "Desa Punten",
+        "status": "Desa",
+        "kode_desa": "35.79.03.2006"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [112.515, -7.825],
+            [112.535, -7.825],
+            [112.535, -7.845],
+            [112.515, -7.845],
+            [112.515, -7.825]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "provinsi": "JAWA TIMUR",
+        "kabkot": "KOTA BATU",
+        "kecamatan": "Bumiaji",
+        "desa_kelurahan": "Desa Sumbergondo",
+        "status": "Desa",
+        "kode_desa": "35.79.03.2007"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [112.51, -7.795],
+            [112.54, -7.795],
+            [112.54, -7.82],
+            [112.51, -7.82],
+            [112.51, -7.795]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "provinsi": "JAWA TIMUR",
+        "kabkot": "KOTA BATU",
+        "kecamatan": "Bumiaji",
+        "desa_kelurahan": "Desa Sumber Brantas",
+        "status": "Desa",
+        "kode_desa": "35.79.03.2008"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [112.48, -7.75],
+            [112.55, -7.75],
+            [112.55, -7.8],
+            [112.48, -7.8],
+            [112.48, -7.75]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "provinsi": "JAWA TIMUR",
+        "kabkot": "KOTA BATU",
+        "kecamatan": "Bumiaji",
+        "desa_kelurahan": "Desa Tulungrejo",
+        "status": "Desa",
+        "kode_desa": "35.79.03.2009"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [112.49, -7.78],
+            [112.525, -7.78],
+            [112.525, -7.815],
+            [112.49, -7.815],
+            [112.49, -7.78]
+          ]
+        ]
+      }
+    }
+  ]
 }

@@ -6,6 +6,8 @@ from apps.gis.views import (
     village_geojson,
     village_points_geojson,
     destination_geojson,
+    elevation_zones_geojson,
+    characteristic_zones_geojson,
     legend,
     itinerary_page,
     itinerary_excel,
@@ -27,6 +29,7 @@ from apps.gis.views import (
     TouristDestinationUpdateView,
     TouristDestinationDeleteView,
     update_destination_price,
+    update_destination_type,
 )
 
 
@@ -66,6 +69,16 @@ urlpatterns = [
         "api/destinations/geojson/",
         destination_geojson,
         name="api-destinations-geojson",
+    ),
+    path(
+        "api/elevation-zones/geojson/",
+        elevation_zones_geojson,
+        name="api-elevation-zones-geojson",
+    ),
+    path(
+        "api/characteristic-zones/geojson/",
+        characteristic_zones_geojson,
+        name="api-characteristic-zones-geojson",
     ),
     path(
         "api/legend/",
@@ -161,5 +174,10 @@ urlpatterns = [
         "manage/destinations/<int:pk>/update-price/",
         update_destination_price,
         name="manage-destination-update-price",
+    ),
+    path(
+        "manage/destinations/<int:pk>/move/",
+        update_destination_type,
+        name="manage-destination-move",
     ),
 ]

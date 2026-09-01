@@ -1,0 +1,87 @@
+{
+  "type": "FeatureCollection",
+  "name": "Karakteristik_Wilayah_Kota_Batu",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "zona_wilayah": "Kawasan Pegunungan Tinggi & Resapan Air Utama",
+        "kecamatan": "Bumiaji",
+        "iklim_suhu": "Sejuk - Dingin (13°C - 20°C)",
+        "curah_hujan": "Tinggi (2.500 - 3.000 mm/tahun)",
+        "jenis_tanah": "Andosol (Sangat Subur)",
+        "penggunaan_lahan": "Hutan Lindung, Perkebunan Apel, Pertanian Hortikultura, Wisata Alam",
+        "kemiringan_lereng": "Curam - Sangat Curam (> 25%)",
+        "kerentanan_bencana": "Tinggi (Longsor & Galodo/Banjir Bandang)"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [112.48, -7.72],
+            [112.59, -7.72],
+            [112.56, -7.845],
+            [112.48, -7.845],
+            [112.48, -7.72]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "zona_wilayah": "Kawasan Lembah / Jantung Kota & Pariwisata Buatan",
+        "kecamatan": "Batu",
+        "iklim_suhu": "Sejuk (18°C - 24°C)",
+        "curah_hujan": "Sedang - Tinggi (2.000 - 2.500 mm/tahun)",
+        "jenis_tanah": "Latosol & Andosol",
+        "penggunaan_lahan": "Permukiman Padat, Pusat Pemerintahan, Komersial, Theme Park/Jatim Park Group, Perhotelan",
+        "kemiringan_lereng": "Landai - Agak Curam (8% - 15%)",
+        "kerentanan_bencana": "Sedang (Genangan Air Lintas Musim, Kemacetan)"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [112.475, -7.845],
+            [112.555, -7.845],
+            [112.55, -7.895],
+            [112.475, -7.895],
+            [112.475, -7.845]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "zona_wilayah": "Kawasan Dataran Agrowisata, Pendidikan & Pendidikan Militer",
+        "kecamatan": "Junrejo",
+        "iklim_suhu": "Warm/Hangat-Sejuk (20°C - 26°C)",
+        "curah_hujan": "Sedang (1.800 - 2.200 mm/tahun)",
+        "jenis_tanah": "Latosol & Alluvial",
+        "penggunaan_lahan": "Sawah Irigasi, Industri Kerajinan/Gerabah, Kampus, Fasilitas Militer (Arhanud), Permukiman",
+        "kemiringan_lereng": "Datar - Landai (0% - 8%)",
+        "kerentanan_bencana": "Rendah - Sedang"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [112.525, -7.88],
+            [112.585, -7.88],
+            [112.575, -7.925],
+            [112.525, -7.925],
+            [112.525, -7.88]
+          ]
+        ]
+      }
+    }
+  ]
+}

@@ -9,6 +9,7 @@ kosong + status, BUKAN polygon/koordinat palsu.
 """
 
 import json
+import re
 from pathlib import Path
 
 from django.conf import settings
@@ -41,18 +42,20 @@ class GeoJSONService:
     @classmethod
     def load_features(cls):
         """
-        Baca file GeoJSON. Return (features, note).
+        Baca file GeoJSON batas desa. Return (features, note).
 
         features : list of feature dict (kosong bila file belum ada/invalid)
         note     : None bila berhasil, string penjelasan bila tidak.
         """
-        path = cls.geojson_path()
+        return cls.load_features_from(settings.GIS_GEOJSON_PATH)
+
+    @classmethod
+    def load_features_from(cls, relative_path):
+        """Baca file GeoJSON dari path relatif BASE_DIR. Return (features, note)."""
+        path = Path(settings.BASE_DIR) / relative_path
 
         if not path.exists():
-            return [], (
-                "File GeoJSON batas desa belum tersedia "
-                f"({path.name})."
-            )
+            return [], f"File GeoJSON belum tersedia ({path.name})."
 
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
@@ -73,6 +76,11 @@ class GeoJSONService:
     # LOOKUP VILLAGE (sekali query, tanpa N+1)
     # =========================================================
 
+    @staticmethod
+    def _normalize_name(name):
+        """Normalisasi nama untuk pencocokan (lowercase, hapus non-alfanumerik)."""
+        return re.sub(r"[^a-z0-9]", "", (name or "").lower())
+
     @classmethod
     def _village_lookup(cls):
         villages = list(
@@ -90,17 +98,20 @@ class GeoJSONService:
         by_id = {}
         by_code = {}
         by_name = {}
+        by_name_norm = {}
 
         for village in villages:
             by_id[village.id] = village
             if village.code:
                 by_code[village.code] = village
             by_name[village.name.lower()] = village
+            by_name_norm[cls._normalize_name(village.name)] = village
 
         return {
             "by_id": by_id,
             "by_code": by_code,
             "by_name": by_name,
+            "by_name_norm": by_name_norm,
         }
 
     @classmethod
@@ -289,14 +300,24 @@ class GeoJSONService:
 
             village_id = props.get("village_id")
             village_code = props.get("village_code")
-            village_name = props.get("village_name")
+            village_name = props.get("village_name") or props.get("desa_kelurahan")
+            if village_name:
+                village_name = village_name.strip()
+                for prefix in ("Kelurahan ", "Desa "):
+                    if village_name.lower().startswith(prefix.lower()):
+                        village_name = village_name[len(prefix):].strip()
+                        break
 
             if village_id in lookup["by_id"]:
                 village = lookup["by_id"][village_id]
             elif village_code and village_code in lookup["by_code"]:
                 village = lookup["by_code"][village_code]
-            elif village_name and village_name.lower() in lookup["by_name"]:
-                village = lookup["by_name"][village_name.lower()]
+            elif village_name:
+                village = lookup["by_name"].get(village_name.lower())
+                if village is None:
+                    village = lookup["by_name_norm"].get(
+                        cls._normalize_name(village_name)
+                    )
 
             if village is None:
                 # Polygon tidak punya desa di DB: tetap ikut (dengan properti

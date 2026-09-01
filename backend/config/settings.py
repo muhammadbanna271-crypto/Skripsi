@@ -441,6 +441,18 @@ GIS_GEOJSON_PATH = os.getenv(
     "static/geo/batas_desa_kota_batu.geojson",
 )
 
+# GeoJSON zona ketinggian (region-level) — layer "Elevasi Wilayah".
+GIS_ELEVATION_GEOJSON_PATH = os.getenv(
+    "GIS_ELEVATION_GEOJSON_PATH",
+    "static/geo/sebaran_ketinggian_kota_batu.geojson",
+)
+
+# GeoJSON karakteristik wilayah (region-level, per kecamatan).
+GIS_CHARACTERISTIC_GEOJSON_PATH = os.getenv(
+    "GIS_CHARACTERISTIC_GEOJSON_PATH",
+    "static/geo/karakteristik_wilayah_kota_batu.geojson",
+)
+
 # Palet warna cluster (categorical, urutan tetap & tervalidasi CVD-safe).
 # Cluster akan diwarnai dari palet ini berdasarkan urutan code; kalau admin
 # menetapkan warna custom di model Cluster (selain default), warna itu
