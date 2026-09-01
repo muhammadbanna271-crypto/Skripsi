@@ -242,8 +242,10 @@
             padding: 1px 7px;
             font-size: 0.72rem;
             font-weight: 700;
+            line-height: 1.25;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
             white-space: nowrap;
+            transform: translate(-50%, -50%);
         }
     </style>
 </head>
@@ -582,6 +584,7 @@ async function init() {
                             permanent: true,
                             direction: "center",
                             className: "temp-label",
+                            offset: [0, 0],
                         });
                     }
                 });
@@ -885,7 +888,6 @@ async function init() {
         "Tempat Makan": restaurantLayer,
         "Zona Ketinggian": elevationZonesLayer,
         "Karakteristik Zona": characteristicZonesLayer,
-        "Ketinggian Destinasi": destinationElevationLayer,
     };
     if (IS_STAFF) {
         overlays["Batas Desa/Kelurahan"] = boundaryLayer;
