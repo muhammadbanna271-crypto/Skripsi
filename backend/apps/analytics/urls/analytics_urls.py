@@ -4,6 +4,7 @@ from apps.analytics.views import (
     analytics_dashboard,
     ml_dashboard,
     retrain_model,
+    run_survey_pipeline,
     predict_village,
     village_radar_json,
     relationship_json,
@@ -35,6 +36,12 @@ urlpatterns = [
         "ml/retrain/",
         retrain_model,
         name="ml-retrain",
+    ),
+
+    path(
+        "ml/survey/run/",
+        run_survey_pipeline,
+        name="ml-survey-run",
     ),
 
     path(

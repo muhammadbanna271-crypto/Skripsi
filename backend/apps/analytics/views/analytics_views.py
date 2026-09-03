@@ -67,8 +67,13 @@ def ml_dashboard(request):
     from apps.analytics.services.relationship_analysis_service import (
         RelationshipAnalysisService,
     )
+    from apps.survey_analysis.services.dashboard import (
+        SurveyAnalysisDashboard,
+    )
 
     village_table = MLDashboardService.village_table()
+
+    survey = SurveyAnalysisDashboard.context()
 
     variable_importance = (
         FeatureImportanceService.dominant_variables()
@@ -106,6 +111,8 @@ def ml_dashboard(request):
 
         "analysis_stale": AnalysisState.is_stale(),
 
+        "survey": survey,
+
     }
 
     return render(
@@ -117,6 +124,46 @@ def ml_dashboard(request):
         context,
 
     )
+
+
+@staff_required
+def run_survey_pipeline(request):
+
+    from apps.survey_analysis.services.dashboard import (
+        SurveyAnalysisDashboard,
+    )
+
+    if request.method == "POST":
+
+        out = SurveyAnalysisDashboard.run()
+
+        state = out.get("state")
+
+        if state is not None and getattr(state, "status", None) == "STOPPED":
+
+            stop_msg = ""
+
+            for h in reversed(state.history):
+                if h.get("status") == "STOPPED" and h.get("message"):
+                    stop_msg = h["message"]
+                    break
+
+            messages.warning(
+                request,
+                (
+                    "Pipeline SEM/LCA/SHAP berhenti: "
+                    f"{stop_msg or 'lihat log pipeline.'}"
+                ),
+            )
+
+        else:
+
+            messages.success(
+                request,
+                "Pipeline SEM/LCA/SHAP selesai dijalankan.",
+            )
+
+    return redirect("analytics:ml-dashboard")
 
 
 @staff_required

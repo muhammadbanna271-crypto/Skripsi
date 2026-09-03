@@ -84,6 +84,15 @@ ML Analytics Dashboard
         </button>
     </form>
 
+    {% if request.user.is_staff or request.user.is_superuser %}
+    <form method="post" action="{% url 'analytics:ml-survey-run' %}" id="survey-run-form">
+        {% csrf_token %}
+        <button type="submit" id="survey-run-btn" class="btn btn-outline-primary">
+            <i class="bi bi-diagram-3 me-1"></i> Run SEM/LCA/SHAP
+        </button>
+    </form>
+    {% endif %}
+
     <form method="post" id="predict-form" action="">
         {% csrf_token %}
         <div class="input-group">
@@ -291,6 +300,178 @@ ML Analytics Dashboard
 
     </div>
 </div>
+
+<!-- ================= Analisis Survei (SEM / LCA / SHAP) ================= -->
+
+<hr class="my-4">
+
+<h4 class="mb-2">
+    Analisis Survei — SEM / LCA / SHAP
+    {% if survey.has_results and survey.generated_at %}
+    <span class="text-secondary fs-6 ms-1">(diperbarui {{ survey.generated_at }})</span>
+    {% endif %}
+</h4>
+<p class="text-secondary small mb-3">Hasil pipeline responden-level, terpisah dari clustering desa di atas.</p>
+
+{% if survey.stale %}
+<div class="alert alert-warning rounded-3 d-flex align-items-center mb-3">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    Data survei berubah sejak terakhir dihitung. Klik <strong>&quot;Run SEM/LCA/SHAP&quot;</strong> untuk memperbarui hasil.
+</div>
+{% endif %}
+
+{% if not survey.has_results %}
+<div class="alert alert-secondary rounded-3">
+    Belum ada hasil analisis survei. Klik tombol <strong>&quot;Run SEM/LCA/SHAP&quot;</strong> di atas untuk menjalankan pipeline (bisa beberapa menit).
+</div>
+{% else %}
+
+<div class="row g-3 mb-3">
+
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white"><strong>SEM (Structural Model)</strong></div>
+            <div class="card-body">
+                {% if survey.sem_fit %}
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <span class="badge bg-light text-dark border">CFI: {{ survey.sem_fit.cfi }}</span>
+                    <span class="badge bg-light text-dark border">TLI: {{ survey.sem_fit.tli }}</span>
+                    <span class="badge bg-light text-dark border">RMSEA: {{ survey.sem_fit.rmsea }}</span>
+                </div>
+                {% endif %}
+                {% if survey.paths %}
+                <div class="table-responsive" style="max-height: 420px; overflow-y: auto;">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Target</th><th>Source</th>
+                                <th class="text-end">Est</th>
+                                <th class="text-end">Std</th>
+                                <th class="text-end">p</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in survey.paths %}
+                            <tr>
+                                <td>{{ p.lhs }}</td>
+                                <td>{{ p.rhs }}</td>
+                                <td class="text-end">{{ p.est }}</td>
+                                <td class="text-end">{{ p.standardized }}</td>
+                                <td class="text-end">
+                                    {% if p.p_value is not None %}
+                                    <span class="badge {% if p.p_value < 0.05 %}bg-success{% else %}bg-secondary{% endif %}">{{ p.p_value }}</span>
+                                    {% else %}&mdash;{% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white"><strong>LCA (Latent Class Analysis)</strong></div>
+            <div class="card-body">
+                {% if survey.lca_selected %}
+                <div class="mb-2">
+                    <span class="badge bg-success">Terpilih: {{ survey.lca_selected }} kelas</span>
+                    {% if survey.lca_review_required %}
+                    <span class="badge bg-danger">review</span>
+                    {% endif %}
+                </div>
+                {% if survey.lca_reason %}<div class="small text-muted mb-2">{{ survey.lca_reason }}</div>{% endif %}
+                {% endif %}
+                {% if survey.lca_classes %}
+                <div class="table-responsive mb-3">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Kelas</th><th class="text-end">Size</th>
+                                <th class="text-end">%</th><th class="text-end">Ave PP</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in survey.lca_classes %}
+                            <tr>
+                                <td>{{ c.class }}</td>
+                                <td class="text-end">{{ c.class_size }}</td>
+                                <td class="text-end">{{ c.class_percentage }}%</td>
+                                <td class="text-end">{{ c.avepp }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+                {% if survey.lca_profiles %}
+                <div class="small text-muted mb-1">Item persetujuan tertinggi per kelas:</div>
+                {% for class_key, items in survey.lca_profiles.items %}
+                <div class="mb-1">
+                    <span class="fw-semibold">Kelas {{ class_key }}:</span>
+                    {% for it in items|slice:":3" %}
+                    <span class="badge bg-light text-dark border">{{ it.item }}</span>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white"><strong>SHAP (Feature Importance)</strong></div>
+            <div class="card-body">
+                {% if survey.shap_top %}
+                <canvas id="shapChart" height="320"></canvas>
+                {% else %}
+                <p class="text-secondary small mb-0">Belum ada hasil SHAP.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% if survey.reliability %}
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white"><strong>Reliabilitas (Cronbach's Alpha &amp; Omega)</strong></div>
+    <div class="card-body p-0">
+        <div class="table-responsive" style="max-height: 320px; overflow-y: auto;">
+            <table class="table table-sm table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Konstruk</th><th class="text-end">Items</th>
+                        <th class="text-end">Alpha</th><th class="text-end">Omega</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in survey.reliability %}
+                    <tr>
+                        <td>{{ r.construct }} {{ r.name }}</td>
+                        <td class="text-end">{{ r.n_items }}</td>
+                        <td class="text-end">{{ r.cronbach_alpha }}</td>
+                        <td class="text-end">{{ r.omega }}</td>
+                        <td>
+                            <span class="badge {% if r.status == 'ok' %}bg-success{% else %}bg-danger{% endif %}">{{ r.status }}</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{{ survey.shap_top|json_script:"shap-data" }}
+
+{% endif %}
 
 {{ cluster_distribution|json_script:"cluster-distribution-data" }}
 {{ variable_importance|json_script:"variable-importance-data" }}
@@ -550,6 +731,53 @@ radarSelect.addEventListener("change", (event) => {
     loadRadarChart(event.target.value);
 });
 
+// ================= SHAP Feature Importance Bar Chart =================
+
+const shapDataEl = document.getElementById("shap-data");
+const shapChartEl = document.getElementById("shapChart");
+
+if (shapDataEl && shapChartEl) {
+
+    const shapData = JSON.parse(shapDataEl.textContent);
+
+    if (shapData && shapData.length) {
+
+        new Chart(shapChartEl, {
+            type: "bar",
+            data: {
+                labels: shapData.map(item => item.feature),
+                datasets: [{
+                    label: "Mean |SHAP|",
+                    data: shapData.map(item => item.mean_abs_shap),
+                    backgroundColor: "#0d6efd",
+                    borderColor: "#0a58ca",
+                    borderWidth: 1,
+                }],
+            },
+            options: {
+                indexAxis: "y",
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false,
+                    },
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: "Mean |SHAP|",
+                        },
+                    },
+                },
+            },
+        });
+
+    }
+
+}
+
 // ================= Form Predict -> set action dinamis =================
 
 const predictForm = document.getElementById("predict-form");
@@ -593,6 +821,34 @@ retrainForm.addEventListener("submit", (event) => {
     );
 
 });
+
+// ================= UX: Run SEM/LCA/SHAP =================
+
+const surveyRunForm = document.getElementById("survey-run-form");
+const surveyRunBtn = document.getElementById("survey-run-btn");
+
+if (surveyRunForm) {
+
+    surveyRunForm.addEventListener("submit", (event) => {
+
+        const confirmed = confirm(
+            "Menjalankan pipeline SEM/LCA/SHAP " +
+            "(reliabilitas, CFA, SEM, LCA, ML, SHAP). " +
+            "Butuh beberapa menit. Lanjutkan?"
+        );
+
+        if (!confirmed) {
+            event.preventDefault();
+            return;
+        }
+
+        surveyRunBtn.disabled = true;
+        surveyRunBtn.innerHTML =
+            '<span class="spinner-border spinner-border-sm me-1"></span> Memproses...';
+
+    });
+
+}
 
 const predictBtn = document.getElementById("predict-btn");
 

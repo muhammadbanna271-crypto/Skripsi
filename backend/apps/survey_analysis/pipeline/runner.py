@@ -135,6 +135,7 @@ def run_pipeline(config=None):
         "class_labels": class_labels,
     }
     exporter.write_csv(comparison, "lca", "model_comparison.csv")
+    exporter.write_json(selection, "lca", "selection.json")
     exporter.write_csv(diag, "lca", "classification_diagnostics.csv")
     exporter.write_csv(best.item_probabilities(), "lca", "conditional_probabilities.csv")
     exporter.write_json(profiles, "lca", "class_profiles.json")
