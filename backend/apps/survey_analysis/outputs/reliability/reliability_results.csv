@@ -1,0 +1,12 @@
+construct,name,n_items,cronbach_alpha,omega,n_used,status
+X1,Orientasi Pasar,8,0.8282,0.8281,1152,ok
+X2,Fasilitas Pariwisata,8,0.8243,0.8244,1152,ok
+X3,Infrastruktur dan Aksesibilitas,8,0.8138,0.8137,1152,ok
+X4,Hubungan Pemasaran,8,0.8272,0.8272,1152,ok
+X5,Kepuasan Pengunjung,8,0.8193,0.8192,1152,ok
+Y1,Inovasi Ekonomi Kreatif,8,0.8212,0.821,1152,ok
+Y2,Kualitas Layanan,8,0.8105,0.8105,1152,ok
+Y3,Orientasi Kewirausahaan,8,0.8244,0.8242,1152,ok
+Z1,Penerimaan Daerah,8,0.8077,0.8078,1152,ok
+Z2,Kunjungan Wisata,8,0.8241,0.8241,1152,ok
+Z3,Keunggulan Bersaing,8,0.8154,0.8155,1152,ok

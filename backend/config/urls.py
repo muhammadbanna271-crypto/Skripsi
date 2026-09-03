@@ -96,4 +96,12 @@ urlpatterns = [
             namespace="gis",
         ),
     ),
+
+    path(
+        "survey-analysis/",
+        include(
+            ("apps.survey_analysis.ui.urls", "survey_analysis"),
+            namespace="survey_analysis",
+        ),
+    ),
 ]

@@ -1,0 +1,123 @@
+{% extends "base/layout.html" %}
+
+{% block title %}
+Analisis Survei — SEM/LCA/ML/SHAP
+{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="page-title mb-1">Pipeline Analisis Survei</h3>
+                <div class="page-subtitle">
+                    Reliability → CFA/SEM → LCA → Surrogate ML → SHAP
+                </div>
+            </div>
+            <span class="badge bg-success">Random seed: {{ random_state }}</span>
+        </div>
+
+        <h6 class="fw-semibold mb-2">Engine / Model</h6>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="border rounded-3 p-3 h-100">
+                    <div class="fw-semibold mb-2">CFA / SEM</div>
+                    {% for e in sem_engines %}
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="fw-semibold">{{ e.name }}</span>
+                        {% if e.available %}
+                            <span class="badge bg-success">tersedia</span>
+                        {% else %}
+                            <span class="badge bg-danger">⚠ tidak tersedia</span>
+                        {% endif %}
+                    </div>
+                    {% if not e.available %}
+                        <div class="small text-muted mb-2">{{ e.error }}</div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="border rounded-3 p-3 h-100">
+                    <div class="fw-semibold mb-2">LCA</div>
+                    {% for e in lca_engines %}
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="fw-semibold">{{ e.name }}</span>
+                        {% if e.available %}
+                            <span class="badge bg-success">tersedia</span>
+                        {% else %}
+                            <span class="badge bg-danger">⚠ tidak tersedia</span>
+                        {% endif %}
+                    </div>
+                    {% if not e.available %}<div class="small text-muted mb-2">{{ e.error }}</div>{% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="border rounded-3 p-3 h-100">
+                    <div class="fw-semibold mb-2">Surrogate ML</div>
+                    {% for e in ml_engines %}
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="fw-semibold">{{ e.name }}</span>
+                        {% if e.available %}
+                            <span class="badge bg-success">tersedia</span>
+                        {% else %}
+                            <span class="badge bg-danger">⚠ tidak tersedia</span>
+                        {% endif %}
+                    </div>
+                    {% if not e.available %}<div class="small text-muted mb-2">{{ e.error }}</div>{% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="small text-muted mt-3">
+            Output disimpan di <code>{{ output_dir }}</code>. Jalankan pipeline dengan
+            <code>python manage.py run_survey_pipeline</code>.
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-4">
+        <h5 class="mb-3">Status Pipeline</h5>
+        {% if state %}
+            <table class="table table-sm align-middle">
+                <thead class="table-light">
+                    <tr><th>Tahap</th><th>Status</th><th>Pesan</th></tr>
+                </thead>
+                <tbody>
+                    {% for s in state %}
+                    <tr>
+                        <td class="fw-semibold">{{ s.stage }}</td>
+                        <td>
+                            {% if s.status == "PASSED" or s.status == "COMPLETED" %}
+                                <span class="badge bg-success">{{ s.status }}</span>
+                            {% elif s.status == "STOPPED" %}
+                                <span class="badge bg-danger">{{ s.status }}</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">{{ s.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="small text-muted">{{ s.message|default:"—" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="text-muted">
+                Pipeline belum dijalankan. Jalankan <code>python manage.py run_survey_pipeline</code>.
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if report %}
+<div class="card border-0 shadow-sm rounded-4 mt-4">
+    <div class="card-body p-4">
+        <h5 class="mb-3">Final Report</h5>
+        <pre class="bg-light p-3 rounded-3" style="white-space: pre-wrap; font-size: 0.85rem;">{{ report }}</pre>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -284,10 +284,19 @@ sesuai (jangan mengarang angka):
   user bertanya "desa apa saja di kecamatan X" atau "desa X ada di mana",
   pakai tool ini.
 
-- Suhu udara real-time per desa: tool ``get_village_temperature``.
-  Mengembalikan suhu saat ini, suhu jam 12:00, suhu jam 00:00, dan suhu
-  24 jam hari ini (sumber Open-Meteo). Gunakan untuk pertanyaan "suhu di
-  desa X", "desa mana yang paling dingin/panas", "suhu malam di Kota Batu".
+- Suhu & cuaca real-time per desa: tool ``get_village_temperature``.
+  Mengembalikan suhu saat ini, suhu siang (12:00), suhu malam (00:00),
+  kondisi cuaca saat ini (cerah/mendung/hujan), dan prakiraan 6 jam ke
+  depan (jam, suhu, kondisi, probabilitas hujan) — sumber Open-Meteo.
+  Gunakan untuk pertanyaan "suhu di desa X", "desa mana yang paling
+  dingin/panas", "suhu malam di Kota Batu", "bagaimana cuaca sekarang",
+  "jam berapa hujan", "besok cerah atau hujan".
+  Saat menganalisis rencana liburan / itinerary, perhatikan prakiraannya:
+  kalau diprediksi hujan (atau probabilitas hujan tinggi), sarankan
+  aktivitas indoor, bawa payung/jas hujan, atau geser aktivitas outdoor
+  ke jam yang lebih cerah; kalau cerah, cocok untuk wisata alam/outdoor.
+  (Prakiraan condong "mendung/hujan" saat ragu — itu disengaja supaya
+  pengguna tidak kaget kehujanan.)
   Hasil search_destinations / get_destination_details / build_itinerary /
   estimate_trip_budget juga menyertakan field ``suhu`` (suhu real-time desa
   destinasi) — sebutkan saat relevan, mis. "di sana suhunya sekitar 20°C".

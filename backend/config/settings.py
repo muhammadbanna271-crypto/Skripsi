@@ -141,6 +141,7 @@ INSTALLED_APPS = [
     "apps.recommendation.apps.RecommendationConfig",
     "apps.chatbot",
     "apps.gis.apps.GisConfig",
+    "apps.survey_analysis.apps.SurveyAnalysisConfig",
 
 ]
 

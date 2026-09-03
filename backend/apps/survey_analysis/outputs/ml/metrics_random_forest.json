@@ -1,0 +1,50 @@
+{
+  "accuracy": 1.0,
+  "macro_f1": 1.0,
+  "per_class": [
+    {
+      "class": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "class": 1,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "class": 2,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    }
+  ],
+  "confusion_matrix": [
+    {
+      "0": 106,
+      "1": 0,
+      "2": 0
+    },
+    {
+      "0": 0,
+      "1": 77,
+      "2": 0
+    },
+    {
+      "0": 0,
+      "1": 0,
+      "2": 48
+    }
+  ],
+  "class_names": [
+    "0",
+    "1",
+    "2"
+  ],
+  "best_params": {
+    "max_depth": null,
+    "n_estimators": 100
+  }
+}

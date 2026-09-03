@@ -1,0 +1,12 @@
+{
+  "n_respondents": 1152,
+  "n_items": 88,
+  "n_invalid_values": 0,
+  "n_missing_cells": 0,
+  "n_near_zero_items": 0,
+  "n_items_with_missing": 0,
+  "reverse_coded": {
+    "confirmed": false,
+    "warning": "Reverse-coded item belum dikonfirmasi — tidak dilakukan recoding otomatis."
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "state": [
+    {
+      "stage": "VALIDATION",
+      "status": "PASSED",
+      "message": null
+    },
+    {
+      "stage": "RELIABILITY",
+      "status": "PASSED",
+      "message": null
+    },
+    {
+      "stage": "CFA",
+      "status": "PASSED",
+      "message": null
+    },
+    {
+      "stage": "SEM",
+      "status": "POOR_FIT",
+      "message": null
+    },
+    {
+      "stage": "LCA",
+      "status": "PASSED",
+      "message": null
+    },
+    {
+      "stage": "ML",
+      "status": "PASSED",
+      "message": null
+    },
+    {
+      "stage": "SHAP",
+      "status": "PASSED",
+      "message": null
+    }
+  ]
+}

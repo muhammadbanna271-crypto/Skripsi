@@ -376,32 +376,54 @@ def _norm_village_name(name):
     return GeoJSONService._normalize_name(s)
 
 
+def _clean_cuaca(cuaca):
+    """Ringkas kondisi cuaca -> {kondisi, kategori} (ramah LLM)."""
+    if not cuaca:
+        return None
+    return {"kondisi": cuaca.get("label"), "kategori": cuaca.get("kategori")}
+
+
+def _clean_forecast(forecast):
+    """Ringkas prakiraan 6 jam -> [{jam, suhu, kondisi, probabilitas_hujan}]."""
+    out = []
+    for e in forecast or []:
+        out.append({
+            "jam": e.get("jam"),
+            "suhu": e.get("suhu"),
+            "kondisi": e.get("label"),
+            "probabilitas_hujan": e.get("precip_prob"),
+        })
+    return out
+
+
 def get_village_temperature(village_name=None, **kwargs):
     """
-    Suhu real-time per desa (dari Open-Meteo). Tanpa nama -> semua desa
-    (urut dari terpanas).
+    Suhu + prakiraan cuaca real-time per desa (Open-Meteo, cache 15 menit).
+    Tanpa nama -> semua desa (urut dari terpanas). Termasuk kondisi cuaca
+    saat ini (cerah/mendung/hujan) dan prakiraan 6 jam ke depan.
     """
-    temps = GeoJSONService.temperature_by_village()
-    if not temps:
-        return {"found": False, "message": "Data suhu belum tersedia."}
+    live = GeoJSONService.live_temperature_by_village()
+    if not live:
+        return {"found": False, "message": "Data cuaca belum tersedia."}
 
     if village_name:
         key = _norm_village_name(village_name)
-        for name, p in temps.items():
+        for name, d in live.items():
             if _norm_village_name(name) == key:
                 return {
                     "found": True,
-                    "village": p.get("village_name"),
-                    "suhu_current": p.get("suhu_current"),
-                    "suhu_siang_1200": p.get("suhu_siang_1200"),
-                    "suhu_malam_2400": p.get("suhu_malam_2400"),
-                    "hourly_temp_today": p.get("hourly_temp_today"),
-                    "last_updated": p.get("last_updated"),
+                    "village": name,
+                    "suhu_current": d.get("suhu_current"),
+                    "suhu_siang_1200": d.get("suhu_siang_1200"),
+                    "suhu_malam_2400": d.get("suhu_malam_2400"),
+                    "cuaca_sekarang": _clean_cuaca(d.get("cuaca_current")),
+                    "prakiraan_6_jam": _clean_forecast(d.get("forecast_6h")),
+                    "last_updated": d.get("last_updated"),
                 }
         return {"found": False, "message": f"Desa \"{village_name}\" tidak ditemukan."}
 
     results = sorted(
-        temps.items(),
+        live.items(),
         key=lambda kv: (
             kv[1].get("suhu_current") is None,
             -(kv[1].get("suhu_current") or 0),
@@ -411,12 +433,11 @@ def get_village_temperature(village_name=None, **kwargs):
         "count": len(results),
         "results": [
             {
-                "village": p.get("village_name"),
-                "suhu_current": p.get("suhu_current"),
-                "suhu_siang_1200": p.get("suhu_siang_1200"),
-                "suhu_malam_2400": p.get("suhu_malam_2400"),
+                "village": name,
+                "suhu_current": d.get("suhu_current"),
+                "cuaca": (d.get("cuaca_current") or {}).get("label"),
             }
-            for _, p in results
+            for name, d in results
         ],
     }
 
@@ -860,9 +881,10 @@ TOOLS_SCHEMA = [
     {
         "name": "get_village_temperature",
         "description": (
-            "Ambil suhu udara real-time per desa Kota Batu: suhu saat ini, "
-            "suhu jam 12:00 siang, suhu jam 00:00 malam, dan suhu 24 jam "
-            "hari ini. Sumber: Open-Meteo."
+            "Ambil suhu udara real-time + prakiraan cuaca per desa Kota Batu: "
+            "suhu saat ini, suhu siang (12:00), suhu malam (00:00), kondisi "
+            "cuaca saat ini (cerah/mendung/hujan), dan prakiraan 6 jam ke "
+            "depan (jam, suhu, kondisi, probabilitas hujan). Sumber: Open-Meteo."
         ),
         "input_schema": {
             "type": "object",

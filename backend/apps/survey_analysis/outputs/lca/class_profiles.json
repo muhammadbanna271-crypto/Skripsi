@@ -1,0 +1,83 @@
+{
+  "0": [
+    {
+      "item": "X2.4",
+      "construct": "X2",
+      "agreement_prob": 1.0
+    },
+    {
+      "item": "Y1.7",
+      "construct": "Y1",
+      "agreement_prob": 1.0
+    },
+    {
+      "item": "X3.4",
+      "construct": "X3",
+      "agreement_prob": 1.0
+    },
+    {
+      "item": "X1.2",
+      "construct": "X1",
+      "agreement_prob": 1.0
+    },
+    {
+      "item": "Y3.3",
+      "construct": "Y3",
+      "agreement_prob": 1.0
+    }
+  ],
+  "1": [
+    {
+      "item": "X3.3",
+      "construct": "X3",
+      "agreement_prob": 0.453
+    },
+    {
+      "item": "X5.5",
+      "construct": "X5",
+      "agreement_prob": 0.448
+    },
+    {
+      "item": "Y2.4",
+      "construct": "Y2",
+      "agreement_prob": 0.445
+    },
+    {
+      "item": "Z1.3",
+      "construct": "Z1",
+      "agreement_prob": 0.443
+    },
+    {
+      "item": "X1.5",
+      "construct": "X1",
+      "agreement_prob": 0.44
+    }
+  ],
+  "2": [
+    {
+      "item": "X2.5",
+      "construct": "X2",
+      "agreement_prob": 0.819
+    },
+    {
+      "item": "Y1.3",
+      "construct": "Y1",
+      "agreement_prob": 0.806
+    },
+    {
+      "item": "X4.6",
+      "construct": "X4",
+      "agreement_prob": 0.797
+    },
+    {
+      "item": "Y1.5",
+      "construct": "Y1",
+      "agreement_prob": 0.797
+    },
+    {
+      "item": "Z1.4",
+      "construct": "Z1",
+      "agreement_prob": 0.793
+    }
+  ]
+}
