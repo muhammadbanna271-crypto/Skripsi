@@ -481,6 +481,28 @@
             color: var(--muted);
         }
 
+        .thumb--photo { position: relative; display: block; }
+        .thumb--photo img {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .thumb-fallback {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: var(--accent);
+            font-size: 26px;
+        }
+
         .dest .body { padding: 12px 14px 14px; }
         .dest h3 {
             margin: 0 0 3px;
@@ -924,8 +946,16 @@
             card.href = p.google_maps_url || "#";
             card.target = "_blank";
             card.rel = "noopener";
+            var iconFallback = '<i class="bi ' + catIcon(cat) + '"></i><span class="thumb-label">' + escapeHtml(catLabel(cat)) + '</span>';
+            var thumb = p.photo
+                ? '<div class="thumb thumb--photo">' +
+                    '<img src="' + escapeHtml(p.photo) + '" alt="' + escapeHtml(p.name || "") + '" loading="lazy" onerror="this.onerror=null;this.remove();">' +
+                    '<span class="thumb-fallback">' + iconFallback + '</span>' +
+                  '</div>'
+                : '<div class="thumb">' + iconFallback + '</div>';
+
             card.innerHTML =
-                '<div class="thumb"><i class="bi ' + catIcon(cat) + '"></i><span class="thumb-label">' + escapeHtml(catLabel(cat)) + '</span></div>' +
+                thumb +
                 '<div class="body">' +
                     '<h3>' + escapeHtml(p.name) + '</h3>' +
                     '<div class="meta">' + escapeHtml(catLabel(cat)) + ' · ' + escapeHtml(village) + tempText + '</div>' +

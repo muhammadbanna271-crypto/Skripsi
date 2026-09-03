@@ -16,6 +16,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import requests
+from shapely.geometry import shape
 from django.conf import settings
 from django.core.cache import cache
 from django.db.models import Count
@@ -36,17 +37,76 @@ _JAKARTA = ZoneInfo("Asia/Jakarta")
 
 
 def _open_meteo_hourly(lat, lng):
-    """Ambil data suhu per jam dari Open-Meteo (forecast, tz Asia/Jakarta)."""
+    """Ambil data suhu + cuaca per jam dari Open-Meteo (forecast, tz Asia/Jakarta)."""
     url = (
         "https://api.open-meteo.com/v1/forecast"
         f"?latitude={lat}&longitude={lng}"
-        "&hourly=temperature_2m"
+        "&hourly=temperature_2m,weather_code,precipitation_probability,precipitation,cloud_cover"
         "&timezone=Asia%2FJakarta"
         "&past_days=1&forecast_days=2"
     )
     resp = requests.get(url, timeout=20)
     resp.raise_for_status()
     return resp.json().get("hourly", {})
+
+
+# Kode WMO yang dianggap "hujan" (gerimis/hujan/badai) dan "cerah" (langit
+# cerah / berawan tipis). Sisanya (overcast, kabut, berawan) -> mendung.
+_WMO_RAIN = {51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 85, 86, 95, 96, 99}
+_WMO_CLEAR = {0, 1}
+
+# Label + ikon (kunci `ikon` dipetakan ke ikon Bootstrap di sisi frontend).
+_WEATHER_META = {
+    "cerah": {"label": "Cerah", "ikon": "sun"},
+    "mendung": {"label": "Mendung", "ikon": "cloud"},
+    "hujan": {"label": "Hujan", "ikon": "rain"},
+}
+
+
+def _classify_weather(code, precip_prob, precipitation, cloud_cover):
+    """Klasifikasi cuaca -> "cerah" | "mendung" | "hujan" dengan bias basah.
+
+    Bias basah (wet bias): orang lebih dirugikan bila prakiraan "cerah"
+    ternyata hujan daripada sebaliknya (prakiraan "hujan" ternyata cerah).
+    Akibatnya:
+      - ambang "hujan" dibuat longgar (cepat berstatus hujan),
+      - ambang "cerah" dibuat ketat (hanya cerah bila sangat yakin),
+      - kondisi yang meragukan jatuh ke "mendung".
+    """
+    # Tanpa sinyal cuaca sama sekali, jangan berani bilang cerah (bias basah).
+    if code is None and precip_prob is None and precipitation is None and cloud_cover is None:
+        return "mendung"
+
+    try:
+        code = int(code) if code is not None else 0
+    except (TypeError, ValueError):
+        code = 0
+    precip_prob = precip_prob if precip_prob is not None else 0
+    precipitation = precipitation if precipitation is not None else 0.0
+    cloud_cover = cloud_cover if cloud_cover is not None else 0
+
+    # Hujan: kode WMO hujan, presipitasi nyata, atau probabilitas hujan tinggi.
+    if code in _WMO_RAIN or precipitation >= 0.2 or precip_prob >= 60:
+        return "hujan"
+
+    # Cerah: hanya bila langit cerah/berawan tipis + awan sedikit + risiko kecil.
+    if code in _WMO_CLEAR and cloud_cover <= 25 and precip_prob < 25:
+        return "cerah"
+
+    # Sisanya mendung (kategori "aman" dari bias basah).
+    return "mendung"
+
+
+def _weather_info(kategori):
+    """Kembalikan {kategori, label, ikon} untuk kategori cuaca.
+
+    Kategori tak dikenal dinormalisasi ke "mendung" supaya field `kategori`,
+    `label`, dan `ikon` selalu konsisten (total & defensif).
+    """
+    if kategori not in _WEATHER_META:
+        kategori = "mendung"
+    meta = _WEATHER_META[kategori]
+    return {"kategori": kategori, "label": meta["label"], "ikon": meta["ikon"]}
 
 
 class GeoJSONService:
@@ -154,7 +214,12 @@ class GeoJSONService:
 
     @classmethod
     def _village_centroids(cls):
-        """Centroid (rata-rata koordinat) tiap desa -> {name_lower: (lat, lng)}."""
+        """Centroid sebenarnya tiap desa (shapely) -> {name_lower: (lat, lng)}.
+
+        Memakai centroid polygon (bukan rata-rata vertex / bounding-box) supaya
+        titik pusat desa akurat untuk polygon tidak beraturan — dipakai untuk
+        menempatkan label suhu tepat di tengah desa.
+        """
         features, _ = cls.load_features()
         out = {}
         for f in features:
@@ -167,12 +232,21 @@ class GeoJSONService:
                 if name.lower().startswith(prefix.lower()):
                     name = name[len(prefix):].strip()
                     break
-            coords = cls._flatten_coords(f.get("geometry"))
-            if not coords:
+
+            geom = f.get("geometry")
+            if not geom:
                 continue
-            lng = sum(c[0] for c in coords) / len(coords)
-            lat = sum(c[1] for c in coords) / len(coords)
-            out[name.lower()] = (lat, lng)
+            try:
+                centroid = shape(geom).centroid
+                out[name.lower()] = (centroid.y, centroid.x)
+            except Exception:
+                # Fallback ke rata-rata koordinat bila geometri tidak valid.
+                coords = cls._flatten_coords(geom)
+                if not coords:
+                    continue
+                lng = sum(c[0] for c in coords) / len(coords)
+                lat = sum(c[1] for c in coords) / len(coords)
+                out[name.lower()] = (lat, lng)
         return out
 
     @classmethod
@@ -186,24 +260,60 @@ class GeoJSONService:
         now = datetime.now(_JAKARTA)
         today = now.date()
 
+        def _empty(lat, lng):
+            return {
+                "suhu_current": None,
+                "suhu_siang_1200": None,
+                "suhu_malam_2400": None,
+                "cuaca_current": None,
+                "forecast_6h": [],
+                "forecast_24h": [],
+                "centroid": [lng, lat],
+                "last_updated": None,
+            }
+
         def _fetch_one(name):
             lat, lng = centroids[name]
             try:
                 hourly = _open_meteo_hourly(lat, lng)
                 times = hourly.get("time", [])
                 temps = hourly.get("temperature_2m", [])
+                codes = hourly.get("weather_code", [])
+                probs = hourly.get("precipitation_probability", [])
+                precs = hourly.get("precipitation", [])
+                clouds = hourly.get("cloud_cover", [])
 
                 today_temps = {}
+                today_weather = {}  # hour -> (code, prob, prec, cloud)
                 forecast = []
-                for t, v in zip(times, temps):
+
+                for i, t in enumerate(times):
                     dt = datetime.fromisoformat(t).replace(tzinfo=_JAKARTA)
+                    temp = temps[i] if i < len(temps) else None
+                    code = codes[i] if i < len(codes) else None
+                    prob = probs[i] if i < len(probs) else None
+                    prec = precs[i] if i < len(precs) else None
+                    cloud = clouds[i] if i < len(clouds) else None
+
                     if dt.date() == today:
-                        today_temps[dt.hour] = v
+                        if temp is not None:
+                            today_temps[dt.hour] = temp
+                        today_weather[dt.hour] = (code, prob, prec, cloud)
+
                     if dt >= now:
-                        forecast.append({
-                            "jam": dt.strftime("%H:%M"),
-                            "suhu": round(float(v), 2),
-                        })
+                        entry = _weather_info(
+                            _classify_weather(code, prob, prec, cloud)
+                        )
+                        entry["jam"] = dt.strftime("%H:%M")
+                        entry["suhu"] = (
+                            round(float(temp), 2) if temp is not None else None
+                        )
+                        entry["precip_prob"] = (
+                            round(float(prob), 2) if prob is not None else None
+                        )
+                        forecast.append(entry)
+
+                cur_weather = today_weather.get(now.hour)
 
                 return name, {
                     "suhu_current": (
@@ -218,17 +328,17 @@ class GeoJSONService:
                         round(float(today_temps[0]), 2)
                         if 0 in today_temps else None
                     ),
+                    "cuaca_current": (
+                        _weather_info(_classify_weather(*cur_weather))
+                        if cur_weather else None
+                    ),
+                    "forecast_6h": forecast[:6],
                     "forecast_24h": forecast[:24],
+                    "centroid": [lng, lat],
                     "last_updated": datetime.now(timezone.utc).isoformat(),
                 }
             except Exception:
-                return name, {
-                    "suhu_current": None,
-                    "suhu_siang_1200": None,
-                    "suhu_malam_2400": None,
-                    "forecast_24h": [],
-                    "last_updated": None,
-                }
+                return name, _empty(lat, lng)
 
         out = {}
         with ThreadPoolExecutor(max_workers=8) as executor:
@@ -619,6 +729,7 @@ class GeoJSONService:
                 "properties": {
                     "id": dest.id,
                     "name": dest.name,
+                    "photo": dest.photo or "",
                     "village_id": dest.village_id,
                     "village_name": dest.village.name if dest.village else None,
                     "district_name": (

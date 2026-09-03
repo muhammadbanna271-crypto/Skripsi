@@ -1,0 +1,1263 @@
+{
+  "fetchedAt": 1788401844952,
+  "source": "https://catalog.selat.ai/twitter/openapi.json",
+  "services": [
+    {
+      "slug": "twitter",
+      "base": "https://catalog.selat.ai",
+      "openApiUrl": "https://catalog.selat.ai/twitter/openapi.json",
+      "openapi": {
+        "openapi": "3.0.3",
+        "info": {
+          "title": "twitter service",
+          "version": "1.0.0",
+          "description": "SELAT services with NanoPayments paywall"
+        },
+        "paths": {
+          "/twitter/tweets": {
+            "get": {
+              "summary": "Get tweets by ids",
+              "parameters": [
+                {
+                  "name": "tweet_ids",
+                  "in": "query",
+                  "required": true,
+                  "description": "Comma-separated tweet IDs",
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Proxied response from upstream service"
+                }
+              },
+              "x-selat-pricing": {
+                "priceUsd": "0.001"
+              },
+              "x-selat-upstream": {
+                "path": "/twitter/tweets"
+              }
+            }
+          },
+          "/twitter/article": {
+            "get": {
+              "summary": "Get article by tweet id",
+              "parameters": [
+                {
+                  "name": "tweet_id",
+                  "in": "query",
+                  "required": true,
+                  "description": "Tweet ID",
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Proxied response from upstream service"
+                }
+              },
+              "x-selat-pricing": {
+                "priceUsd": "0.001"
+              },
+              "x-selat-upstream": {
+                "path": "/twitter/article"
+              }
+            }
+          },
+          "/twitter/tweet/replies": {
+            "get": {
+              "summary": "Get tweet replies",
+              "parameters": [
+                {
+                  "name": "tweetId",
+                  "in": "query",
+                  "required": true,
+                  "description": "Tweet ID",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "sinceTime",
+                  "in": "query",
+                  "required": false,
+                  "description": "Unix timestamp in seconds, include results on/after this time",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "untilTime",
+                  "in": "query",
+                  "required": false,
+                  "description": "Unix timestamp in seconds, include results before this time",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "cursor",
+                  "in": "query",
+                  "required": false,
+                  "description": "Pagination cursor",
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Proxied response from upstream service"
+                }
+              },
+              "x-selat-pricing": {
+                "priceUsd": "0.001"
+              },
+              "x-selat-upstream": {
+                "path": "/twitter/tweet/replies"
+              }
+            }
+          },
+          "/twitter/tweet/replies/v2": {
+            "get": {
+              "summary": "Get tweet replies (v2)",
+              "parameters": [
+                {
+                  "name": "tweetId",
+                  "in": "query",
+                  "required": true,
+                  "description": "Tweet ID",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "cursor",
+                  "in": "query",
+                  "required": false,
+                  "description": "Pagination cursor",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "queryType",
+                  "in": "query",
+                  "required": false,
+                  "description": "Sort mode",
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Proxied response from upstream service"
+                }
+              },
+              "x-selat-pricing": {
+                "priceUsd": "0.001"
+              },
+              "x-selat-upstream": {
+                "path": "/twitter/tweet/replies/v2"
+              }
+            }
+          },
+          "/twitter/tweet/thread_context": {
+            "get": {
+              "summary": "Get thread context",
+              "parameters": [
+                {
+                  "name": "tweetId",
+                  "in": "query",
+                  "required": true,
+                  "description": "Tweet ID",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "cursor",
+                  "in": "query",
+                  "required": false,
+                  "description": "Pagination cursor",
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Proxied response from upstream service"
+                }
+              },
+              "x-selat-pricing": {
+                "priceUsd": "0.001"
+              },
+              "x-selat-upstream": {
+                "path": "/twitter/tweet/thread_context"
+              }
+            }
+          },
+          "/twitter/tweet/quotes": {
+            "get": {
+              "summary": "Get tweet quotes",
+              "parameters": [
+                {
+                  "name": "tweetId",
+                  "in": "query",
+                  "required": true,
+                  "description": "Tweet ID",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "sinceTime",
+                  "in": "query",
+                  "required": false,
+                  "description": "Unix timestamp in seconds, include results on/after this time",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "untilTime",
+                  "in": "query",
+                  "required": false,
+                  "description": "Unix timestamp in seconds, include results before this time",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "includeReplies",
+                  "in": "query",
+                  "required": false,
+                  "description": "Whether to include replies",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "cursor",
+                  "in": "query",
+                  "required": false,
+                  "description": "Pagination cursor",
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Proxied response from upstream service"
+                }
+              },
+              "x-selat-pricing": {
+                "priceUsd": "0.001"
+              },
+              "x-selat-upstream": {
+                "path": "/twitter/tweet/quotes"
+              }
+            }
+          },
+          "/twitter/tweet/retweeters": {
+            "get": {
+              "summary": "Get tweet retweeters",
+              "parameters": [
+                {
+                  "name": "tweetId",
+                  "in": "query",
+                  "required": true,
+                  "description": "Tweet ID",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "cursor",
+                  "in": "query",
+                  "required": false,
+                  "description": "Pagination cursor",
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Proxied response from upstream service"
+                }
+              },
+              "x-selat-pricing": {
+                "priceUsd": "0.001"
+              },
+              "x-selat-upstream": {
+                "path": "/twitter/tweet/retweeters"
+              }
+            }
+          },
+          "/twitter/trends": {
+            "get": {
+              "summary": "Get trends by woeid",
+              "parameters": [
+                {
+                  "name": "woeid",
+                  "in": "query",
+                  "required": true,
+                  "description": "Yahoo Where On Earth ID",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "count",
+                  "in": "query",
+                  "required": false,
+                  "description": "Number of trends to return",
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Proxied response from upstream service"
+                }
+              },
+              "x-selat-pricing": {
+                "priceUsd": "0.001"
+              },
+              "x-selat-upstream": {
+                "path": "/twitter/trends"
+              }
+            }
+          },
+          "/twitter/user/info": {
+            "get": {
+              "summary": "Get user info by username",
+              "parameters": [
+                {
+                  "name": "userName",
+                  "in": "query",
+                  "required": true,
+                  "description": "Twitter username (screen name)",
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Proxied response from upstream service"
+                }
+              },
+              "x-selat-pricing": {
+                "priceUsd": "0.001"
+              },
+              "x-selat-upstream": {
+                "path": "/twitter/user/info"
+              }
+            }
+          },
+          "/twitter/user/about": {
+            "get": {
+              "summary": "Get user about",
+              "parameters": [
+                {
+                  "name": "userName",
+                  "in": "query",
+                  "required": true,
+                  "description": "Twitter username (screen name)",
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Proxied response from upstream service"
+                }
+              },
+              "x-selat-pricing": {
+                "priceUsd": "0.001"
+              },
+              "x-selat-upstream": {
+                "path": "/twitter/user_about"
+              }
+            }
+          },
+          "/twitter/user/search": {
+            "get": {
+              "summary": "Search users by keyword",
+              "parameters": [
+                {
+                  "name": "query",
+                  "in": "query",
+                  "required": true,
+                  "description": "Search keyword",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "cursor",
+                  "in": "query",
+                  "required": false,
+                  "description": "Pagination cursor",
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Proxied response from upstream service"
+                }
+              },
+              "x-selat-pricing": {
+                "priceUsd": "0.001"
+              },
+              "x-selat-upstream": {
+                "path": "/twitter/user/search"
+              }
+            }
+          },
+          "/twitter/user/batch_info_by_ids": {
+            "get": {
+              "summary": "Batch get users by ids",
+              "parameters": [
+                {
+                  "name": "userIds",
+                  "in": "query",
+                  "required": true,
+                  "description": "Comma-separated user IDs",
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Proxied response from upstream service"
+                }
+              },
+              "x-selat-pricing": {
+                "priceUsd": "0.001"
+              },
+              "x-selat-upstream": {
+                "path": "/twitter/user/batch_info_by_ids"
+              }
+            }
+          },
+          "/twitter/user/last_tweets": {
+            "get": {
+              "summary": "Get user latest tweets",
+              "parameters": [
+                {
+                  "name": "userId",
+                  "in": "query",
+                  "required": false,
+                  "description": "Twitter user ID",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "userName",
+                  "in": "query",
+                  "required": false,
+                  "description": "Twitter username (screen name)",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "cursor",
+                  "in": "query",
+                  "required": false,
+                  "description": "Pagination cursor",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "includeReplies",
+                  "in": "query",
+                  "required": false,
+                  "description": "Whether to include replies",
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Proxied response from upstream service"
+                }
+              },
+              "x-selat-pricing": {
+                "priceUsd": "0.001"
+              },
+              "x-selat-upstream": {
+                "path": "/twitter/user/last_tweets"
+              }
+            }
+          },
+          "/twitter/user/tweet_timeline": {
+            "get": {
+              "summary": "Get user tweet timeline",
+              "parameters": [
+                {
+                  "name": "userId",
+                  "in": "query",
+                  "required": true,
+                  "description": "Twitter user ID",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "includeReplies",
+                  "in": "query",
+                  "required": false,
+                  "description": "Whether to include replies",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "includeParentTweet",
+                  "in": "query",
+                  "required": false,
+                  "description": "Whether to include parent tweets",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "cursor",
+                  "in": "query",
+                  "required": false,
+                  "description": "Pagination cursor",
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Proxied response from upstream service"
+                }
+              },
+              "x-selat-pricing": {
+                "priceUsd": "0.001"
+              },
+              "x-selat-upstream": {
+                "path": "/twitter/user/tweet_timeline"
+              }
+            }
+          },
+          "/twitter/user/mentions": {
+            "get": {
+              "summary": "Get user mentions",
+              "parameters": [
+                {
+                  "name": "userName",
+                  "in": "query",
+                  "required": true,
+                  "description": "Twitter username (screen name)",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "sinceTime",
+                  "in": "query",
+                  "required": false,
+                  "description": "Unix timestamp in seconds, include results on/after this time",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "untilTime",
+                  "in": "query",
+                  "required": false,
+                  "description": "Unix timestamp in seconds, include results before this time",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "cursor",
+                  "in": "query",
+                  "required": false,
+                  "description": "Pagination cursor",
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Proxied response from upstream service"
+                }
+              },
+              "x-selat-pricing": {
+                "priceUsd": "0.001"
+              },
+              "x-selat-upstream": {
+                "path": "/twitter/user/mentions"
+              }
+            }
+          },
+          "/twitter/user/followers": {
+            "get": {
+              "summary": "Get user followers",
+              "parameters": [
+                {
+                  "name": "userName",
+                  "in": "query",
+                  "required": true,
+                  "description": "Twitter username (screen name)",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "cursor",
+                  "in": "query",
+                  "required": false,
+                  "description": "Pagination cursor",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "pageSize",
+                  "in": "query",
+                  "required": false,
+                  "description": "Page size",
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Proxied response from upstream service"
+                }
+              },
+              "x-selat-pricing": {
+                "priceUsd": "0.001"
+              },
+              "x-selat-upstream": {
+                "path": "/twitter/user/followers"
+              }
+            }
+          },
+          "/twitter/user/followers_ids": {
+            "get": {
+              "summary": "Get user follower ids",
+              "parameters": [
+                {
+                  "name": "userName",
+                  "in": "query",
+                  "required": false,
+                  "description": "Twitter username (screen name)",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "userId",
+                  "in": "query",
+                  "required": false,
+                  "description": "Twitter user ID",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "count",
+                  "in": "query",
+                  "required": false,
+                  "description": "Number of ids to return",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "cursor",
+                  "in": "query",
+                  "required": false,
+                  "description": "Pagination cursor",
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Proxied response from upstream service"
+                }
+              },
+              "x-selat-pricing": {
+                "priceUsd": "0.001"
+              },
+              "x-selat-upstream": {
+                "path": "/twitter/user/followers_ids"
+              }
+            }
+          },
+          "/twitter/user/verified_followers": {
+            "get": {
+              "summary": "Get user verified followers",
+              "parameters": [
+                {
+                  "name": "user_id",
+                  "in": "query",
+                  "required": true,
+                  "description": "Twitter user ID",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "cursor",
+                  "in": "query",
+                  "required": false,
+                  "description": "Pagination cursor",
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Proxied response from upstream service"
+                }
+              },
+              "x-selat-pricing": {
+                "priceUsd": "0.001"
+              },
+              "x-selat-upstream": {
+                "path": "/twitter/user/verifiedFollowers"
+              }
+            }
+          },
+          "/twitter/user/followings": {
+            "get": {
+              "summary": "Get user followings",
+              "parameters": [
+                {
+                  "name": "userName",
+                  "in": "query",
+                  "required": true,
+                  "description": "Twitter username (screen name)",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "cursor",
+                  "in": "query",
+                  "required": false,
+                  "description": "Pagination cursor",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "pageSize",
+                  "in": "query",
+                  "required": false,
+                  "description": "Page size",
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Proxied response from upstream service"
+                }
+              },
+              "x-selat-pricing": {
+                "priceUsd": "0.001"
+              },
+              "x-selat-upstream": {
+                "path": "/twitter/user/followings"
+              }
+            }
+          },
+          "/twitter/user/check_follow_relationship": {
+            "get": {
+              "summary": "Check follow relationship",
+              "parameters": [
+                {
+                  "name": "source_user_name",
+                  "in": "query",
+                  "required": true,
+                  "description": "Source username",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "target_user_name",
+                  "in": "query",
+                  "required": true,
+                  "description": "Target username",
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Proxied response from upstream service"
+                }
+              },
+              "x-selat-pricing": {
+                "priceUsd": "0.001"
+              },
+              "x-selat-upstream": {
+                "path": "/twitter/user/check_follow_relationship"
+              }
+            }
+          },
+          "/twitter/tweet/advanced_search": {
+            "get": {
+              "summary": "Advanced tweet search",
+              "parameters": [
+                {
+                  "name": "query",
+                  "in": "query",
+                  "required": true,
+                  "description": "Advanced search query",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "queryType",
+                  "in": "query",
+                  "required": false,
+                  "description": "Sort mode",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "cursor",
+                  "in": "query",
+                  "required": false,
+                  "description": "Pagination cursor",
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Proxied response from upstream service"
+                }
+              },
+              "x-selat-pricing": {
+                "priceUsd": "0.001"
+              },
+              "x-selat-upstream": {
+                "path": "/twitter/tweet/advanced_search"
+              }
+            }
+          },
+          "/twitter/list/followers": {
+            "get": {
+              "summary": "Get list followers",
+              "parameters": [
+                {
+                  "name": "list_id",
+                  "in": "query",
+                  "required": true,
+                  "description": "List ID",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "cursor",
+                  "in": "query",
+                  "required": false,
+                  "description": "Pagination cursor",
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Proxied response from upstream service"
+                }
+              },
+              "x-selat-pricing": {
+                "priceUsd": "0.001"
+              },
+              "x-selat-upstream": {
+                "path": "/twitter/list/followers"
+              }
+            }
+          },
+          "/twitter/list/members": {
+            "get": {
+              "summary": "Get list members",
+              "parameters": [
+                {
+                  "name": "list_id",
+                  "in": "query",
+                  "required": true,
+                  "description": "List ID",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "cursor",
+                  "in": "query",
+                  "required": false,
+                  "description": "Pagination cursor",
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Proxied response from upstream service"
+                }
+              },
+              "x-selat-pricing": {
+                "priceUsd": "0.001"
+              },
+              "x-selat-upstream": {
+                "path": "/twitter/list/members"
+              }
+            }
+          },
+          "/twitter/list/tweets": {
+            "get": {
+              "summary": "Get list tweets",
+              "parameters": [
+                {
+                  "name": "listId",
+                  "in": "query",
+                  "required": true,
+                  "description": "List ID",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "sinceTime",
+                  "in": "query",
+                  "required": false,
+                  "description": "Unix timestamp in seconds, include results on/after this time",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "untilTime",
+                  "in": "query",
+                  "required": false,
+                  "description": "Unix timestamp in seconds, include results before this time",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "includeReplies",
+                  "in": "query",
+                  "required": false,
+                  "description": "Whether to include replies",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "cursor",
+                  "in": "query",
+                  "required": false,
+                  "description": "Pagination cursor",
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Proxied response from upstream service"
+                }
+              },
+              "x-selat-pricing": {
+                "priceUsd": "0.001"
+              },
+              "x-selat-upstream": {
+                "path": "/twitter/list/tweets"
+              }
+            }
+          },
+          "/twitter/list/tweets_timeline": {
+            "get": {
+              "summary": "Get list tweets timeline",
+              "parameters": [
+                {
+                  "name": "listId",
+                  "in": "query",
+                  "required": true,
+                  "description": "List ID",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "cursor",
+                  "in": "query",
+                  "required": false,
+                  "description": "Pagination cursor",
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Proxied response from upstream service"
+                }
+              },
+              "x-selat-pricing": {
+                "priceUsd": "0.001"
+              },
+              "x-selat-upstream": {
+                "path": "/twitter/list/tweets_timeline"
+              }
+            }
+          },
+          "/twitter/community/get_tweets_from_all_community": {
+            "get": {
+              "summary": "Get tweets from all communities",
+              "parameters": [
+                {
+                  "name": "query",
+                  "in": "query",
+                  "required": false,
+                  "description": "Search query",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "queryType",
+                  "in": "query",
+                  "required": false,
+                  "description": "Sort mode",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "cursor",
+                  "in": "query",
+                  "required": false,
+                  "description": "Pagination cursor",
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Proxied response from upstream service"
+                }
+              },
+              "x-selat-pricing": {
+                "priceUsd": "0.001"
+              },
+              "x-selat-upstream": {
+                "path": "/twitter/community/get_tweets_from_all_community"
+              }
+            }
+          },
+          "/twitter/community/info": {
+            "get": {
+              "summary": "Get community info",
+              "parameters": [
+                {
+                  "name": "community_id",
+                  "in": "query",
+                  "required": true,
+                  "description": "Community ID",
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Proxied response from upstream service"
+                }
+              },
+              "x-selat-pricing": {
+                "priceUsd": "0.001"
+              },
+              "x-selat-upstream": {
+                "path": "/twitter/community/info"
+              }
+            }
+          },
+          "/twitter/community/members": {
+            "get": {
+              "summary": "Get community members",
+              "parameters": [
+                {
+                  "name": "community_id",
+                  "in": "query",
+                  "required": true,
+                  "description": "Community ID",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "cursor",
+                  "in": "query",
+                  "required": false,
+                  "description": "Pagination cursor",
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Proxied response from upstream service"
+                }
+              },
+              "x-selat-pricing": {
+                "priceUsd": "0.001"
+              },
+              "x-selat-upstream": {
+                "path": "/twitter/community/members"
+              }
+            }
+          },
+          "/twitter/community/moderators": {
+            "get": {
+              "summary": "Get community moderators",
+              "parameters": [
+                {
+                  "name": "community_id",
+                  "in": "query",
+                  "required": true,
+                  "description": "Community ID",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "cursor",
+                  "in": "query",
+                  "required": false,
+                  "description": "Pagination cursor",
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Proxied response from upstream service"
+                }
+              },
+              "x-selat-pricing": {
+                "priceUsd": "0.001"
+              },
+              "x-selat-upstream": {
+                "path": "/twitter/community/moderators"
+              }
+            }
+          },
+          "/twitter/community/tweets": {
+            "get": {
+              "summary": "Get community tweets",
+              "parameters": [
+                {
+                  "name": "community_id",
+                  "in": "query",
+                  "required": true,
+                  "description": "Community ID",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "cursor",
+                  "in": "query",
+                  "required": false,
+                  "description": "Pagination cursor",
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Proxied response from upstream service"
+                }
+              },
+              "x-selat-pricing": {
+                "priceUsd": "0.001"
+              },
+              "x-selat-upstream": {
+                "path": "/twitter/community/tweets"
+              }
+            }
+          },
+          "/twitter/spaces/detail": {
+            "get": {
+              "summary": "Get spaces detail",
+              "parameters": [
+                {
+                  "name": "space_id",
+                  "in": "query",
+                  "required": true,
+                  "description": "Space ID",
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Proxied response from upstream service"
+                }
+              },
+              "x-selat-pricing": {
+                "priceUsd": "0.001"
+              },
+              "x-selat-upstream": {
+                "path": "/twitter/spaces/detail"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

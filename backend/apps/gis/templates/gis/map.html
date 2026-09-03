@@ -249,6 +249,32 @@
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
             white-space: nowrap;
         }
+        .temp-label .wx { font-size: 0.8rem; margin-left: 3px; vertical-align: -1px; }
+
+        .fc-strip { display: flex; gap: 6px; margin-top: 5px; flex-wrap: wrap; }
+        .fc-item {
+            display: flex; flex-direction: column; align-items: center;
+            background: #f6f8f6; border: 1px solid #e6ebe6; border-radius: 8px;
+            padding: 4px 5px; min-width: 44px; font-size: 0.7rem;
+            line-height: 1.25; color: #374151;
+        }
+        .fc-item .fc-time { font-weight: 700; color: #22301f; }
+        .fc-item .fc-temp { color: #6b7280; }
+        .fc-item .fc-label { color: #6b7280; font-size: 0.66rem; }
+
+        .temp-updated {
+            position: absolute;
+            left: 12px;
+            bottom: 12px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.94);
+            border: 1px solid #e1e0d9;
+            border-radius: 8px;
+            padding: 4px 10px;
+            font-size: 0.72rem;
+            color: #374151;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+        }
     </style>
 </head>
 <body>
@@ -279,6 +305,8 @@
 <div id="map"></div>
 
 <div id="data-banner" class="data-banner" style="display:none;"></div>
+
+<div id="temp-updated" class="temp-updated" style="display:none;"></div>
 
 <div class="legend-panel" id="legend-panel">
     <h6><i class="bi bi-palette"></i> Legenda</h6>
@@ -366,6 +394,13 @@ const VILLAGE_DETAIL_URL = "{% url 'master:village-detail' 0 %}";
 const DEST_EDIT_URL = "{% url 'gis:manage-destination-update' 0 %}";
 const DEST_DELETE_URL = "{% url 'gis:manage-destination-delete' 0 %}";
 const IS_STAFF = {% if request.user.is_staff or request.user.is_superuser %}true{% else %}false{% endif %};
+
+// Ikon + warna per kategori cuaca (kunci `ikon` dari backend).
+const WEATHER_ICON = {
+    sun:   { cls: "bi-sun", color: "#f59e0b" },
+    cloud: { cls: "bi-cloud", color: "#64748b" },
+    rain:  { cls: "bi-cloud-rain", color: "#0ea5e9" },
+};
 
 // ============================== INIT MAP ==============================
 
@@ -471,6 +506,104 @@ function rampColor(value, min, max, stops) {
     return `rgb(${last[1]},${last[2]},${last[3]})`;
 }
 
+function weatherIconHTML(ikon) {
+    const w = WEATHER_ICON[ikon] || WEATHER_ICON.cloud;
+    return `<i class="bi ${w.cls}" style="color:${w.color}"></i>`;
+}
+
+function forecastHTML(temp) {
+    const fc = temp && temp.forecast_6h;
+    if (!fc || !fc.length) return "";
+    const items = fc.map(function (e) {
+        return `
+            <div class="fc-item">
+                <span class="fc-time">${e.jam}</span>
+                ${weatherIconHTML(e.ikon)}
+                <span class="fc-temp">${e.suhu != null ? e.suhu + "°" : "—"}</span>
+                <span class="fc-label">${e.label || ""}</span>
+            </div>`;
+    }).join("");
+    return `<br><b>Prakiraan 6 jam:</b><div class="fc-strip">${items}</div>`;
+}
+
+function weatherLabelHTML(temp) {
+    const cur = temp && temp.cuaca_current;
+    if (!cur) return "";
+    const w = WEATHER_ICON[cur.ikon] || WEATHER_ICON.cloud;
+    return ` <i class="bi ${w.cls} wx" style="color:${w.color}"></i>`;
+}
+
+function tempColor(t) {
+    if (t == null) return "#d1d5db";
+    var u = Math.max(0, Math.min(1, (t - 10) / 20));  // 10..30 °C -> 0..1
+    var r = Math.round(255 * u);
+    var b = Math.round(255 * (1 - u));
+    return "rgb(" + r + ",90," + b + ")";
+}
+
+// Titik pusat desa: pakai centroid dari backend (shapely), fallback ke
+// center bounding-box Leaflet bila centroid tidak tersedia.
+function villageCentroid(layer, props, key) {
+    const c = (liveTemp[key] || {}).centroid;
+    if (c && Array.isArray(c) && c.length === 2) {
+        return [c[1], c[0]];  // [lng, lat] -> [lat, lng]
+    }
+    return layer.getBounds().getCenter();
+}
+
+function renderTemperatureLayers() {
+    if (tempLayer) {
+        tempLayer.setStyle(function (feature) {
+            var t = (liveTemp[(feature.properties.village_name || "").toLowerCase()] || {}).suhu_current;
+            return { color: "#ffffff", weight: 1, fillColor: tempColor(t), fillOpacity: 0.6 };
+        });
+    }
+    if (!tempLabelLayer) {
+        tempLabelLayer = L.layerGroup().addTo(map);
+    }
+    tempLabelLayer.clearLayers();
+    (tempLayer || L.layerGroup()).eachLayer(function (layer) {
+        var props = layer.feature && layer.feature.properties;
+        if (!props) return;
+        var key = (props.village_name || "").toLowerCase();
+        var t = (liveTemp[key] || {}).suhu_current;
+        if (t == null) return;
+        var center = villageCentroid(layer, props, key);
+        var icon = L.divIcon({
+            className: "temp-marker",
+            html: '<span class="temp-label">' + Math.round(t) + '°C' + weatherLabelHTML(liveTemp[key]) + '</span>',
+            iconSize: [0, 0],
+            iconAnchor: [0, 0],
+        });
+        L.marker(center, { icon: icon, interactive: false }).addTo(tempLabelLayer);
+    });
+}
+
+function renderLastUpdated() {
+    const el = document.getElementById("temp-updated");
+    if (!el) return;
+    let latest = null;
+    for (const k in liveTemp) {
+        if (liveTemp[k].last_updated) { latest = liveTemp[k].last_updated; break; }
+    }
+    if (!latest) return;
+    const d = new Date(latest);
+    el.style.display = "block";
+    el.innerHTML = '<i class="bi bi-arrow-repeat"></i> Suhu live · diperbarui ' +
+        d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) + ' WIB';
+}
+
+async function loadTemperature() {
+    try {
+        const data = await loadJson("{% url 'gis:api-live-temperature' %}");
+        liveTemp = data || {};
+        renderTemperatureLayers();
+        renderLastUpdated();
+    } catch (err) {
+        // Biarkan suhu pada nilai sebelumnya bila refresh gagal.
+    }
+}
+
 function villagePopupHTML(props) {
     const cluster = props.cluster
         ? props.cluster.name
@@ -494,8 +627,12 @@ function villagePopupHTML(props) {
         : "#";
 
     const temp = liveTemp[(props.village_name || "").toLowerCase()];
+    const cur = temp && temp.cuaca_current;
+    const curText = cur
+        ? ` ${weatherIconHTML(cur.ikon)} ${cur.label}`
+        : "";
     const tempLine = temp && temp.suhu_current != null
-        ? `Sekarang ${temp.suhu_current}°C · siang ${temp.suhu_siang_1200 ?? "-"}°C · malam ${temp.suhu_malam_2400 ?? "-"}°C`
+        ? `Sekarang ${temp.suhu_current}°C${curText} · siang ${temp.suhu_siang_1200 ?? "-"}°C · malam ${temp.suhu_malam_2400 ?? "-"}°C`
         : "belum tersedia";
 
     return `
@@ -504,6 +641,7 @@ function villagePopupHTML(props) {
             <div class="muted">Kecamatan ${props.district_name || "-"}</div>
             <br>
             <b>Suhu:</b> ${tempLine}<br>
+            ${forecastHTML(temp)}
             <b>Cluster:</b> ${cluster}<br>
             <b>Skor:</b> ${score}<br>
             <b>Elevasi:</b> ${elevText}<br>
@@ -516,7 +654,9 @@ function villagePopupHTML(props) {
 }
 
 function bindPopupAndHover(layer, props) {
-    layer.bindPopup(villagePopupHTML(props));
+    // Bind sebagai fungsi supaya popup dibangun ulang tiap dibuka — sehingga
+    // suhu & prakiraan cuaca yang baru di-fetch tetap ikut tampil.
+    layer.bindPopup(function () { return villagePopupHTML(props); });
     const defaultStyle = layer.options;
     layer.on("mouseover", function () {
         layer.setStyle({ weight: 3, color: "#111827", fillOpacity: 0.85 });
@@ -567,39 +707,8 @@ async function init() {
         loadJson("{% url 'gis:api-characteristic-zones-geojson' %}"),
     ]);
 
-    // Suhu + forecast real-time per desa (background; dipakai di popup + choropleth).
-    loadJson("{% url 'gis:api-live-temperature' %}")
-        .then(function (data) {
-            liveTemp = data || {};
-            if (tempLayer) {
-                tempLayer.setStyle(function (feature) {
-                    var t = (liveTemp[(feature.properties.village_name || "").toLowerCase()] || {}).suhu_current;
-                    return { color: "#ffffff", weight: 1, fillColor: tempColor(t), fillOpacity: 0.6 };
-                });
-                // Label angka suhu permanen (divIcon marker di centroid desa).
-                if (!tempLabelLayer) {
-                    tempLabelLayer = L.layerGroup().addTo(map);
-                }
-                tempLabelLayer.clearLayers();
-                tempLayer.eachLayer(function (layer) {
-                    var props = layer.feature && layer.feature.properties;
-                    var t = props
-                        ? (liveTemp[(props.village_name || "").toLowerCase()] || {}).suhu_current
-                        : null;
-                    if (t != null) {
-                        var center = layer.getBounds().getCenter();
-                        var icon = L.divIcon({
-                            className: "temp-marker",
-                            html: '<span class="temp-label">' + t + '°C</span>',
-                            iconSize: [0, 0],
-                            iconAnchor: [0, 0],
-                        });
-                        L.marker(center, { icon: icon, interactive: false }).addTo(tempLabelLayer);
-                    }
-                });
-            }
-        })
-        .catch(function () {});
+    // Suhu live dimuat lewat loadTemperature() setelah semua layer siap (lihat
+    // bawah), lalu di-refresh tiap 15 menit supaya tetap realtime per jam.
 
     if (IS_STAFF) {
         // Data riset (clustering/skor desa) hanya untuk staff.
@@ -658,13 +767,6 @@ async function init() {
     characteristicLayerGroup = characteristicLayer;
 
     // --- Suhu live (choropleth desa) ---
-    function tempColor(t) {
-        if (t == null) return "#d1d5db";
-        var u = Math.max(0, Math.min(1, (t - 10) / 20));  // 10..30 °C -> 0..1
-        var r = Math.round(255 * u);
-        var b = Math.round(255 * (1 - u));
-        return "rgb(" + r + ",90," + b + ")";
-    }
     tempLayer = L.geoJSON(villages, {
         style: function (feature) {
             var t = (liveTemp[(feature.properties.village_name || "").toLowerCase()] || {}).suhu_current;
@@ -920,6 +1022,12 @@ async function init() {
     destinationLayer.addTo(map);
     restaurantLayer.addTo(map);
     elevationZonesLayer.addTo(map);
+
+    // Suhu live: muat sekarang + refresh tiap 15 menit (realtime per jam).
+    if (IS_STAFF) {
+        loadTemperature();
+        setInterval(loadTemperature, 15 * 60 * 1000);
+    }
 
     if (IS_STAFF) {
         renderDataBanner(villages, villagePoints, destinations);
