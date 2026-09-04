@@ -1,18 +1,10 @@
 from sklearn.decomposition import PCA
 
+from apps.analytics.colors import UNASSIGNED_COLOR, cluster_color_map
 from apps.analytics.selectors.analytics_selector import AnalyticsSelector
 from apps.master.models import Cluster, Village
 from apps.respondent.models import Respondent
 from apps.response.models import Response
-
-
-CLUSTER_COLORS = [
-    "#0d6efd",
-    "#198754",
-    "#dc3545",
-    "#fd7e14",
-    "#6f42c1",
-]
 
 
 class MLDashboardService:
@@ -57,6 +49,8 @@ class MLDashboardService:
     @staticmethod
     def cluster_distribution():
 
+        color_map = cluster_color_map()
+
         clusters = (
             Cluster.objects
             .filter(villages__isnull=False)
@@ -65,7 +59,7 @@ class MLDashboardService:
 
         result = []
 
-        for index, cluster in enumerate(clusters):
+        for cluster in clusters:
 
             result.append({
 
@@ -73,10 +67,7 @@ class MLDashboardService:
 
                 "count": cluster.villages.count(),
 
-                "color": (
-                    cluster.color
-                    or CLUSTER_COLORS[index % len(CLUSTER_COLORS)]
-                ),
+                "color": color_map.get(cluster.name, UNASSIGNED_COLOR),
 
             })
 
@@ -88,6 +79,8 @@ class MLDashboardService:
 
     @staticmethod
     def scatter_data():
+
+        color_map = cluster_color_map()
 
         villages, indicators, matrix = (
             AnalyticsSelector.feature_matrix()
@@ -117,9 +110,9 @@ class MLDashboardService:
                 "cluster": cluster.name if cluster else "Belum Dikluster",
 
                 "color": (
-                    cluster.color
-                    if cluster and cluster.color
-                    else "#6c757d"
+                    color_map.get(cluster.name, UNASSIGNED_COLOR)
+                    if cluster
+                    else UNASSIGNED_COLOR
                 ),
 
             })
@@ -132,6 +125,8 @@ class MLDashboardService:
 
     @staticmethod
     def village_table():
+
+        color_map = cluster_color_map()
 
         villages = (
             Village.objects
@@ -150,6 +145,12 @@ class MLDashboardService:
                 "village": village,
 
                 "cluster": village.cluster,
+
+                "color": (
+                    color_map.get(village.cluster.name, UNASSIGNED_COLOR)
+                    if village.cluster
+                    else None
+                ),
 
                 "total_score": score.total_score if score else 0,
 

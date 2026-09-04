@@ -10,6 +10,7 @@
 {% url 'respondent:respondent-list' as respondent_url %}
 {% url 'response:response-list' as response_url %}
 {% url 'analytics:dashboard' as analytics_url %}
+{% url 'analytics:ml-dashboard' as ml_dashboard_url %}
 {% url 'recommendation:dashboard' as recommendation_url %}
 {% url 'gis:map' as gis_map_url %}
 {% url 'gis:destinations' as gis_destinations_url %}
@@ -300,11 +301,25 @@
 
                 <a
                     href="{{ analytics_url }}"
-                    class="nav-link {% if analytics_url in request.path %}active{% endif %}">
+                    class="nav-link {% if request.path == analytics_url %}active{% endif %}">
 
                     <i class="bi bi-graph-up-arrow"></i>
 
                     Analytics
+
+                </a>
+
+            </li>
+
+            <li>
+
+                <a
+                    href="{{ ml_dashboard_url }}"
+                    class="nav-link {% if ml_dashboard_url in request.path %}active{% endif %}">
+
+                    <i class="bi bi-diagram-3"></i>
+
+                    ML Dashboard
 
                 </a>
 

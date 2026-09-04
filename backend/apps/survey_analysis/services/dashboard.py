@@ -17,6 +17,7 @@ from datetime import datetime
 
 import pandas as pd
 
+from apps.analytics.colors import color_for_index
 from apps.survey_analysis.config import settings as cfg
 
 
@@ -266,6 +267,11 @@ class SurveyAnalysisDashboard:
             "lca_review_required": False,
             "lca_classes": [],
             "lca_profiles": {},
+            "lca_model_comparison": [],
+            "lca_entropy": None,
+            "lca_class_colors": [],
+            "lca_scatter": [],
+            "lca_shap_per_class": [],
             "shap_top": [],
         }
 
@@ -346,12 +352,64 @@ class SurveyAnalysisDashboard:
                     "class_size": int(row["class_size"]),
                     "class_percentage": _r(row["class_percentage"], 1),
                     "avepp": _r(row["average_posterior_probability"]),
+                    "color": color_for_index(int(row["class"])),
                 }
                 for _, row in lca_classes.iterrows()
             ]
         profiles = cls._load_json("lca/class_profiles.json")
         if profiles:
             ctx["lca_profiles"] = profiles
+
+        # ---- LCA model comparison (BIC/AIC/entropy per jumlah kelas) ----
+        comparison = cls._load_csv("lca/model_comparison.csv")
+        if comparison is not None and not comparison.empty:
+            ctx["lca_model_comparison"] = [
+                {
+                    "classes": int(row["classes"]),
+                    "aic": _r(row["aic"], 1),
+                    "bic": _r(row["bic"], 1),
+                    "entropy": _r(row["entropy"]),
+                    "min_class_pct": _r(row["min_class_pct"], 1),
+                }
+                for _, row in comparison.iterrows()
+            ]
+            # Entropy keseluruhan = entropy pada jumlah kelas yang terpilih.
+            selected = ctx.get("lca_selected")
+            if selected is not None:
+                for item in ctx["lca_model_comparison"]:
+                    if item["classes"] == selected:
+                        ctx["lca_entropy"] = item["entropy"]
+                        break
+
+        # ---- Warna kelas LCA (fixed: kelas c -> palet[c]) ----
+        ctx["lca_class_colors"] = [
+            color_for_index(c) for c in range(ctx["lca_selected"] or 0)
+        ]
+
+        # ---- Scatter responden per kelas LCA (PCA 2D) ----
+        scatter = cls._load_csv("lca/scatter_points.csv")
+        if scatter is not None and not scatter.empty:
+            ctx["lca_scatter"] = [
+                {
+                    "respondent_id": row["respondent_id"],
+                    "class": int(row["class"]),
+                    "x": _r(row["x"], 3),
+                    "y": _r(row["y"], 3),
+                }
+                for _, row in scatter.iterrows()
+            ]
+
+        # ---- SHAP per kelas LCA ----
+        per_class = cls._load_csv("shap/feature_importance_per_class.csv")
+        if per_class is not None and not per_class.empty:
+            ctx["lca_shap_per_class"] = [
+                {
+                    "class": int(row["class"]),
+                    "feature": row["feature"],
+                    "mean_abs_shap": _r(row["mean_abs_shap"], 4),
+                }
+                for _, row in per_class.iterrows()
+            ]
 
         # ---- SHAP (top N item) ----
         shap = cls._load_csv("shap/feature_importance.csv")

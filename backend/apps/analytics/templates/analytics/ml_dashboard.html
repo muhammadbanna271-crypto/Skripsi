@@ -9,6 +9,24 @@ ML Analytics Dashboard
 <h2 class="mb-1">ML Analytics Dashboard</h2>
 <p class="text-secondary">Clustering, Feature Importance &amp; Rekomendasi Desa</p>
 
+<ul class="nav nav-pills mb-3">
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'analytics:dashboard' %}">
+            <i class="bi bi-graph-up me-1"></i>Analytics
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link active" href="{% url 'analytics:ml-dashboard' %}">
+            <i class="bi bi-diagram-3 me-1"></i>ML Dashboard
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'recommendation:dashboard' %}">
+            <i class="bi bi-award me-1"></i>Recommendation (TOPSIS)
+        </a>
+    </li>
+</ul>
+
 {% if messages %}
 {% for message in messages %}
 <div class="alert alert-{{ message.tags }}">
@@ -61,6 +79,15 @@ ML Analytics Dashboard
                     -
                     {% endif %}
                 </div>
+                {% if summary.silhouette_score %}
+                    {% if summary.silhouette_score >= 0.5 %}
+                    <span class="badge bg-success">Baik</span>
+                    {% elif summary.silhouette_score >= 0.25 %}
+                    <span class="badge bg-warning text-dark">Cukup</span>
+                    {% else %}
+                    <span class="badge bg-danger">Perlu review</span>
+                    {% endif %}
+                {% endif %}
             </div>
         </div>
     </div>
@@ -244,7 +271,7 @@ ML Analytics Dashboard
                     <td>{{ row.village.name }}</td>
                     <td>
                         {% if row.cluster %}
-                        <span class="badge" style="background-color: {{ row.cluster.color }}">
+                        <span class="badge" style="background-color: {{ row.color }}">
                             {{ row.cluster.name }}
                         </span>
                         {% else %}
@@ -272,7 +299,7 @@ ML Analytics Dashboard
         {% for group in cluster_ranking %}
         <h6 class="mt-2">
             {% if group.cluster %}
-            <span class="badge" style="background-color: {{ group.cluster.color }}">
+            <span class="badge" style="background-color: {{ group.color }}">
                 {{ group.cluster.name }}
             </span>
             {% else %}
@@ -401,7 +428,14 @@ ML Analytics Dashboard
 
     <div class="col-md-4">
         <div class="card shadow-sm border-0 h-100">
-            <div class="card-header bg-white"><strong>LCA (Latent Class Analysis)</strong></div>
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <strong>LCA (Latent Class Analysis)</strong>
+                {% if survey.lca_entropy is not None %}
+                <span class="badge {% if survey.lca_entropy >= 0.8 %}bg-success{% elif survey.lca_entropy >= 0.6 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                    Entropy: {{ survey.lca_entropy }}
+                </span>
+                {% endif %}
+            </div>
             <div class="card-body">
                 {% if survey.lca_selected %}
                 <div class="mb-2">
@@ -413,7 +447,7 @@ ML Analytics Dashboard
                 {% if survey.lca_reason %}<div class="small text-muted mb-2">{{ survey.lca_reason }}</div>{% endif %}
                 {% endif %}
                 {% if survey.lca_classes %}
-                <div class="table-responsive mb-3">
+                <div class="table-responsive mb-2">
                     <table class="table table-sm table-hover mb-0">
                         <thead class="table-light">
                             <tr>
@@ -424,7 +458,11 @@ ML Analytics Dashboard
                         <tbody>
                             {% for c in survey.lca_classes %}
                             <tr>
-                                <td>{{ c.class }}</td>
+                                <td>
+                                    <span class="badge" style="background-color: {{ c.color }}">
+                                        Kelas {{ c.class|add:"1" }}
+                                    </span>
+                                </td>
                                 <td class="text-end">{{ c.class_size }}</td>
                                 <td class="text-end">{{ c.class_percentage }}%</td>
                                 <td class="text-end">{{ c.avepp }}</td>
@@ -432,6 +470,14 @@ ML Analytics Dashboard
                             {% endfor %}
                         </tbody>
                     </table>
+                </div>
+                <div class="d-flex flex-wrap gap-3 mb-2">
+                    {% for c in survey.lca_classes %}
+                    <span class="small text-secondary">
+                        <span class="d-inline-block rounded me-1" style="width:12px;height:12px;background-color:{{ c.color }};"></span>
+                        Kelas {{ c.class|add:"1" }}
+                    </span>
+                    {% endfor %}
                 </div>
                 {% endif %}
                 {% if survey.lca_profiles %}
@@ -463,6 +509,42 @@ ML Analytics Dashboard
     </div>
 
 </div>
+
+{% if survey.lca_model_comparison %}
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white"><strong>Evaluasi LCA — Perbandingan Jumlah Kelas (BIC/AIC)</strong></div>
+    <div class="card-body">
+        <canvas id="lcaBicChart" height="220"></canvas>
+    </div>
+</div>
+{% endif %}
+
+{% if survey.lca_scatter %}
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white"><strong>Sebaran Responden per Kelas (PCA)</strong></div>
+    <div class="card-body">
+        <canvas id="lcaScatterChart" height="320"></canvas>
+    </div>
+</div>
+{% endif %}
+
+{% if survey.lca_profiles %}
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white"><strong>Profil Kelas — Item Persetujuan Tertinggi</strong></div>
+    <div class="card-body">
+        <canvas id="lcaProfilesChart" height="300"></canvas>
+    </div>
+</div>
+{% endif %}
+
+{% if survey.lca_shap_per_class %}
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white"><strong>Feature Importance per Kelas (SHAP)</strong></div>
+    <div class="card-body">
+        <canvas id="lcaShapChart" height="320"></canvas>
+    </div>
+</div>
+{% endif %}
 
 {% if survey.reliability %}
 <div class="card shadow-sm border-0 mb-4">
@@ -497,6 +579,11 @@ ML Analytics Dashboard
 {% endif %}
 
 {{ survey.shap_top|json_script:"shap-data" }}
+{{ survey.lca_model_comparison|json_script:"lca-model-comparison-data" }}
+{{ survey.lca_class_colors|json_script:"lca-class-colors-data" }}
+{{ survey.lca_scatter|json_script:"lca-scatter-data" }}
+{{ survey.lca_profiles|json_script:"lca-profiles-data" }}
+{{ survey.lca_shap_per_class|json_script:"lca-shap-per-class-data" }}
 
 {% endif %}
 
@@ -582,27 +669,11 @@ new Chart(document.getElementById("importanceChart"), {
 
 const scatterByCluster = {};
 
-const clusterColors = {
-    "Berkembang": "#0d6efd",
-    "Sedang": "#fd7e14",
-    "Unggul": "#198754",
-
-    // fallback jika nama cluster masih default
-    "Cluster 0": "#0d6efd",
-    "Cluster 1": "#fd7e14",
-    "Cluster 2": "#198754",
-
-    "Belum Dikluster": "#6c757d",
-};
-
 scatterData.forEach((point) => {
 
     if (!scatterByCluster[point.cluster]) {
 
-        const color =
-            point.color ||
-            clusterColors[point.cluster] ||
-            "#6c757d";
+        const color = point.color || "#6c757d";
 
         scatterByCluster[point.cluster] = {
 
@@ -803,6 +874,197 @@ if (shapDataEl && shapChartEl) {
 
     }
 
+}
+
+// ================= Evaluasi LCA: BIC/AIC vs Jumlah Kelas =================
+
+const lcaComparisonEl = document.getElementById("lca-model-comparison-data");
+const lcaBicChartEl = document.getElementById("lcaBicChart");
+
+if (lcaComparisonEl && lcaBicChartEl) {
+    const comparison = JSON.parse(lcaComparisonEl.textContent);
+    if (comparison && comparison.length) {
+        new Chart(lcaBicChartEl, {
+            type: "line",
+            data: {
+                labels: comparison.map(d => d.classes + " kelas"),
+                datasets: [
+                    {
+                        label: "BIC",
+                        data: comparison.map(d => d.bic),
+                        borderColor: "#0072B2",
+                        backgroundColor: "#0072B2",
+                        tension: 0.2,
+                    },
+                    {
+                        label: "AIC",
+                        data: comparison.map(d => d.aic),
+                        borderColor: "#D55E00",
+                        backgroundColor: "#D55E00",
+                        tension: 0.2,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: "top" } },
+                scales: {
+                    x: { title: { display: true, text: "Jumlah kelas" } },
+                    y: { title: { display: true, text: "Nilai" } },
+                },
+            },
+        });
+    }
+}
+
+// ================= Sebaran Responden per Kelas (PCA) =================
+
+const lcaScatterEl = document.getElementById("lca-scatter-data");
+const lcaScatterChartEl = document.getElementById("lcaScatterChart");
+
+if (lcaScatterEl && lcaScatterChartEl) {
+    const points = JSON.parse(lcaScatterEl.textContent);
+    if (points && points.length) {
+        const lcaColors = JSON.parse(
+            document.getElementById("lca-class-colors-data").textContent
+        );
+        const byClass = {};
+        points.forEach((p) => {
+            if (!byClass[p.class]) {
+                const color = lcaColors[p.class] || "#6c757d";
+                byClass[p.class] = {
+                    label: "Kelas " + (p.class + 1),
+                    data: [],
+                    backgroundColor: color,
+                    borderColor: color,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                };
+            }
+            byClass[p.class].data.push({
+                x: p.x,
+                y: p.y,
+                respondent: p.respondent_id,
+            });
+        });
+        new Chart(lcaScatterChartEl, {
+            type: "scatter",
+            data: { datasets: Object.values(byClass) },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: "top" },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) =>
+                                ctx.dataset.label +
+                                " - Resp " +
+                                ctx.raw.respondent,
+                        },
+                    },
+                },
+                scales: {
+                    x: { title: { display: true, text: "PC1" } },
+                    y: { title: { display: true, text: "PC2" } },
+                },
+            },
+        });
+    }
+}
+
+// ================= Profil Kelas: Item Persetujuan Tertinggi =================
+
+const lcaProfilesEl = document.getElementById("lca-profiles-data");
+const lcaProfilesChartEl = document.getElementById("lcaProfilesChart");
+
+if (lcaProfilesEl && lcaProfilesChartEl) {
+    const profiles = JSON.parse(lcaProfilesEl.textContent);
+    const lcaColors = JSON.parse(
+        document.getElementById("lca-class-colors-data").textContent
+    );
+    const rows = [];
+    Object.keys(profiles).forEach((k) => {
+        const cls = parseInt(k, 10);
+        (profiles[k] || []).forEach((it) => {
+            rows.push({
+                class: cls,
+                label: "Kelas " + (cls + 1) + " · " + it.item,
+                value: it.agreement_prob,
+            });
+        });
+    });
+    if (rows.length) {
+        new Chart(lcaProfilesChartEl, {
+            type: "bar",
+            data: {
+                labels: rows.map(r => r.label),
+                datasets: [{
+                    label: "P(persetujuan)",
+                    data: rows.map(r => r.value),
+                    backgroundColor: rows.map(r => lcaColors[r.class] || "#6c757d"),
+                    borderWidth: 0,
+                }],
+            },
+            options: {
+                indexAxis: "y",
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        max: 1,
+                        title: { display: true, text: "P(persetujuan)" },
+                    },
+                },
+            },
+        });
+    }
+}
+
+// ================= Feature Importance per Kelas (SHAP) =================
+
+const lcaShapPerClassEl = document.getElementById("lca-shap-per-class-data");
+const lcaShapChartEl = document.getElementById("lcaShapChart");
+
+if (lcaShapPerClassEl && lcaShapChartEl) {
+    const rows = JSON.parse(lcaShapPerClassEl.textContent);
+    if (rows && rows.length) {
+        const lcaColors = JSON.parse(
+            document.getElementById("lca-class-colors-data").textContent
+        );
+        const best = {};
+        rows.forEach((r) => {
+            best[r.feature] = Math.max(best[r.feature] || 0, r.mean_abs_shap);
+        });
+        const topFeatures = Object.keys(best)
+            .sort((a, b) => best[b] - best[a])
+            .slice(0, 12);
+        const classes = [...new Set(rows.map(r => r.class))].sort();
+        const datasets = classes.map((cls) => ({
+            label: "Kelas " + (cls + 1),
+            data: topFeatures.map((f) => {
+                const row = rows.find(r => r.feature === f && r.class === cls);
+                return row ? row.mean_abs_shap : 0;
+            }),
+            backgroundColor: lcaColors[cls] || "#6c757d",
+            borderWidth: 0,
+        }));
+        new Chart(lcaShapChartEl, {
+            type: "bar",
+            data: { labels: topFeatures, datasets },
+            options: {
+                indexAxis: "y",
+                responsive: true,
+                plugins: { legend: { position: "top" } },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        title: { display: true, text: "Mean |SHAP|" },
+                    },
+                },
+            },
+        });
+    }
 }
 
 // ================= Form Predict -> set action dinamis =================

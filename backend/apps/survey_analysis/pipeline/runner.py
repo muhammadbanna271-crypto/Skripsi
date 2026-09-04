@@ -9,6 +9,9 @@ STOP conditions (tidak dipaksa lanjut):
 Semua hasil ditulis ke outputs/ (CSV/JSON) + final report markdown.
 """
 
+import pandas as pd
+from sklearn.decomposition import PCA
+
 from apps.survey_analysis.config import settings as cfg
 from apps.survey_analysis.config import model_config
 from apps.survey_analysis.data.loader import load_dataset
@@ -28,7 +31,11 @@ from apps.survey_analysis.lca.runner import (
     class_profiles,
 )
 from apps.survey_analysis.ml.runner import run_surrogate_ml
-from apps.survey_analysis.shap.explainer import explain, summary_table
+from apps.survey_analysis.shap.explainer import (
+    explain,
+    per_class_importance,
+    summary_table,
+)
 from apps.survey_analysis.exporters import exporter
 from apps.survey_analysis.pipeline.state import (
     PipelineState,
@@ -124,7 +131,8 @@ def run_pipeline(config=None):
     )
     selection = select_classes(comparison)
     best = lca_models[selection["selected"]]
-    class_labels = best.predict_class(matrix).values.astype(int)
+    class_series = best.predict_class(matrix)  # Series indexed by respondent_id
+    class_labels = class_series.values.astype(int)
     diag, entropy = classification_diagnostics(best, matrix)
     profiles = class_profiles(best, matrix)
     results["lca"] = {
@@ -139,6 +147,21 @@ def run_pipeline(config=None):
     exporter.write_csv(diag, "lca", "classification_diagnostics.csv")
     exporter.write_csv(best.item_probabilities(), "lca", "conditional_probabilities.csv")
     exporter.write_json(profiles, "lca", "class_profiles.json")
+
+    # Output presentasi tambahan (TIDAK mengubah perhitungan LCA): label
+    # kelas per responden + proyeksi PCA 2D untuk scatter responden per kelas.
+    assignments = class_series.astype(int).rename("class").reset_index()
+    exporter.write_csv(assignments, "lca", "class_assignments.csv")
+    pca = PCA(n_components=2, random_state=random_state)
+    coords = pca.fit_transform(matrix.astype(float).values)
+    scatter = pd.DataFrame({
+        "respondent_id": class_series.index,
+        "class": class_series.values.astype(int),
+        "x": coords[:, 0],
+        "y": coords[:, 1],
+    })
+    exporter.write_csv(scatter, "lca", "scatter_points.csv")
+
     state.log(LCA, "PASSED")
 
     # ---- 6. ML (STOP sebelum SHAP) ----
@@ -165,8 +188,14 @@ def run_pipeline(config=None):
     if xgb_model is not None:
         sh = explain(xgb_model, ml["X_test"], ml["feature_names"])
         summary = summary_table(sh["shap_values"], ml["feature_names"])
-        results["shap"] = {"summary": summary}
+        per_class = per_class_importance(
+            sh["shap_values"], ml["feature_names"], class_labels=None
+        )
+        results["shap"] = {"summary": summary, "per_class": per_class}
         exporter.write_csv(summary, "shap", "feature_importance.csv")
+        exporter.write_csv(
+            per_class, "shap", "feature_importance_per_class.csv"
+        )
     state.log(SHAP, "PASSED")
 
     # ---- 8. Report ----

@@ -1,3 +1,4 @@
+from apps.analytics.colors import UNASSIGNED_COLOR, cluster_color_map
 from apps.recommendation.selectors.recommendation_selector import (
     RecommendationSelector,
 )
@@ -14,6 +15,8 @@ class ClusterRecommendationService:
 
     @classmethod
     def rank_within_clusters(cls):
+
+        color_map = cluster_color_map()
 
         villages, indicators, matrix = (
             RecommendationSelector.decision_matrix()
@@ -110,6 +113,12 @@ class ClusterRecommendationService:
             result.append({
 
                 "cluster": bucket["cluster"],
+
+                "color": (
+                    color_map.get(bucket["cluster"].name, UNASSIGNED_COLOR)
+                    if bucket["cluster"]
+                    else UNASSIGNED_COLOR
+                ),
 
                 "ranking": ranking,
 
