@@ -12,6 +12,7 @@ berbasis file (outputs/reports/cache_state.json) sehingga tidak perlu migrasi DB
 
 import hashlib
 import json
+import os
 from datetime import datetime
 
 import pandas as pd
@@ -36,6 +37,7 @@ class SurveyAnalysisDashboard:
 
     CACHE_FILE = cfg.OUTPUT_DIR / "reports" / "cache_state.json"
     STATE_FILE = cfg.OUTPUT_DIR / "reports" / "pipeline_state.json"
+    RUNNING_FILE = cfg.OUTPUT_DIR / "reports" / "running.json"
 
     # =========================================================
     # SIGNATURE (deteksi perubahan data, murah)
@@ -106,6 +108,104 @@ class SurveyAnalysisDashboard:
         return cls.STATE_FILE.exists()
 
     # =========================================================
+    # BACKGROUND RUN (marker "sedang berjalan", anti-double-run)
+    # =========================================================
+
+    @classmethod
+    def is_running(cls):
+        """True bila pipeline sedang berjalan di background.
+
+        Marker ditulis oleh ``start_background`` dan dihapus oleh management
+        command saat selesai. Bila marker menyisakan PID yang sudah mati
+        (proses OOM/kill tanpa sempat membersihkan), marker dianggap stale
+        dan dibersihkan di sini.
+        """
+        if not cls.RUNNING_FILE.exists():
+            return False
+        try:
+            data = json.loads(cls.RUNNING_FILE.read_text(encoding="utf-8"))
+            pid = data.get("pid")
+        except (ValueError, OSError):
+            # Marker korup/kosong (mis. crash tepat setelah claim) -> stale.
+            cls.clear_running()
+            return False
+        if pid is None:
+            return True
+        try:
+            os.kill(int(pid), 0)  # signal 0 = cek liveness (POSIX).
+        except ProcessLookupError:
+            cls.clear_running()
+            return False
+        except (PermissionError, ValueError, OSError):
+            return True
+        return True
+
+    @classmethod
+    def clear_running(cls):
+        try:
+            cls.RUNNING_FILE.unlink()
+        except OSError:
+            pass
+
+    @classmethod
+    def start_background(cls):
+        """Jalankan pipeline lewat ``manage.py run_survey_pipeline`` sebagai
+        subprocess terpisah (detached), sehingga request web tidak memblokir
+        dan tidak terkena timeout gunicorn. Return True bila berhasil memulai;
+        False bila sudah ada run yang berjalan."""
+        import subprocess
+        import sys
+        import threading
+
+        from django.conf import settings
+
+        cls.RUNNING_FILE.parent.mkdir(parents=True, exist_ok=True)
+        # Klaim slot "running" secara atomik (cegah double-run dari double-click).
+        try:
+            fd = os.open(
+                str(cls.RUNNING_FILE), os.O_CREAT | os.O_EXCL | os.O_WRONLY
+            )
+            os.close(fd)
+        except FileExistsError:
+            return False
+
+        manage = settings.BASE_DIR / "manage.py"
+        log_path = cfg.OUTPUT_DIR / "reports" / "pipeline_run.log"
+        popen_kwargs = {}
+        if os.name == "posix":
+            # Lepas dari process group gunicorn supaya worker yang di-recycle
+            # tidak ikut mematikan pipeline.
+            popen_kwargs["start_new_session"] = True
+
+        try:
+            with open(log_path, "a", encoding="utf-8") as logf:
+                proc = subprocess.Popen(
+                    [sys.executable, str(manage), "run_survey_pipeline"],
+                    cwd=str(settings.BASE_DIR),
+                    stdout=logf,
+                    stderr=subprocess.STDOUT,
+                    **popen_kwargs,
+                )
+        except Exception:
+            cls.clear_running()
+            raise
+
+        # Reap child di thread terpisah supaya proses yang selesai/terkill
+        # tidak menjadi zombie (yang membuat os.kill(pid, 0) tetap "hidup").
+        threading.Thread(target=proc.wait, daemon=True).start()
+
+        cls.RUNNING_FILE.write_text(
+            json.dumps(
+                {
+                    "started_at": datetime.now().isoformat(timespec="seconds"),
+                    "pid": proc.pid,
+                }
+            ),
+            encoding="utf-8",
+        )
+        return True
+
+    # =========================================================
     # RUN (hanya dipicu tombol, staff-only)
     # =========================================================
 
@@ -154,6 +254,8 @@ class SurveyAnalysisDashboard:
         ctx = {
             "has_results": has_results,
             "stale": stale,
+            "running": cls.is_running(),
+            "stop_message": None,
             "generated_at": generated_at,
             "sem_fit": None,
             "paths": [],
@@ -169,6 +271,14 @@ class SurveyAnalysisDashboard:
 
         if not has_results:
             return ctx
+
+        # ---- STOP message (pipeline berhenti di reliability/CFA/ML) ----
+        state_raw = cls._load_json("reports/pipeline_state.json")
+        if state_raw:
+            for h in reversed(state_raw.get("state", [])):
+                if h.get("status") == "STOPPED" and h.get("message"):
+                    ctx["stop_message"] = h["message"]
+                    break
 
         # ---- CFA fit (strip kualitas) ----
         cfa_raw = cls._load_json("cfa/fit_indices.json")

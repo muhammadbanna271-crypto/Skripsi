@@ -135,32 +135,27 @@ def run_survey_pipeline(request):
 
     if request.method == "POST":
 
-        out = SurveyAnalysisDashboard.run()
+        started = SurveyAnalysisDashboard.start_background()
 
-        state = out.get("state")
+        if started:
 
-        if state is not None and getattr(state, "status", None) == "STOPPED":
-
-            stop_msg = ""
-
-            for h in reversed(state.history):
-                if h.get("status") == "STOPPED" and h.get("message"):
-                    stop_msg = h["message"]
-                    break
-
-            messages.warning(
+            messages.success(
                 request,
                 (
-                    "Pipeline SEM/LCA/SHAP berhenti: "
-                    f"{stop_msg or 'lihat log pipeline.'}"
+                    "Pipeline SEM/LCA/SHAP mulai berjalan di background. "
+                    "Hasil akan muncul otomatis setelah selesai (bisa "
+                    "beberapa menit)."
                 ),
             )
 
         else:
 
-            messages.success(
+            messages.warning(
                 request,
-                "Pipeline SEM/LCA/SHAP selesai dijalankan.",
+                (
+                    "Pipeline SEM/LCA/SHAP masih berjalan. "
+                    "Tunggu hingga selesai sebelum menjalankan lagi."
+                ),
             )
 
     return redirect("analytics:ml-dashboard")

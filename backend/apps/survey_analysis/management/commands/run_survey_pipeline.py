@@ -7,7 +7,7 @@ Contoh:
 
 from django.core.management.base import BaseCommand
 
-from apps.survey_analysis.pipeline.runner import run_pipeline
+from apps.survey_analysis.services.dashboard import SurveyAnalysisDashboard
 
 
 class Command(BaseCommand):
@@ -25,9 +25,14 @@ class Command(BaseCommand):
             "random_state": options["random_state"],
         }
         self.stdout.write("Menjalankan pipeline... (bisa beberapa menit)")
-        out = run_pipeline(config)
-        for h in out["state"].history:
-            self.stdout.write(f"  {h['stage']}: {h['status']}"
-                              + (f" — {h['message']}" if h["message"] else ""))
-        if out.get("report_path"):
-            self.stdout.write(self.style.SUCCESS(f"Report: {out['report_path']}"))
+        try:
+            out = SurveyAnalysisDashboard.run(config)
+            for h in out["state"].history:
+                self.stdout.write(f"  {h['stage']}: {h['status']}"
+                                  + (f" — {h['message']}" if h["message"] else ""))
+            if out.get("report_path"):
+                self.stdout.write(self.style.SUCCESS(f"Report: {out['report_path']}"))
+        finally:
+            # Hapus marker "running" (termasuk bila pipeline gagal/STOP),
+            # supaya dashboard tidak terkunci dalam status "berjalan".
+            SurveyAnalysisDashboard.clear_running()

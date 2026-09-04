@@ -2,7 +2,7 @@
 
 Menampilkan konfigurasi (engine selection), status pipeline, dan hasil
 (sebagai ringkasan + link ke final report). Run pipeline via management command
-atau tombol POST (sinkron — perlu beberapa menit).
+atau tombol POST (asinkron — berjalan di background, bisa beberapa menit).
 """
 
 import json
