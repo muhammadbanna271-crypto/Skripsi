@@ -1,7 +1,7 @@
 import numpy as np
 from django.db import transaction
 
-from apps.analytics.ml.clustering import KMeansClusterModel
+from apps.analytics.ml.clustering import KMeansClusterModel, select_n_clusters
 from apps.analytics.ml.feature_importance import (
     aggregate_importance_by_group,
     compute_feature_importance,
@@ -25,7 +25,9 @@ LEVEL_NAMES = [
 
 class ClusteringService:
 
-    N_CLUSTERS = 3
+    # Batas atas jumlah cluster (k) saat seleksi otomatis. k dipilih dari data
+    # (silhouette), bukan hard-code.
+    MAX_CLUSTERS = 6
 
     # =========================================================
     # TRAINING (atas seluruh data historis, unsupervised,
@@ -54,8 +56,16 @@ class ClusteringService:
 
         X = np.array(matrix, dtype=float)
 
+        # Pilih jumlah cluster (k) secara data-driven (silhouette), bukan
+        # hard-code k=3.
+        selection = select_n_clusters(
+            X,
+            max_k=cls.MAX_CLUSTERS,
+        )
+        n_clusters = selection["selected"]
+
         cluster_model = KMeansClusterModel(
-            n_clusters=cls.N_CLUSTERS,
+            n_clusters=n_clusters,
         )
 
         fit_result = cluster_model.fit(X)
@@ -102,11 +112,12 @@ class ClusteringService:
         )
 
         registry = MLModelRegistry.objects.create(
-            n_clusters=cls.N_CLUSTERS,
+            n_clusters=n_clusters,
             n_samples=len(villages),
             silhouette_score=fit_result["silhouette_score"],
             inertia=fit_result["inertia"],
             cluster_mapping=cluster_mapping,
+            cluster_selection=selection["curve"],
             feature_importance=feature_importance,
             variable_importance=variable_importance,
             is_active=True,

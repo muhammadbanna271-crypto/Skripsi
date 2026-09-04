@@ -1,58 +1,48 @@
 import numpy as np
-from sklearn.ensemble import RandomForestClassifier
 
 
-def compute_feature_importance(
-    X,
-    labels,
-    feature_names,
-    random_state=42,
-):
-    """
-    Latih Random Forest SUPERVISED dengan target = label cluster
-    hasil K-Means, untuk mengetahui indikator mana yang paling
-    membedakan antar cluster (bukan untuk prediksi produksi).
+def compute_feature_importance(X, labels, feature_names):
+    """Ukur seberapa kuat tiap fitur membedakan antar cluster (eta-squared).
 
-    Return: list of dict [{ "feature": ..., "importance": 0.xx }]
-    diurutkan dari yang paling dominan.
+    NON-sirkular: menghitung rasio varians antar-cluster terhadap varians
+    total per fitur (ANOVA eta-squared / between-cluster variance), BUKAN
+    melatih classifier supervised (RandomForest) untuk menebak label cluster —
+    yang sirkular karena label berasal dari fitur yang sama.
+
+    Return: list of dict [{ "feature": ..., "importance": 0.xx }],
+    dinormalisasi agar total = 1.0, terurut dari yang paling membedakan.
     """
 
-    X = np.array(X, dtype=float)
-
-    labels = np.array(labels)
+    X = np.asarray(X, dtype=float)
+    labels = np.asarray(labels)
 
     if len(set(labels.tolist())) < 2:
-        # RandomForest butuh minimal 2 kelas untuk bisa membedakan
         return []
 
-    model = RandomForestClassifier(
-        n_estimators=300,
-        random_state=random_state,
-    )
+    grand_mean = X.mean(axis=0)
+    total_ss = ((X - grand_mean) ** 2).sum(axis=0)
 
-    model.fit(X, labels)
+    between_ss = np.zeros(X.shape[1])
+    for c in np.unique(labels):
+        mask = labels == c
+        cluster_mean = X[mask].mean(axis=0)
+        between_ss += mask.sum() * ((cluster_mean - grand_mean) ** 2)
 
-    importances = model.feature_importances_
+    # eta^2 = SS_between / SS_total (0 bila fitur konstan).
+    denom = np.where(total_ss == 0, 1.0, total_ss)
+    eta_sq = between_ss / denom
+
+    total = eta_sq.sum()
+    if total <= 0:
+        weights = np.full(X.shape[1], 1.0 / X.shape[1])
+    else:
+        weights = eta_sq / total
 
     result = [
-
-        {
-
-            "feature": name,
-
-            "importance": float(score),
-
-        }
-
-        for name, score in zip(feature_names, importances)
-
+        {"feature": name, "importance": float(score)}
+        for name, score in zip(feature_names, weights)
     ]
-
-    result.sort(
-        key=lambda item: item["importance"],
-        reverse=True,
-    )
-
+    result.sort(key=lambda item: item["importance"], reverse=True)
     return result
 
 

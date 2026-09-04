@@ -103,7 +103,7 @@ def run_pipeline(config=None):
     exporter.write_csv(evaluate_loadings(loadings), "cfa", "factor_loadings.csv")
 
     if _definite_fit_fail(cfa_fit):
-        state.stop(CFA, "CFA tidak memenuhi kriteria fit (CFI/TLI/RMSEA).")
+        state.stop(CFA, "CFA tidak memenuhi kriteria fit (SRMR).")
         exporter.write_json({"state": state.stages_summary()}, "reports", "pipeline_state.json")
         return {"state": state, "results": results, "report_path": None}
     state.log(CFA, "PASSED")

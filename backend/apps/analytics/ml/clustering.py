@@ -139,3 +139,47 @@ class KMeansClusterModel:
             load_object(SCALER_FILENAME) is not None
             and load_object(KMEANS_FILENAME) is not None
         )
+
+
+def select_n_clusters(X, max_k=6, random_state=42):
+    """Pilih jumlah cluster (k) K-Means secara data-driven (silhouette).
+
+    Menghitung silhouette score + inertia untuk k = 2..max_k pada data yang
+    sudah di-standardize, lalu memilih k dengan silhouette tertinggi. Ini
+    menggantikan hard-code ``k=3`` supaya jumlah cluster mengikuti data.
+
+    Return dict:
+      {"selected": int, "curve": [{"k", "silhouette", "inertia"}, ...]}
+
+    ``curve`` disimpan untuk transparansi (dashboard bisa menampilkan kenapa
+    k tertentu terpilih), bukan sekadar angka.
+    """
+    X = np.asarray(X, dtype=float)
+    n = X.shape[0]
+    if n < 3:
+        return {"selected": 1, "curve": []}
+
+    upper = min(max_k, n - 1)  # k harus < n.
+    if upper < 2:
+        return {"selected": 1, "curve": []}
+
+    scaler = StandardScaler()
+    Xs = scaler.fit_transform(X)
+
+    curve = []
+    best_k, best_score = 2, -1.0
+    for k in range(2, upper + 1):
+        km = KMeans(n_clusters=k, n_init=10, random_state=random_state)
+        labels = km.fit_predict(Xs)
+        score = float(silhouette_score(Xs, labels))
+        if np.isnan(score):
+            score = -1.0  # cluster berisi <2 sampel -> silhouette tak terdefinisi.
+        curve.append({
+            "k": k,
+            "silhouette": round(score, 4),
+            "inertia": round(float(km.inertia_), 2),
+        })
+        if score > best_score:
+            best_k, best_score = k, score
+
+    return {"selected": best_k, "curve": curve}

@@ -31,6 +31,15 @@ class MLModelRegistry(BaseModel):
         blank=True,
     )
 
+    cluster_selection = models.JSONField(
+        default=list,
+        blank=True,
+        help_text=(
+            "Kurva seleksi jumlah cluster: list {k, silhouette, inertia} "
+            "untuk k=2..MAX_CLUSTERS. Dipakai untuk transparansi pemilihan k."
+        ),
+    )
+
     cluster_mapping = models.JSONField(
         default=dict,
         blank=True,
@@ -44,7 +53,7 @@ class MLModelRegistry(BaseModel):
         default=list,
         blank=True,
         help_text=(
-            "Hasil Random Forest feature importance per indikator, "
+            "Importance per indikator (eta-squared antar-cluster), "
             "diurutkan dari yang paling dominan."
         ),
     )

@@ -85,8 +85,13 @@ class LavaanSEM(SEMEngine):
     def converged(self):
         if self._fit is None:
             return False
-        # lavaan: fitMeasures "converged" (1/0) atau lavInspect.
-        return True
+        # lavaan: lavInspect(fit, "converged") -> TRUE/FALSE.
+        try:
+            conv = list(self._lavaan.lavInspect(self._fit, "converged"))
+            return bool(conv[0]) if conv else False
+        except Exception:
+            # Tidak bisa menentukan; anggap tidak konvergen (konservatif).
+            return False
 
     def _measures(self):
         return self._lavaan.fitMeasures(self._fit)

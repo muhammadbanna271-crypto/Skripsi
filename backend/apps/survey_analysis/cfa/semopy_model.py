@@ -352,19 +352,39 @@ class SemopySEM(SEMEngine):
                 return self._num(s[col].iloc[0])
             return None
 
-        return {
-            "cfi": get("CFI"),
-            "tli": get("TLI"),
-            "rmsea": get("RMSEA"),
-            "rmsea_ci_low": None,  # semopy tidak menyediakan CI RMSEA.
-            "rmsea_ci_high": None,
+        # SRMR valid untuk semua estimator (residual berbasis skala korelasi).
+        indices = {
             "srmr": self._srmr(),
             "chi2": get("chi2"),
             "dof": get("DoF"),
-            "p_value": get("chi2 p-value"),
             "aic": get("AIC"),
             "bic": get("BIC"),
         }
+
+        if self._estimator == "ULS":
+            # ULS (unweighted least squares) TIDAK punya distribusi chi-square
+            # yang diketahui, sehingga CFI/TLI/RMSEA/p-value — yang dikalibrasi
+            # untuk ML/WLSMV (Hu & Bentler, 1999) — TIDAK valid. Melaporkan/
+            # menggating indeks tsb di sini adalah category error. Untuk
+            # CFI/TLI/RMSEA yang valid, gunakan engine 'lavaan' (WLSMV).
+            indices.update({
+                "cfi": None,
+                "tli": None,
+                "rmsea": None,
+                "rmsea_ci_low": None,
+                "rmsea_ci_high": None,
+                "p_value": None,
+            })
+        else:
+            indices.update({
+                "cfi": get("CFI"),
+                "tli": get("TLI"),
+                "rmsea": get("RMSEA"),
+                "rmsea_ci_low": None,  # semopy tidak menyediakan CI RMSEA.
+                "rmsea_ci_high": None,
+                "p_value": get("chi2 p-value"),
+            })
+        return indices
 
     def _srmr(self):
         """SRMR = sqrt(mean residu kuadrat) pada skala korelasi (lower-tri)."""
