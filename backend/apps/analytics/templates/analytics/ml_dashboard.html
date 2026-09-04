@@ -510,12 +510,28 @@ ML Analytics Dashboard
 
 </div>
 
-{% if survey.lca_model_comparison %}
-<div class="card shadow-sm border-0 mb-4">
-    <div class="card-header bg-white"><strong>Evaluasi LCA — Perbandingan Jumlah Kelas (BIC/AIC)</strong></div>
-    <div class="card-body">
-        <canvas id="lcaBicChart" height="220"></canvas>
+{% if survey.lca_model_comparison or survey.lca_profiles %}
+<div class="row g-3 mb-4">
+    {% if survey.lca_model_comparison %}
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white"><strong>Evaluasi LCA — BIC/AIC per Jumlah Kelas</strong></div>
+            <div class="card-body">
+                <canvas id="lcaBicChart" height="200"></canvas>
+            </div>
+        </div>
     </div>
+    {% endif %}
+    {% if survey.lca_profiles %}
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white"><strong>Profil Kelas — Item Persetujuan Tertinggi</strong></div>
+            <div class="card-body">
+                <canvas id="lcaProfilesChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endif %}
 
@@ -523,16 +539,7 @@ ML Analytics Dashboard
 <div class="card shadow-sm border-0 mb-4">
     <div class="card-header bg-white"><strong>Sebaran Responden per Kelas (PCA)</strong></div>
     <div class="card-body">
-        <canvas id="lcaScatterChart" height="320"></canvas>
-    </div>
-</div>
-{% endif %}
-
-{% if survey.lca_profiles %}
-<div class="card shadow-sm border-0 mb-4">
-    <div class="card-header bg-white"><strong>Profil Kelas — Item Persetujuan Tertinggi</strong></div>
-    <div class="card-body">
-        <canvas id="lcaProfilesChart" height="300"></canvas>
+        <canvas id="lcaScatterChart" height="300"></canvas>
     </div>
 </div>
 {% endif %}
@@ -985,7 +992,7 @@ if (lcaProfilesEl && lcaProfilesChartEl) {
     const rows = [];
     Object.keys(profiles).forEach((k) => {
         const cls = parseInt(k, 10);
-        (profiles[k] || []).forEach((it) => {
+        (profiles[k] || []).slice(0, 3).forEach((it) => {
             rows.push({
                 class: cls,
                 label: "Kelas " + (cls + 1) + " · " + it.item,
