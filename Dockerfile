@@ -53,4 +53,4 @@ EXPOSE 8000
 # =====================================================
 # Run migrations then Gunicorn
 # =====================================================
-CMD ["sh", "-c", "python manage.py migrate --noinput && gunicorn config.wsgi:application --bind 0.0.0.0:8000 --timeout 600 --graceful-timeout 120"]
+CMD ["sh", "-c", "python manage.py migrate --noinput && gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8000} --timeout 600 --graceful-timeout 120"]

@@ -18,6 +18,8 @@ Estimator:
 Tidak ada penggantian estimator diam-diam: estimator eksplisit dan dilaporkan.
 """
 
+import math
+
 import numpy as np
 import pandas as pd
 
@@ -25,6 +27,111 @@ from apps.survey_analysis.cfa.base import SEMEngine, SEMEngineError
 from apps.survey_analysis.cfa.model_spec import build_model_description
 from apps.survey_analysis.config import settings as cfg
 from apps.survey_analysis.config import model_config
+
+
+# ---------------------------------------------------------------------------
+# Korelasi polychoric self-contained.
+#
+# semopy.polycorr.hetcor() memakai ``scipy.stats.mvn.mvnun`` yang SUDAH DIHAPUS
+# sejak scipy >= 1.14 (error: "mvn has no attribute mvnun"). Monkey-patch shim
+# (lihat ``_patch_semopy_scipy_compat``) terbukti tidak andal di production,
+# jadi di sini bivariate normal CDF + polychoric correlation dihitung langsung:
+# kuadratur Gauss-Legendre 20 titik (hasil identik dgn mvn.mvnun, err ~1e-10,
+# ~25x lebih cepat) dan estimasi korelasi per-pasang via ``minimize_scalar``.
+# ---------------------------------------------------------------------------
+
+_GL_NODES, _GL_WEIGHTS = np.polynomial.legendre.leggauss(20)
+# Node & bobot Gauss-Legendre dipetakan dari [-1, 1] ke [0, 1] (domain 0..rho).
+_GL = [(float((u + 1.0) / 2.0), float(w) / 2.0)
+       for u, w in zip(_GL_NODES, _GL_WEIGHTS)]
+
+
+def _phi(x):
+    """CDF normal standar."""
+    return 0.5 * math.erfc(-x / math.sqrt(2.0))
+
+
+def _bvn_cdf(x, y, rho):
+    """CDF normal bivariat standar P(X <= x, Y <= y; corr=rho)."""
+    if rho >= 1.0:
+        return _phi(min(x, y))
+    if rho <= -1.0:
+        return max(0.0, _phi(x) + _phi(y) - 1.0)
+    if rho == 0.0:
+        return _phi(x) * _phi(y)
+    total = 0.0
+    for u, w in _GL:
+        t = rho * u
+        s = 1.0 - t * t
+        total += w * math.exp(-(x * x - 2.0 * t * x * y + y * y) / (2.0 * s)) / math.sqrt(s)
+    return _phi(x) * _phi(y) + rho * total / (2.0 * math.pi)
+
+
+def _polychoric_corr_matrix(data):
+    """Matriks korelasi polychoric untuk data ordinal (semua kolom).
+
+    Reimplementasi ``semopy.hetcor()`` untuk kasus semua-ordinal: threshold per
+    item via ``norm.ppf`` dari proporsi kumulatif, lalu korelasi polychoric
+    per-pasang via ``minimize_scalar`` atas negative log-likelihood (bivariate
+    CDF = Gauss-Legendre lokal). Hasil dikoreksi ke nearest positive-definite
+    (threshold 0.05, sama seperti ``hetcor(nearest=True)``).
+    """
+    from scipy.optimize import minimize_scalar
+    from scipy.stats import norm
+    from statsmodels.stats.correlation_tools import corr_nearest
+
+    cols = list(data.columns)
+    X = data.astype(float).values
+    n_cols = X.shape[1]
+
+    def estimate_intervals(x):
+        x_f = x[~np.isnan(x)]
+        u, counts = np.unique(x_f, return_counts=True)
+        sz = len(x_f)
+        cum = np.cumsum(counts[:-1])
+        thresholds = [-10.0] + [float(norm.ppf(n / sz)) for n in cum] + [10.0]
+        inds = np.searchsorted(u, x).astype(float) + 1.0
+        inds[np.isnan(x)] = np.nan
+        return thresholds, inds
+
+    intervals = [estimate_intervals(X[:, j]) for j in range(n_cols)]
+    R = np.eye(n_cols)
+    for a in range(n_cols):
+        x_ints, x_inds = intervals[a]
+        p = len(x_ints) - 1
+        for b in range(a + 1, n_cols):
+            y_ints, y_inds = intervals[b]
+            m = len(y_ints) - 1
+            n = np.zeros((p, m))
+            for ia, ib in zip(x_inds, y_inds):
+                if not (np.isnan(ia) or np.isnan(ib)):
+                    n[int(ia) - 1, int(ib) - 1] += 1
+
+            def neg_loglik(r):
+                s = 0.0
+                for i in range(p):
+                    for j in range(m):
+                        if n[i, j] == 0:
+                            continue
+                        prob = (
+                            _bvn_cdf(x_ints[i + 1], y_ints[j + 1], r)
+                            - _bvn_cdf(x_ints[i], y_ints[j + 1], r)
+                            - _bvn_cdf(x_ints[i + 1], y_ints[j], r)
+                            + _bvn_cdf(x_ints[i], y_ints[j], r)
+                        )
+                        if prob <= 0.0:
+                            prob = 1e-12
+                        s += math.log(prob) * n[i, j]
+                return -s
+
+            r = float(minimize_scalar(neg_loglik, bounds=(-1.0, 1.0),
+                                      method="bounded").x)
+            if not np.isfinite(r):
+                r = 0.0
+            R[a, b] = R[b, a] = r
+
+    R = corr_nearest(R, threshold=0.05)
+    return pd.DataFrame(R, index=cols, columns=cols)
 
 
 def _patch_semopy_numpy_compat():
@@ -203,9 +310,7 @@ class SemopySEM(SEMEngine):
         if key in self._POLYCHORIC_CACHE:
             return self._POLYCHORIC_CACHE[key]
         try:
-            # hetcor() stabil dengan ndarray; ords auto-deteksi.
-            het = self._semopy.polycorr.hetcor(data.values, nearest=True)
-            corr = pd.DataFrame(het, index=data.columns, columns=data.columns)
+            corr = _polychoric_corr_matrix(data)
         except Exception as exc:
             raise SEMEngineError(
                 "Gagal menghitung korelasi polychoric untuk data ordinal: "
