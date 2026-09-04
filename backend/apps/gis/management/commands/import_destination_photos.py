@@ -86,12 +86,12 @@ def search_wikimedia(name):
     for page in pages.values():
         title = page.get("title", "")
         imageinfo = (page.get("imageinfo") or [{}])[0]
-        # Buang query params (utm_...) supaya URL muat di URLField(max_length=200);
+        # Buang query params (utm_...) supaya URL muat di URLField(max_length=500);
         # fallback ke URL asli (lebih pendek) bila thumbnail masih terlalu panjang.
         thumb = (imageinfo.get("thumburl") or "").split("?", 1)[0]
         original = (imageinfo.get("url") or "").split("?", 1)[0]
-        url = thumb if len(thumb) <= 200 else (
-            original if len(original) <= 200 else ""
+        url = thumb if len(thumb) <= 500 else (
+            original if len(original) <= 500 else ""
         )
         if url:
             results.append((title, url))

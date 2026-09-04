@@ -185,6 +185,7 @@ class TouristDestination(BaseModel):
     )
 
     photo = models.URLField(
+        max_length=500,
         blank=True,
         default="",
         verbose_name="Foto (URL)",
