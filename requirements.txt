@@ -24,6 +24,7 @@ et_xmlfile==2.0.0
 executing==2.2.1
 flake8==7.3.0
 formulaic==1.2.2
+google-genai==2.21.0
 gunicorn==26.0.0
 h11==0.16.0
 httpcore==1.0.9
@@ -66,6 +67,7 @@ pydantic==2.13.4
 pydantic_core==2.46.4
 pyflakes==3.4.0
 Pygments==2.20.0
+pypdf==6.1.1
 pytest-django==4.12.0
 pytest==9.1.1
 python-dateutil==2.9.0.post0

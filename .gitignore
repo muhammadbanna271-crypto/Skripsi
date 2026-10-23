@@ -53,6 +53,11 @@ coverage.xml
 htmlcov/
 nosetests.xml
 
+# ================= Generated Analysis Results =================
+
+# Hasil pipeline survey_analysis (CSV/JSON dan laporan) dibuat ulang saat pipeline dijalankan.
+backend/apps/survey_analysis/outputs/
+
 
 # ================= Logs =================
 

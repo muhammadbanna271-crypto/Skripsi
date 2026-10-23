@@ -71,6 +71,28 @@ DEEPSEEK_MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
 
 CHATBOT_CLAUDE_PASSWORD = os.getenv("CHATBOT_CLAUDE_PASSWORD", "")
 
+# --------------------------------------------------
+# Systematic Literature Review
+# --------------------------------------------------
+SLR_HTTP_TIMEOUT_SECONDS = int(os.getenv("SLR_HTTP_TIMEOUT_SECONDS", "20"))
+SLR_HTTP_MAX_RETRIES = int(os.getenv("SLR_HTTP_MAX_RETRIES", "4"))
+SLR_HTTP_BACKOFF_SECONDS = float(os.getenv("SLR_HTTP_BACKOFF_SECONDS", "2"))
+SEMANTIC_SCHOLAR_API_KEY = os.getenv("SEMANTIC_SCHOLAR_API_KEY", "")
+# Crossref's polite pool identifies requests by contact email only; it does
+# not use or require an API key for /works metadata retrieval.
+CROSSREF_MAILTO = os.getenv("CROSSREF_MAILTO", "")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+SLR_LLM_PROVIDER = os.getenv("SLR_LLM_PROVIDER", "gemini")
+SLR_LLM_MODEL = os.getenv(
+    "SLR_LLM_MODEL",
+    (
+        "gemini-3.5-flash-lite"
+        if SLR_LLM_PROVIDER == "gemini"
+        else CHATBOT_MODEL if SLR_LLM_PROVIDER == "anthropic" else DEEPSEEK_MODEL
+    ),
+)
+SLR_LLM_MAX_INPUT_CHARS = int(os.getenv("SLR_LLM_MAX_INPUT_CHARS", "60000"))
+
 # FIXED: default DEBUG diubah ke "False". Kalau env var DEBUG lupa
 # di-set di Railway (production), app tidak akan otomatis jalan
 # dalam mode debug yang berbahaya (bisa expose info sensitif).
@@ -142,6 +164,7 @@ INSTALLED_APPS = [
     "apps.chatbot",
     "apps.gis.apps.GisConfig",
     "apps.survey_analysis.apps.SurveyAnalysisConfig",
+    "apps.slr.apps.SLRConfig",
 
 ]
 
@@ -220,6 +243,12 @@ else:
             "PORT": os.getenv("DB_PORT", ""),
         }
     }
+
+# SQLite is used for local development. Background SLR processing and a web
+# request can briefly overlap, so allow SQLite to wait for the active writer
+# instead of failing immediately with "database is locked".
+if DATABASES["default"]["ENGINE"] == "django.db.backends.sqlite3":
+    DATABASES["default"]["OPTIONS"] = {"timeout": 30}
 
 # --------------------------------------------------
 # PASSWORD VALIDATION

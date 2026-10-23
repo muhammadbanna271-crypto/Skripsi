@@ -1,0 +1,169 @@
+{% extends "base/layout.html" %}
+{% load static %}
+
+{% block title %}Systematic Literature Review{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/slr.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="slr-page">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h2 class="mb-1">Systematic Literature Review</h2>
+            <p class="text-secondary mb-0">Configured runs are processed from the management command; all results remain traceable to their articles.</p>
+        </div>
+        <a href="/admin/slr/slrrun/" class="btn btn-outline-secondary">Open admin</a>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-6 col-md-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <div class="text-secondary small">Stored articles</div>
+                    <div class="fs-3 fw-bold">{{ article_count }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <div class="text-secondary small">Extracted variables</div>
+                    <div class="fs-3 fw-bold">{{ variable_count }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if not llm_configured %}
+    <div class="alert alert-warning">
+        Retrieval is ready, but AI extraction needs <code>GEMINI_API_KEY</code> with <code>SLR_LLM_PROVIDER=gemini</code> in the root <code>.env</code>. Restart the server after adding it.
+    </div>
+    {% endif %}
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header">Create SLR run</div>
+        <div class="card-body">
+            <form method="post" action="{% url 'slr:create-run' %}" class="row g-3">
+                {% csrf_token %}
+                <div class="col-12 col-md-6">
+                    <label class="form-label">Target Master Variable</label>
+                    <select class="form-select" name="master_variable" required{% if not master_variables %} disabled{% endif %}>
+                        <option value="">Select a Master Variable</option>
+                        {% for variable in master_variables %}
+                        <option value="{{ variable.pk }}">{{ variable.code }} - {{ variable.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label">From year</label>
+                    <input class="form-control" type="number" name="year_from">
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label">To year</label>
+                    <input class="form-control" type="number" name="year_to">
+                </div>
+                <div class="col-12 col-md-2 d-flex align-items-end">
+                    <button class="btn btn-primary w-100"{% if not master_variables %} disabled{% endif %}>Save and Run</button>
+                </div>
+                {% if not master_variables %}
+                <div class="col-12">
+                    <div class="alert alert-warning mb-0">
+                        No active Master Variables are available. <a href="{% url 'master:variable-list' %}">Configure Master Variables</a> first, then return here to start an SLR run.
+                    </div>
+                </div>
+                {% endif %}
+                <div class="col-12">
+                    <small class="text-muted">The selected Master Variable is stored as this run's topic and search query. Crossref and Semantic Scholar are searched automatically.</small>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header">Recent runs</div>
+        <div class="table-responsive">
+            <table class="table table-sm mb-0 slr-table">
+                <colgroup>
+                    <col style="width: 25%"><col style="width: 25%"><col style="width: 12%">
+                    <col style="width: 10%"><col style="width: 10%"><col style="width: 18%">
+                </colgroup>
+                <thead>
+                    <tr><th>Topic</th><th>Target variable</th><th>Status</th><th>Retrieved</th><th>Accepted</th><th>Provider warnings</th></tr>
+                </thead>
+                <tbody>
+                    {% for run in runs %}
+                    <tr>
+                        <td>{{ run.topic }}</td>
+                        <td>{% if run.master_variable %}{{ run.master_variable.code }} - {{ run.master_variable.name }}{% else %}Legacy / Not specified{% endif %}</td>
+                        <td><span class="badge text-bg-secondary">{{ run.status }}</span></td>
+                        <td>{{ run.retrieved_count }}</td>
+                        <td>{{ run.accepted_count }}</td>
+                        <td>{% if run.error_summary %}{{ run.error_summary }}{% else %}—{% endif %}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-muted">No runs configured yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header">Latest articles</div>
+        <div class="table-responsive">
+            <table class="table table-sm mb-0 slr-table">
+                <colgroup>
+                    <col style="width: 28%"><col style="width: 8%"><col style="width: 20%">
+                    <col style="width: 22%"><col style="width: 11%"><col style="width: 11%">
+                </colgroup>
+                <thead>
+                    <tr><th>Title</th><th>Year</th><th>Journal / publisher</th><th>DOI</th><th>Source</th><th>Access</th></tr>
+                </thead>
+                <tbody>
+                    {% for article in articles %}
+                    <tr>
+                        <td>{{ article.title }}</td>
+                        <td>{{ article.publication_year|default:"—" }}</td>
+                        <td>{{ article.journal|default:"Journal unavailable" }}{% if article.publisher %}<br><small class="text-muted">{{ article.publisher }}</small>{% endif %}</td>
+                        <td>{% if article.doi %}<a href="https://doi.org/{{ article.doi }}" target="_blank" rel="noopener noreferrer">https://doi.org/{{ article.doi }}</a>{% else %}<span class="text-muted">DOI unavailable</span>{% endif %}</td>
+                        <td>{{ article.source_database|default:"unknown" }}</td>
+                        <td>{{ article.access_status }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-muted">No articles retrieved yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header">SLR title-derived keywords and supporting journals</div>
+        <div class="card-body py-2">
+            <small class="text-muted">Keywords are calculated deterministically from retrieved article titles; each keyword is traceable to its supporting article title. The AI Agent will later validate and enrich them from abstracts/full text.</small>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm mb-0 slr-table">
+                <colgroup><col style="width: 35%"><col style="width: 20%"><col style="width: 45%"></colgroup>
+                <thead><tr><th>Keyword</th><th>Supporting studies</th><th>Supporting journals</th></tr></thead>
+                <tbody>
+                    {% for item in keyword_results %}
+                    <tr>
+                        <td>{{ item.normalized_name }}</td>
+                        <td>{{ item.study_count }}</td>
+                        <td>{% for journal in item.journals %}{{ journal }}{% if not forloop.last %}; {% endif %}{% empty %}<span class="text-muted">Journal metadata unavailable</span>{% endfor %}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" class="text-muted">Keywords appear after retrieval completes.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% if runs.0.status == 'pending' or runs.0.status == 'running' %}
+<script>window.setTimeout(() => window.location.reload(), 5000);</script>
+{% endif %}
+{% endblock %}

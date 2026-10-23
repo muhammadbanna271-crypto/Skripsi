@@ -17,6 +17,7 @@
 {% url 'gis:itinerary' as gis_itinerary_url %}
 {% url 'gis:manage-destination-list' as gis_manage_destinations_url %}
 {% url 'chatbot:chat-page' as chatbot_url %}
+{% url 'slr:dashboard' as slr_url %}
 {% load static %}
 <div class="sidebar">
 
@@ -334,6 +335,26 @@
                     <i class="bi bi-award"></i>
 
                     Recommendation
+
+                </a>
+
+            </li>
+
+            <li class="menu-title">
+
+                LITERATURE REVIEW
+
+            </li>
+
+            <li>
+
+                <a
+                    href="{{ slr_url }}"
+                    class="nav-link {% if slr_url in request.path %}active{% endif %}">
+
+                    <i class="bi bi-journal-text"></i>
+
+                    Literature Review
 
                 </a>
 

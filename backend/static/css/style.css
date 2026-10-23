@@ -183,7 +183,7 @@ body{
 
 .main{
 
-    width:100%;
+    width:calc(100% - 270px);
 
     margin-left:270px;
 
@@ -344,6 +344,8 @@ body{
     }
 
     .main{
+
+        width:100%;
 
         margin-left:0;
 
