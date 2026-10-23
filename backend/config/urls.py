@@ -104,4 +104,12 @@ urlpatterns = [
             namespace="survey_analysis",
         ),
     ),
+
+    path(
+        "slr/",
+        include(
+            ("apps.slr.urls", "slr"),
+            namespace="slr",
+        ),
+    ),
 ]
