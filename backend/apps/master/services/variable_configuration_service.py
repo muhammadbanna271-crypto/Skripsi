@@ -339,13 +339,15 @@ class VariableConfigurationService:
             sub = cls._indicator_sub_ordinal(indicator.code)
             new_indicator_codes[indicator.id] = f"{new_prefix}.{sub}"
 
-        # Two-pass supaya tidak bentrok unique constraint `code`.
+        # Two-pass supaya tidak bentrok unique constraint `code`. Kode
+        # sementara dibuat pendek karena kolom ``code`` hanya 10 karakter
+        # (PostgreSQL menolak yang lebih panjang).
         for variable in variables:
-            variable.code = f"__vtmp_{variable.id}"
+            variable.code = f"_v{variable.id}"
             variable.save(update_fields=["code"])
 
         for indicator in indicators:
-            indicator.code = f"__itmp_{indicator.id}"
+            indicator.code = f"_i{indicator.id}"
             indicator.save(update_fields=["code"])
 
         for variable in variables:

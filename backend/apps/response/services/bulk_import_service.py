@@ -52,7 +52,13 @@ class ResponseBulkImportService:
     """
 
     @classmethod
-    def import_excel(cls, file, survey):
+    def import_excel(cls, file, survey, only_rows=None):
+        """
+        only_rows (opsional): himpunan nomor baris Excel yang boleh
+        diproses. None = semua baris (perilaku asli). Dipakai lapisan
+        validasi (apps.dataquality) agar baris yang ditolak tidak
+        disimpan.
+        """
 
         wb = load_workbook(
             filename=file,
@@ -80,6 +86,9 @@ class ResponseBulkImportService:
         skipped_rows = []
 
         for data_row in range(header_row + 1, ws.max_row + 1):
+
+            if only_rows is not None and data_row not in only_rows:
+                continue
 
             row_dict = {
 

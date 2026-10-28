@@ -231,6 +231,11 @@ Response List
 
         if (modal) {
 
+            // Pindahkan modal ke <body>. Di dalam .card, efek hover
+            // (transform: translateY) bikin modal ikut bergerak/glitch
+            // dan susah diklik karena position:fixed jadi relatif ke card.
+            document.body.appendChild(modal);
+
             modal.addEventListener('hidden.bs.modal', function () {
 
                 const form = document.getElementById('deleteAllFormResponse');

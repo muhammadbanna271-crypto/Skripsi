@@ -3,7 +3,7 @@ from django.db import IntegrityError
 from django.db.models import Count
 from django.db.models.deletion import ProtectedError
 from django.shortcuts import redirect
-from django.urls import reverse_lazy
+from django.urls import reverse
 from django.shortcuts import get_object_or_404
 from apps.master.models import Indicator, Variable
 from common.views import (
@@ -139,14 +139,47 @@ class IndicatorDetailView(BaseDetailView):
     context_object_name = "indicator"
 
 
+def by_variable_url(variable_id):
+    """Halaman indikator milik satu variable (tempat user bekerja)."""
+    return reverse("master:indicator-by-variable", args=[variable_id])
+
+
 class IndicatorCreateView(BaseCreateView):
     model = Indicator
     form_class = IndicatorForm
     template_name = "master/indicator/create.html"
 
-    success_url = reverse_lazy("master:indicator-list")
-
     success_message = "Indicator created successfully."
+
+    def get_initial(self):
+        initial = super().get_initial()
+
+        # "Add Indicator" dari halaman variable membawa ?variable=<id>
+        # supaya variable langsung terpilih.
+        variable_id = self.request.GET.get("variable", "")
+
+        if variable_id.isdigit() and Variable.objects.filter(
+            pk=variable_id
+        ).exists():
+            initial["variable"] = variable_id
+
+        return initial
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        variable_id = self.request.GET.get("variable", "")
+
+        context["cancel_url"] = (
+            by_variable_url(variable_id)
+            if variable_id.isdigit()
+            else reverse("master:indicator-list")
+        )
+
+        return context
+
+    def get_success_url(self):
+        return by_variable_url(self.object.variable_id)
 
 
 class IndicatorUpdateView(BaseUpdateView):
@@ -154,9 +187,10 @@ class IndicatorUpdateView(BaseUpdateView):
     form_class = IndicatorForm
     template_name = "master/indicator/update.html"
 
-    success_url = reverse_lazy("master:indicator-list")
-
     success_message = "Indicator updated successfully."
+
+    def get_success_url(self):
+        return by_variable_url(self.object.variable_id)
 
 
 class IndicatorDeleteView(BaseDeleteView):
@@ -164,13 +198,16 @@ class IndicatorDeleteView(BaseDeleteView):
 
     template_name = "master/indicator/delete.html"
 
-    success_url = reverse_lazy("master:indicator-list")
-
     success_message = "Indicator deleted successfully."
+
+    def get_success_url(self):
+        return by_variable_url(self.object.variable_id)
 
     def post(self, request, *args, **kwargs):
 
         self.object = self.get_object()
+
+        variable_id = self.object.variable_id
 
         try:
 
@@ -188,4 +225,4 @@ class IndicatorDeleteView(BaseDeleteView):
                 "Indicator cannot be deleted because it is still being used."
             )
 
-        return redirect("master:indicator-list")
+        return redirect(by_variable_url(variable_id))

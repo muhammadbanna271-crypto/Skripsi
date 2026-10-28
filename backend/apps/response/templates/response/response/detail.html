@@ -111,4 +111,14 @@ Response Detail
 
 </a>
 
+<a
+    href="{% url 'response:response-create' %}?respondent={{ respondent.pk }}"
+    class="btn btn-primary">
+
+    <i class="bi bi-plus-circle"></i>
+
+    Add Response
+
+</a>
+
 {% endblock %}

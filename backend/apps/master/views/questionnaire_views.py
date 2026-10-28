@@ -3,7 +3,7 @@ from django.db import IntegrityError
 from django.db.models import Count
 from django.db.models.deletion import ProtectedError
 from django.shortcuts import get_object_or_404, redirect
-from django.urls import reverse_lazy
+from django.urls import reverse
 
 from common.views import (
     BaseCreateView,
@@ -207,31 +207,71 @@ class QuestionnaireDetailView(BaseDetailView):
     context_object_name = "questionnaire"
 
 
+def by_indicator_url(indicator_id):
+    """Halaman questionnaire milik satu indicator (tempat user bekerja)."""
+    return reverse("master:questionnaire-by-indicator", args=[indicator_id])
+
+
 class QuestionnaireCreateView(BaseCreateView):
     model = Questionnaire
     form_class = QuestionnaireForm
     template_name = "master/questionnaire/create.html"
-    success_url = reverse_lazy("master:questionnaire-list")
     success_message = "Questionnaire created successfully."
+
+    def get_initial(self):
+        initial = super().get_initial()
+
+        # "Add Questionnaire" dari halaman indicator membawa
+        # ?indicator=<id> supaya indicator langsung terpilih.
+        indicator_id = self.request.GET.get("indicator", "")
+
+        if indicator_id.isdigit() and Indicator.objects.filter(
+            pk=indicator_id
+        ).exists():
+            initial["indicator"] = indicator_id
+
+        return initial
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        indicator_id = self.request.GET.get("indicator", "")
+
+        context["cancel_url"] = (
+            by_indicator_url(indicator_id)
+            if indicator_id.isdigit()
+            else reverse("master:questionnaire-list")
+        )
+
+        return context
+
+    def get_success_url(self):
+        return by_indicator_url(self.object.indicator_id)
 
 
 class QuestionnaireUpdateView(BaseUpdateView):
     model = Questionnaire
     form_class = QuestionnaireForm
     template_name = "master/questionnaire/update.html"
-    success_url = reverse_lazy("master:questionnaire-list")
     success_message = "Questionnaire updated successfully."
+
+    def get_success_url(self):
+        return by_indicator_url(self.object.indicator_id)
 
 
 class QuestionnaireDeleteView(BaseDeleteView):
     model = Questionnaire
     template_name = "master/questionnaire/delete.html"
-    success_url = reverse_lazy("master:questionnaire-list")
     success_message = "Questionnaire deleted successfully."
+
+    def get_success_url(self):
+        return by_indicator_url(self.object.indicator_id)
 
     def post(self, request, *args, **kwargs):
 
         self.object = self.get_object()
+
+        indicator_id = self.object.indicator_id
 
         try:
 
@@ -249,7 +289,7 @@ class QuestionnaireDeleteView(BaseDeleteView):
                 "Questionnaire cannot be deleted because it is still being used."
             )
 
-        return redirect("master:questionnaire-list")
+        return redirect(by_indicator_url(indicator_id))
 
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views import View

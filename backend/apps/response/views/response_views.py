@@ -1,7 +1,7 @@
 from django.contrib import messages
 from django.db.models import Count, Sum
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 
 from apps.master.models import Questionnaire
 from apps.respondent.models import Respondent
@@ -105,9 +105,40 @@ class ResponseCreateView(BaseCreateView):
 
     template_name = "response/response/create.html"
 
-    success_url = reverse_lazy("response:response-list")
-
     success_message = "Response created successfully."
+
+    def get_initial(self):
+        initial = super().get_initial()
+
+        # "Add Response" dari halaman detail responden membawa
+        # ?respondent=<id> supaya responden langsung terpilih.
+        respondent_id = self.request.GET.get("respondent", "")
+
+        if respondent_id.isdigit() and Respondent.objects.filter(
+            pk=respondent_id
+        ).exists():
+            initial["respondent"] = respondent_id
+
+        return initial
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        respondent_id = self.request.GET.get("respondent", "")
+
+        context["cancel_url"] = (
+            reverse("response:response-detail", args=[respondent_id])
+            if respondent_id.isdigit()
+            else reverse("response:response-list")
+        )
+
+        return context
+
+    def get_success_url(self):
+        return reverse(
+            "response:response-detail",
+            args=[self.object.respondent_id],
+        )
 
 
 class ResponseUpdateView(BaseUpdateView):
@@ -118,9 +149,13 @@ class ResponseUpdateView(BaseUpdateView):
 
     template_name = "response/response/update.html"
 
-    success_url = reverse_lazy("response:response-list")
-
     success_message = "Response updated successfully."
+
+    def get_success_url(self):
+        return reverse(
+            "response:response-detail",
+            args=[self.object.respondent_id],
+        )
 
 
 class ResponseDeleteView(BaseDeleteView):

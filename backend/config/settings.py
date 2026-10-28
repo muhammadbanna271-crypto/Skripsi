@@ -158,6 +158,7 @@ INSTALLED_APPS = [
     "apps.survey",
     "apps.respondent",
     "apps.response",
+    "apps.dataquality",
     "apps.analytics",
     "apps.dashboard",
     "apps.recommendation.apps.RecommendationConfig",
