@@ -264,6 +264,16 @@ No respondent found.
     </div>
 </div>
 
+<script>
+    // Pindahkan modal ke <body>. Di dalam .card, efek hover (transform:
+    // translateY) bikin modal ikut bergerak/glitch dan susah diklik.
+    document.addEventListener('DOMContentLoaded', function () {
+        const modal = document.getElementById('deleteAllModal');
+        if (modal) {
+            document.body.appendChild(modal);
+        }
+    });
+</script>
 
 {% if is_paginated %}
 

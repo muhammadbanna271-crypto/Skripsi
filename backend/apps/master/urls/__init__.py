@@ -6,6 +6,7 @@ from .village_urls import urlpatterns as village_urls
 from .indicator_urls import urlpatterns as indicator_urls
 from .questionnaire_urls import urlpatterns as questionnaire_urls
 from .variable_config_urls import urlpatterns as variable_config_urls
+from .import_urls import urlpatterns as import_urls
 
 urlpatterns = [
 
@@ -16,5 +17,6 @@ urlpatterns = [
     path("", include(indicator_urls)),
     path("", include(questionnaire_urls)),
     path("", include(variable_config_urls)),
+    path("", include(import_urls)),
 
 ]

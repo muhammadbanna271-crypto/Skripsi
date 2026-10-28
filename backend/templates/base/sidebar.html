@@ -3,6 +3,9 @@
 {% url 'master:village-list' as village_url %}
 {% url 'master:cluster-list' as cluster_url %}
 {% url 'master:variable-list' as variable_url %}
+{% url 'master:district-import' as district_import_url %}
+{% url 'master:village-import' as village_import_url %}
+{% url 'master:variable-import' as variable_import_url %}
 {% url 'master:indicator-list' as indicator_url %}
 {% url 'master:questionnaire-list' as questionnaire_url %}
 {% url 'survey:survey-list' as survey_url %}
@@ -45,7 +48,7 @@
 
                 <a
                     href="/"
-                    class="nav-link {% if request.path == '/' %}active{% endif %}">
+                    class="nav-link {% if request.path == '/' and not request.user.is_staff and not request.user.is_superuser %}active{% endif %}">
 
                     <i class="bi bi-compass"></i>
 
@@ -142,6 +145,54 @@
 
             <li class="menu-title">
 
+                IMPORT DATA
+
+            </li>
+
+            <li>
+
+                <a
+                    href="{{ district_import_url }}"
+                    class="nav-link {% if district_import_url in request.path %}active{% endif %}">
+
+                    <i class="bi bi-file-earmark-excel"></i>
+
+                    Import Kecamatan
+
+                </a>
+
+            </li>
+
+            <li>
+
+                <a
+                    href="{{ village_import_url }}"
+                    class="nav-link {% if village_import_url in request.path %}active{% endif %}">
+
+                    <i class="bi bi-file-earmark-excel"></i>
+
+                    Import Desa
+
+                </a>
+
+            </li>
+
+            <li>
+
+                <a
+                    href="{{ variable_import_url }}"
+                    class="nav-link {% if variable_import_url in request.path %}active{% endif %}">
+
+                    <i class="bi bi-file-earmark-excel"></i>
+
+                    Import Variabel
+
+                </a>
+
+            </li>
+
+            <li class="menu-title">
+
                 MASTER DATA
 
             </li>
@@ -150,7 +201,7 @@
 
                 <a
                     href="{{ district_url }}"
-                    class="nav-link {% if district_url in request.path %}active{% endif %}">
+                    class="nav-link {% if district_url in request.path and district_import_url not in request.path %}active{% endif %}">
 
                     <i class="bi bi-map"></i>
 
@@ -164,7 +215,7 @@
 
                 <a
                     href="{{ village_url }}"
-                    class="nav-link {% if village_url in request.path %}active{% endif %}">
+                    class="nav-link {% if village_url in request.path and village_import_url not in request.path %}active{% endif %}">
 
                     <i class="bi bi-geo-alt"></i>
 
@@ -192,7 +243,7 @@
 
                 <a
                     href="{{ variable_url }}"
-                    class="nav-link {% if variable_url in request.path %}active{% endif %}">
+                    class="nav-link {% if variable_url in request.path and variable_import_url not in request.path %}active{% endif %}">
 
                     <i class="bi bi-boxes"></i>
 
@@ -240,7 +291,7 @@
 
                 <a
                     href="{{ survey_url }}"
-                    class="nav-link {% if survey_url in request.path %}active{% endif %}">
+                    class="nav-link {% if survey_url in request.path and survey_village_url not in request.path %}active{% endif %}">
 
                     <i class="bi bi-clipboard-data"></i>
 
@@ -302,7 +353,7 @@
 
                 <a
                     href="{{ analytics_url }}"
-                    class="nav-link {% if request.path == analytics_url %}active{% endif %}">
+                    class="nav-link {% if analytics_url in request.path and ml_dashboard_url not in request.path %}active{% endif %}">
 
                     <i class="bi bi-graph-up-arrow"></i>
 
@@ -388,3 +439,24 @@
     </div>
 
 </div>
+
+<script>
+    // Ingat posisi scroll sidebar saja (konten halaman tidak terpengaruh).
+    (function () {
+        var sidebar = document.querySelector(".sidebar");
+        var key = "sidebarScrollTop";
+        if (!sidebar) return;
+
+        try {
+            var saved = sessionStorage.getItem(key);
+            if (saved !== null) sidebar.scrollTop = parseInt(saved, 10) || 0;
+        } catch (e) {}
+
+        function save() {
+            try { sessionStorage.setItem(key, sidebar.scrollTop); } catch (e) {}
+        }
+
+        sidebar.addEventListener("scroll", save, { passive: true });
+        window.addEventListener("pagehide", save);
+    })();
+</script>

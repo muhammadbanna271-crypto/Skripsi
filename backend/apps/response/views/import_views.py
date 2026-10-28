@@ -1,10 +1,8 @@
 from django.contrib import messages
 from django.shortcuts import redirect, render
 
-from apps.response.services.bulk_import_service import (
-    BulkImportError,
-    ResponseBulkImportService,
-)
+from apps.dataquality.pipeline import ValidatedImportService
+from apps.dataquality.wording import result_messages
 from apps.survey.models import Survey
 
 
@@ -64,50 +62,31 @@ def import_response(request):
 
         try:
 
-            result = ResponseBulkImportService.import_excel(
+            execution = ValidatedImportService.run(
                 excel_file,
                 survey,
             )
-
-        except BulkImportError as error:
-
-            messages.error(
-                request,
-                str(error),
-            )
-
-            return redirect("response:response-import")
 
         except Exception as error:
 
             messages.error(
                 request,
-                f"Gagal memproses file: {error}",
+                "File tidak dapat diproses karena terjadi kesalahan di "
+                "sistem. Mohon coba lagi, atau hubungi pengelola sistem "
+                f"bila masalah berulang. (Keterangan teknis: {error})",
             )
 
             return redirect("response:response-import")
 
-        messages.success(
-            request,
-            (
-                f"Import selesai. Respondent baru: "
-                f"{result['created_respondent']}, "
-                f"Respondent diperbarui: "
-                f"{result['updated_respondent']}, "
-                f"Jawaban tersimpan: {result['created_response']}."
-            ),
-        )
+        levels = {
+            "success": messages.success,
+            "warning": messages.warning,
+            "error": messages.error,
+        }
 
-        if result["skipped_rows"]:
+        for level, text in result_messages(execution):
 
-            messages.warning(
-                request,
-                (
-                    f"{len(result['skipped_rows'])} baris dilewati. "
-                    "Contoh: "
-                    + "; ".join(result["skipped_rows"][:5])
-                ),
-            )
+            levels[level](request, text)
 
         return redirect(
             "response:response-import"

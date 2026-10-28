@@ -1,0 +1,167 @@
+{% extends "base/crud_page.html" %}
+
+{% block title %}
+{{ title }}
+{% endblock %}
+
+{% block page_title %}
+{{ title }}
+{% endblock %}
+
+{% block page_subtitle %}
+{{ description }}
+{% endblock %}
+
+{% block page_action %}
+
+<a
+    href="{% url list_url_name %}"
+    class="btn btn-outline-secondary rounded-3 px-4">
+
+    <i class="bi bi-arrow-left me-2"></i>
+
+    Kembali
+
+</a>
+
+{% endblock %}
+
+{% block crud_content %}
+
+{% if result and not result.ok %}
+
+<div class="alert alert-danger">
+
+    <strong>Import dibatalkan.</strong>
+    File <code>{{ filename }}</code> memiliki {{ result.errors|length }} masalah,
+    dan tidak ada data yang disimpan. Perbaiki lalu unggah ulang.
+
+    <ul class="mb-0 mt-2">
+
+        {% for row, message in result.errors_shown %}
+
+        <li>Baris {{ row }}: {{ message }}</li>
+
+        {% endfor %}
+
+    </ul>
+
+    {% if result.errors_hidden %}
+
+    <div class="mt-2">... dan {{ result.errors_hidden }} masalah lainnya.</div>
+
+    {% endif %}
+
+</div>
+
+{% endif %}
+
+<div class="row g-4">
+
+    <div class="col-lg-5">
+
+        <h5 class="mb-3">1. Unggah file</h5>
+
+        <form method="post" enctype="multipart/form-data">
+
+            {% csrf_token %}
+
+            <div class="mb-3">
+
+                <input
+                    type="file"
+                    name="file"
+                    accept=".xlsx"
+                    class="form-control"
+                    required>
+
+            </div>
+
+            <button type="submit" class="btn btn-success">
+
+                <i class="bi bi-upload me-2"></i>
+
+                Import
+
+            </button>
+
+        </form>
+
+        <h5 class="mt-4 mb-3">Aturan</h5>
+
+        <ul class="small">
+
+            {% for rule in rules %}
+
+            <li>{{ rule }}</li>
+
+            {% endfor %}
+
+        </ul>
+
+    </div>
+
+    <div class="col-lg-7">
+
+        <h5 class="mb-3">2. Format file</h5>
+
+        <p class="small text-muted">
+            Susunan kolom (A, B, C, ...) harus sama dengan contoh berikut.
+            Unduh file contoh sebagai patokan.
+        </p>
+
+        <div class="table-responsive">
+
+            <table class="table table-bordered table-sm small">
+
+                <thead class="table-light">
+
+                    <tr>
+
+                        {% for header in headers %}
+
+                        <th>{{ header }}</th>
+
+                        {% endfor %}
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for row in sample %}
+
+                    <tr>
+
+                        {% for cell in row %}
+
+                        <td>{{ cell }}</td>
+
+                        {% endfor %}
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <a
+            href="{% url template_url_name %}"
+            class="btn btn-outline-primary">
+
+            <i class="bi bi-download me-2"></i>
+
+            Unduh file contoh (.xlsx)
+
+        </a>
+
+    </div>
+
+</div>
+
+{% endblock %}
